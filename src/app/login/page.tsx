@@ -43,25 +43,33 @@ export default function LoginPage() {
   };
 
   return (
+  <div style={{
+    minHeight: '100vh',
+    minWidth: '100vw', // Ensure full viewport width
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #3498db 0%, #8e44ad 100%)',
+    color: '#fff',
+    fontFamily: 'Arial, sans-serif',
+    position: 'fixed', // Cover the whole viewport
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'auto', // Allow scrolling if needed
+    zIndex: 0,
+  }}>
     <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #3498db 0%, #8e44ad 100%)',
-      color: '#fff',
-      fontFamily: 'Arial, sans-serif'
+      background: 'rgba(30,30,60,0.95)', // More opaque to hide white
+      borderRadius: 16,
+      padding: 32,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+      minWidth: 320,
+      maxWidth: 400,
+      width: '100%',
     }}>
-      <div style={{
-        background: 'rgba(30,30,60,0.85)',
-        borderRadius: 16,
-        padding: 32,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
-        minWidth: 320,
-        maxWidth: 400,
-        width: '100%',
-      }}>
         <h1 style={{ fontSize: '2.5rem', marginBottom: 24, textAlign: 'center' }}>Login to SkillSwap</h1>
         {!resetMode && (
           <>
