@@ -1,0 +1,37 @@
+
+/* @import "~bootstrap/scss/bootstrap"; */
+
+
+@import "swiper/css/bundle";   
+@import 'react-modal-video/css/modal-video.css';
+
+
+
+@import "../../public/assets/css/animate.css";
+@import "../../public/assets/css/boxicons.min.css";
+@import "../../public/assets/css/jquery-simple-mobilemenu.css";
+@import "../../public/assets/css/slicknav.css";
+@import "../../public/assets/css/flexslider.css";
+@import "../../public/assets/css/gijgo.min.css";
+@import "../../public/assets/css/line-awesome.css";
+@import "../../public/assets/css/magnific-popup.css";
+@import "../../public/assets/css/niceselect.css";
+@import "../../public/assets/css/preloader.css";
+@import "../../public/assets/css/YouTubePopUp.css"; 
+@import "../../public/assets/css/YTPlayer.css"; 
+@import "../../public/assets/css/slick-theme.css"; 
+@import "../../public/assets/css/slicknav.css"; 
+@import "../../public/assets/css/slick.css"; 
+@import "../../public/assets/css/boxicons.min.css"; 
+
+@import "../../public/assets/bootstrap/css/bootstrap.css";
+@import "../../public/assets/bootstrap/css/bootstrap.min.css";
+
+@import "../../public/assets/fonts/themify-icons.css"; 
+@import "../../public/assets/fonts/fontawesome/fontawesome.css"; 
+
+/* @import "../../public/assets/owlcarousel/css/owl.carousel.min.css";  */
+/* @import "../../public/assets/owlcarousel/css/owl.theme.default.min.css";  */
+ 
+@import "../../public/assets/css/style.css";
+@import "../../public/assets/css/responsive.css"; 
