@@ -18,7 +18,7 @@ export default function HeaderTwo() {
           <div className="row">
             <div className="col-xl-3 col-lg-3 col-md-6 align-self-center">
               <div className="site-logo">
-                <Link href="/"><img src="assets/img/logo.svg" alt="Edumon" /></Link>
+                <Link href="/"><img src="assets/img/logo.svg" alt="SkillSwap" /></Link>
               </div>
 
             </div>

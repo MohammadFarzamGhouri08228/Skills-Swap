@@ -1,5 +1,3 @@
-
-
 import React from 'react'
 
 export default function CtaHomeTwo() {
@@ -14,7 +12,7 @@ export default function CtaHomeTwo() {
                   <h3>Become an <span>Instructor</span></h3>
                   <p>
                     Top instructors from around the world
-                    teach millions of student on Edumon
+                    teach millions of student on SkillSwap
                   </p>
                   <a href="#" className="bg_btn bt">Apply Now</a>
                 </div>
@@ -33,7 +31,7 @@ export default function CtaHomeTwo() {
 
                   <p>
                     Top instructors from around the world
-                    teach millions of student on Edumon
+                    teach millions of student on SkillSwap
                   </p>
                   <a href="#" className="bg_btn bt">Register</a>
                 </div>
