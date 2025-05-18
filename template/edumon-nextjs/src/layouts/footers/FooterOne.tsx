@@ -1,4 +1,3 @@
-
 import React from 'react'
 
 export default function FooterOne() {
@@ -27,7 +26,7 @@ export default function FooterOne() {
               <div className="single-footer">
                 <div className="about-footer">
                   <div className="footer-logo">
-                    <a href="#"><img src="assets/img/footer-logo.svg" alt="Edumon" /></a>
+                    <a href="#"><img src="assets/img/footer-logo.svg" alt="SkillSwap" /></a>
                   </div>
                   <p>
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit varius congue Morbi
@@ -141,7 +140,7 @@ export default function FooterOne() {
         </div>
 
         <div className="copyright text-center wow fadeIn">
-          <p>Copyright © 2024 <a href="#">Edumon</a>. All rights reserved.</p>
+          <p>Copyright © 2024 <a href="#">SkillSwap</a>. All rights reserved.</p>
         </div>
       </section>
     </>

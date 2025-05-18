@@ -11,7 +11,7 @@ export default function HomeOne() {
         <div className="container">
           <div className="row">
             <div className="col-lg-12">
-              <h1 className="text-center">Welcome to Skills Swap</h1>
+              <h1 className="text-center">Welcome to SkillsSwap</h1>
               <p className="text-center">Find courses and resources to enhance your skills</p>
             </div>
           </div>

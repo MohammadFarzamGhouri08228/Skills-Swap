@@ -1,4 +1,3 @@
-
 "use client"
 import React, { useEffect } from 'react'
 
@@ -59,7 +58,7 @@ export default function HeroHomeOne() {
               <div className="banner-content d-flex align-items-center">
                 <div className="banner-content-inner">
                   <span className="subtitle">Online E-Learing Courses</span>
-                  <h2 className="title"><span>Creating</span> a Better Future through Education</h2>
+                  <h2 className="title">SkillSwap</h2>
                   <p>
                     It is long established fact that reader distracted<br />
                     by the readable content.
