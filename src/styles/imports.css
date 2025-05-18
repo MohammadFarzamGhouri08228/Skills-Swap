@@ -1,0 +1,6 @@
+/* Dedicated imports file for fonts and external libraries */
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com");
+@import url("https://fonts.gstatic.com");
+@import "swiper/css/bundle";
+@import "bootstrap/dist/css/bootstrap.min.css"; 
