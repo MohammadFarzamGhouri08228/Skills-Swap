@@ -1,12 +1,14 @@
+
 "use client"
 import React, { useState } from 'react'
 import menu_data from './menu_data'
 import Link from 'next/link'
 
-export default function MobileMenu({ opneMenu }: { opneMenu: boolean }) {
+
+export default function MobileMenu({ opneMenu }: any) {
+
   const [navTitle, setNavTitle] = useState("");
-  
-  // openMobileMenu
+  //openMobileMenu
   const openMobileMenu = (menu: string) => {
     if (navTitle === menu) {
       setNavTitle("");
@@ -14,6 +16,7 @@ export default function MobileMenu({ opneMenu }: { opneMenu: boolean }) {
       setNavTitle(menu);
     }
   };
+
 
   return (
     <>
@@ -42,4 +45,4 @@ export default function MobileMenu({ opneMenu }: { opneMenu: boolean }) {
       </div>
     </>
   )
-} 
+}

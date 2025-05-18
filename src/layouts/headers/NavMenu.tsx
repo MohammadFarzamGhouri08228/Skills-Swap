@@ -1,3 +1,4 @@
+
 import React from 'react'
 import menu_data from './menu_data'
 import Link from 'next/link'
@@ -21,4 +22,4 @@ export default function NavMenu() {
       </ul>
     </>
   )
-} 
+}

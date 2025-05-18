@@ -1,6 +1,4 @@
-"use client"
 import React from 'react'
-import Link from 'next/link'
 
 export default function FooterOne() {
   return (
@@ -9,7 +7,7 @@ export default function FooterOne() {
         <div className="container">
           <div className="row">
             <div className="col-xl-7 col-lg-7 wow fadeIn">
-              <h2 className="fntitle">Subscribe to Our Newsletter <br />
+              <h2 className="fntitle">Subscribe to Our  Newsletter <br />
                 for Latest Update</h2>
             </div>
 
@@ -28,7 +26,7 @@ export default function FooterOne() {
               <div className="single-footer">
                 <div className="about-footer">
                   <div className="footer-logo">
-                    <Link href="/"><img src="/assets/img/footer-logo.svg" alt="SkillSwap" /></Link>
+                    <a href="#"><img src="assets/img/footer-logo.svg" alt="SkillSwap" /></a>
                   </div>
                   <p>
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit varius congue Morbi
@@ -60,12 +58,12 @@ export default function FooterOne() {
               <div className="single-footer">
                 <h3 className="footer-title">Useful Links</h3>
                 <ul>
-                  <li><Link href="/">Home</Link></li>
-                  <li><Link href="/about">About Us</Link></li>
-                  <li><Link href="/courses">Courses</Link></li>
-                  <li><Link href="/courses">Categories</Link></li>
-                  <li><Link href="/pricing">Pricing</Link></li>
-                  <li><Link href="/contact">Contact</Link></li>
+                  <li><a href="#">Home</a></li>
+                  <li><a href="#">About Us</a></li>
+                  <li><a href="#">Courses</a></li>
+                  <li><a href="#">Categories</a></li>
+                  <li><a href="#">Pricing</a></li>
+                  <li><a href="#">Contact</a></li>
                 </ul>
               </div>
             </div>
@@ -90,7 +88,7 @@ export default function FooterOne() {
                 <div className="contact-info">
                   <p>
                     <i className='bx bx-map' ></i>
-                    <span>15 Rose Street Harvey, IL <br />
+                    <span>15 Rose StreetHarvey, IL <br />
                       60426 USA</span>
                   </p>
                   <p>
@@ -147,4 +145,4 @@ export default function FooterOne() {
       </section>
     </>
   )
-} 
+}

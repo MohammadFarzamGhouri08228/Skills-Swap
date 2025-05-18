@@ -5,4 +5,4 @@ export const animationCreate = () => {
       new WOW.WOW({live: false}).init()
     });
   }
-}; 
+};

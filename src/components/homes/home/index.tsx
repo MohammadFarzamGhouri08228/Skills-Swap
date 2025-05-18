@@ -1,23 +1,38 @@
+
+
 import HeaderOne from '@/layouts/headers/HeaderOne'
 import React from 'react'
+import HeroHomeOne from './HeroHomeOne'
+import FeatureHomeOne from './FeatureHomeOne'
+import AboutHomeOne from './AboutHomeOne'
+import CounterHomeOne from './CounterHomeOne'
+import CoursesHomeOne from './CoursesHomeOne'
+import CourseCategoryHomeOne from './CourseCategoryHomeOne'
+import WorkingProcessHomeOne from './WorkingProcessHomeOne'
+import InstructorsHomeOne from './InstructorsHomeOne'
+import VideoHomeOne from './VideoHomeOne'
+import ReviewHomeOne from './ReviewHomeOne'
+import BrandHomeOne from './BrandHomeOne'
+import BlogHomeOne from './BlogHomeOne'
 import FooterOne from '@/layouts/footers/FooterOne'
 
 export default function HomeOne() {
   return (
     <>
       <HeaderOne />
-      {/* Home content sections will be added here */}
-      <div className="hero-section">
-        <div className="container">
-          <div className="row">
-            <div className="col-lg-12">
-              <h1 className="text-center">Welcome to SkillsSwap</h1>
-              <p className="text-center">Find courses and resources to enhance your skills</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <HeroHomeOne />
+      <FeatureHomeOne />
+      <AboutHomeOne />
+      <CounterHomeOne />
+      <CoursesHomeOne />
+      <CourseCategoryHomeOne />
+      <WorkingProcessHomeOne />
+      <InstructorsHomeOne />
+      <VideoHomeOne />
+      <ReviewHomeOne />
+      <BrandHomeOne />
+      <BlogHomeOne />
       <FooterOne />
     </>
   )
-} 
+}
