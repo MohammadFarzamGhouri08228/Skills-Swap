@@ -15,14 +15,12 @@ export default function AboutHomeOne() {
 
             <div className="col-xl-6 col-lg-6 align-self-center wow fadeIn">
               <div className="section-title about-title">
-                <span>About Us Education</span>
-                <h2>Go Your Skill in Next Level</h2>
+                <span>About Us</span>
+                <h2>Take Your Skills to the Next Level </h2>
               </div>
 
               <p className="mb50">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                Integer sed turpis in arcu gravida faucibus euismod eget
-                magna. Donec non justo ac libero pharetra congue.
+                SkillSwap is a platform where you can share your skills, learn from others, and grow together. Whether you want to teach or learn, we provide a space for skill exchange.
               </p>
 
               <div className="single_about">
@@ -31,10 +29,9 @@ export default function AboutHomeOne() {
                 </div>
 
                 <div className="sbcontent">
-                  <h4>Our Success Mission</h4>
+                  <h4>Our Mission</h4>
                   <p>
-                    Lorem ipsum dolor sit amet, consectetur
-                    adipiscing elit.
+                    Empowering people to learn from each other and grow together.
                   </p>
                 </div>
               </div>
@@ -45,10 +42,9 @@ export default function AboutHomeOne() {
                 </div>
 
                 <div className="sbcontent">
-                  <h4>Our Success Mission</h4>
+                  <h4>Our Vision</h4>
                   <p>
-                    Lorem ipsum dolor sit amet, consectetur
-                    adipiscing elit.
+                    A community where skills and knowledge are freely shared.
                   </p>
                 </div>
               </div>

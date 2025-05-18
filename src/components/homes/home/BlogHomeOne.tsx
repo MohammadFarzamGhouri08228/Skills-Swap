@@ -10,28 +10,30 @@ export default function BlogHomeOne() {
             <div className="col-12 wow fadeInUp">
               <div className="section-title text-center">
                 <span>Latest Blog & Articles</span>
-                <h2>Take a Look Our latest Posts</h2>
+                <h2>Discover Insights on Skill Sharing</h2>
               </div>
             </div>
 
             <div className="col-xl-4 col-md-6 col-12 wow fadeIn">
               <div className="blog-item">
                 <div className="blog-image">
-                  <img src="assets/img/blog/1.jpg" alt="image" />
+                  <img src="assets/img/blog/1.jpg" alt="SkillSwap Tips" />
                 </div>
 
                 <div className="blog-content">
                   <div className="bmeta">
                     <span>
-                      <i className="bx bx-time-five"></i> 27 Jan , 2024
+                      <i className="bx bx-time-five"></i> 18 May, 2025
                     </span>
 
                     <span className="bcat">
-                      <a href="#">eLearning</a>
+                      <a href="#">Skill Exchange</a>
                     </span>
                   </div>
 
-                  <h3><Link href="/blog-details">A Student Learning with Online Programme on Computer</Link></h3>
+                  <h3>
+                    <Link href="/blog-details">Top 5 Tips for Effective Skill Swaps</Link>
+                  </h3>
                   <Link href="/blog-details" className="bbtn">Explore More</Link>
                 </div>
               </div>
@@ -40,21 +42,23 @@ export default function BlogHomeOne() {
             <div className="col-xl-4 col-md-6 col-12 wow fadeIn">
               <div className="blog-item">
                 <div className="blog-image">
-                  <img src="assets/img/blog/2.jpg" alt="image" />
+                  <img src="assets/img/blog/2.jpg" alt="Choosing Partners" />
                 </div>
 
                 <div className="blog-content">
                   <div className="bmeta">
                     <span>
-                      <i className="bx bx-time-five"></i> 27 Jan , 2024
+                      <i className="bx bx-time-five"></i> 12 May, 2025
                     </span>
 
                     <span className="bcat">
-                      <a href="#">Students</a>
+                      <a href="#">Community</a>
                     </span>
                   </div>
 
-                  <h3><Link href="/blog-details">All Students and Teachers are Happy To Back to School</Link></h3>
+                  <h3>
+                    <Link href="/blog-details">How to Find the Right Partner for Skill Exchange</Link>
+                  </h3>
                   <Link href="/blog-details" className="bbtn">Explore More</Link>
                 </div>
               </div>
@@ -63,21 +67,23 @@ export default function BlogHomeOne() {
             <div className="col-xl-4 col-md-6 col-12 wow fadeIn">
               <div className="blog-item">
                 <div className="blog-image">
-                  <img src="assets/img/blog/3.jpg" alt="image" />
+                  <img src="assets/img/blog/3.jpg" alt="SkillSwap Benefits" />
                 </div>
 
                 <div className="blog-content">
                   <div className="bmeta">
                     <span>
-                      <i className="bx bx-time-five"></i> 27 Jan , 2024
+                      <i className="bx bx-time-five"></i> 10 May, 2025
                     </span>
 
                     <span className="bcat">
-                      <a href="#">Education</a>
+                      <a href="#">Learning</a>
                     </span>
                   </div>
 
-                  <h3><Link href="/blog-details">Learners are studing with togather in the Class Room</Link></h3>
+                  <h3>
+                    <Link href="/blog-details">Why Skill Exchange is a Game Changer for Learning</Link>
+                  </h3>
 
                   <Link href="/blog-details" className="bbtn">Explore More</Link>
                 </div>
