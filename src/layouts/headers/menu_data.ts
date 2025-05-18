@@ -68,4 +68,4 @@ const menu_data: DataType[] = [
 		has_dropdown: false,
 	},
 ];
-export default menu_data; 
+export default menu_data;

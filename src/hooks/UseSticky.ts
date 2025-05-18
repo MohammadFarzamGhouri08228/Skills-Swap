@@ -29,4 +29,4 @@ const UseSticky = (): StickyState => {
   };
 };
 
-export default UseSticky; 
+export default UseSticky;

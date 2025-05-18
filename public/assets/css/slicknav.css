@@ -23,10 +23,7 @@
 	color: #fff!important;
 }
 .slicknav_menu {
-  display: block;
-}
-.slicknav_menu {
-  display: block; }
+  *zoom: 1; }
   .slicknav_menu .slicknav_menutxt {
     display: block;
     line-height: 1.188em;

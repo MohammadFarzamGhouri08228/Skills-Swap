@@ -5,6 +5,7 @@ import NavMenu from './NavMenu'
 import MobileMenu from './MobileMenu'
 
 export default function HeaderOne() {
+
   const [open, setOpen] = useState(false)
   const [opneMenu, setOpneMenu] = useState(false)
 
@@ -15,7 +16,7 @@ export default function HeaderOne() {
           <div className="row">
             <div className="col-30 left-col align-self-center rk_style">
               <div className="site-logo">
-                <Link href="/"><img src="/assets/img/logo.svg" alt="SkillSwap" /></Link>
+                <Link href="/"><img src="assets/img/logo.svg" alt="SkillSwap" /></Link>
               </div>
 
               <div className="course_cat">
@@ -71,7 +72,7 @@ export default function HeaderOne() {
               <li className="d-flex">
                 <div className="thumb_img_cartmini">
                   <a href="course-details.html" className="mc_img">
-                    <img src="/assets/img/mcart/1.jpg" alt="Product Name" />
+                    <img src="assets/img/mcart/1.jpg" alt="Product Name" />
                   </a>
                 </div>
 
@@ -99,7 +100,7 @@ export default function HeaderOne() {
               <li className="d-flex">
                 <div className="thumb_img_cartmini">
                   <a href="course-details.html" className="mc_img">
-                    <img src="/assets/img/mcart/2.jpg" alt="Product Name" />
+                    <img src="assets/img/mcart/2.jpg" alt="Product Name" />
                   </a>
                 </div>
 
@@ -127,7 +128,7 @@ export default function HeaderOne() {
               <li className="d-flex">
                 <div className="thumb_img_cartmini">
                   <a href="course-details.html" className="mc_img">
-                    <img src="/assets/img/mcart/3.jpg" alt="Product Name" />
+                    <img src="assets/img/mcart/3.jpg" alt="Product Name" />
                   </a>
                 </div>
 
@@ -194,4 +195,4 @@ export default function HeaderOne() {
       </header>
     </>
   )
-} 
+}

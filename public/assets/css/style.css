@@ -1,6 +1,6 @@
 /*
 Author       : Themesvila
-Template Name: SkillSwap - Education HTML Template
+Template Name: Edumon - Education HTML Template
 Version      : 1.0
 */
 
@@ -9,6 +9,10 @@ Version      : 1.0
 * 01.GENERAL STYLE
 * ----------------------------------------------------------------------------------------
 */
+
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com");
+@import url("https://fonts.gstatic.com");
 
 body {
 	color: #555;
