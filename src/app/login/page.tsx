@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, Github, Twitter } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { LampContainer } from '@/components/ui/lamp';
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "@/firebaseConfig";
+import { useRouter } from "next/navigation"; // for Next.js 13+ app router
 
 const fadeIn = (direction: "up" | "down" | "left" | "right" = "up", delay: number = 0) => ({
   hidden: {
@@ -32,12 +35,24 @@ const fadeIn = (direction: "up" | "down" | "left" | "right" = "up", delay: numbe
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     // Add your login logic here
     setTimeout(() => setIsLoading(false), 2000);
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+      // Redirect after successful login
+      router.push("/dashboard"); // Change to your desired route
+    } catch (error) {
+      console.error("Google sign-in error:", error);
+      // Optionally show an error message to the user
+    }
   };
 
   return (
@@ -87,12 +102,12 @@ export default function LoginPage() {
               >
                 <Label htmlFor="email" className="text-purple-200">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" size={20} />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 pointer-events-none" size={22} />
                   <Input
                     id="email"
                     type="email"
                     placeholder="Enter your email"
-                    className="pl-10 bg-purple-800/50 border-purple-400/20 text-white placeholder-purple-300/50"
+                    className="pl-12 bg-purple-800/50 border-purple-400/20 text-white placeholder-purple-300/50 h-12 text-base"
                     required
                   />
                 </div>
@@ -105,12 +120,13 @@ export default function LoginPage() {
               >
                 <Label htmlFor="password" className="text-purple-200">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" size={20} />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 pointer-events-none" size={22} />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
-                    className="pl-10 bg-purple-800/50 border-purple-400/20 text-white placeholder-purple-300/50"
+                    className="pl-12 bg-purple-800/50 border-purple-400/20 text-white placeholder-purple-300/50 h-12 text-base"
+                    style={{ fontSize: '1.25rem', letterSpacing: '0.1em' }}
                     required
                   />
                   <button
@@ -118,7 +134,7 @@ export default function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-400 hover:text-purple-300"
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
                   </button>
                 </div>
               </motion.div>
@@ -182,21 +198,21 @@ export default function LoginPage() {
                   <span className="px-2 bg-purple-900/80 text-purple-300">Or continue with</span>
                 </div>
               </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="mt-6 flex flex-col gap-4">
                 <Button
-                  variant="outline"
-                  className="w-full py-6 bg-purple-800/50 border-purple-400/20 hover:bg-purple-800"
+                  type="button"
+                  className="w-full py-6 bg-white text-purple-800 font-semibold flex items-center justify-center gap-2 hover:bg-purple-100"
+                  onClick={handleGoogleSignIn}
                 >
-                  <Github className="mr-2" size={20} />
-                  GitHub
+                  <i className="bx bxl-google text-2xl mr-2"></i>
+                  Sign in with Google
                 </Button>
                 <Button
-                  variant="outline"
-                  className="w-full py-6 bg-purple-800/50 border-purple-400/20 hover:bg-purple-800"
+                  type="button"
+                  className="w-full py-4 bg-purple-700 hover:bg-purple-800 text-white font-semibold"
+                  onClick={() => window.location.href = '/dashboard'}
                 >
-                  <Twitter className="mr-2" size={20} />
-                  Twitter
+                  Go to Dashboard
                 </Button>
               </div>
             </motion.div>
