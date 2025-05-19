@@ -52,7 +52,7 @@ export default function HeaderOne() {
                   <span>3</span>
                 </div>
               </div>
-              <a href="#" className="white-btn bt">Login / Register</a>
+              <Link href="/login" className="white-btn bt">Login / Register</Link>
             </div>
 
           </div>
