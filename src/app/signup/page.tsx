@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '@/app/firebase';
+import { auth, db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';

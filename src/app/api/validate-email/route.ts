@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/app/firebase';
+import { auth } from '@/lib/firebase';
 import { fetchSignInMethodsForEmail } from 'firebase/auth';
 
 export async function POST(request: Request) {

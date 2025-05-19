@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { LampContainer } from '@/components/ui/lamp';
 import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "@/firebaseConfig";
+import { auth, provider } from "@/lib/firebase";
 import { useRouter } from "next/navigation"; // for Next.js 13+ app router
 
 const fadeIn = (direction: "up" | "down" | "left" | "right" = "up", delay: number = 0) => ({
