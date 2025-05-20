@@ -255,7 +255,7 @@ export default function Signup() {
       await setDoc(doc(db, 'users', user.uid), userData);
 
       toast.success('Account created successfully!');
-      router.push('/login');
+      router.push('/dashboard');
     } catch (error: any) {
       console.error('Signup error:', error);
       

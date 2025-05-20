@@ -42,7 +42,10 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     // Add your login logic here
-    setTimeout(() => setIsLoading(false), 2000);
+    setTimeout(() => {
+      setIsLoading(false);
+      router.push("/dashboard"); // Redirect to dashboard after sign in
+    }, 2000);
   };
 
   const handleGoogleSignIn = async () => {
@@ -51,7 +54,7 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       if (result.user) {
         // Redirect after successful login
-        router.push("/#");
+        router.push("/dashboard");
       }
     } catch (error: any) {
       console.error("Google sign-in error:", error);
