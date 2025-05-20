@@ -1895,6 +1895,7 @@ svg#play_icon:hover #triangle {
     left: 10%;
     width: 20px;
     height: 20px;
+    background: #F8B81F;
     animation-delay: 2s;
     animation-duration: 12s;
 }
@@ -2158,7 +2159,7 @@ svg#play_icon:hover #triangle {
 --------------------------------*/
 
 .footer{
-	background: #002935;
+	background: #644C93;
 	color: #fff;
 	padding-top: 80px;
 	position: relative;
@@ -2169,7 +2170,7 @@ svg#play_icon:hover #triangle {
 }
 .footer a:hover,
 .footer a:focus{
-	color: #0D5FF9;
+	color: #FF686B;
 }
 .fntitle{
 	font-size: 28px;
@@ -2198,9 +2199,9 @@ svg#play_icon:hover #triangle {
 	outline: inherit;
 }
 .footer .newsletter button {
-	border: 1px solid #0D5FF9;
-	background: #0D5FF9;
-	color: #fff;
+	border: 1px solid #FFD23F;
+	background: #FFD23F;
+	color: #644C93;
 	padding: 8px 36px;
 	border-radius: 30px;
 	position: absolute;
@@ -2212,7 +2213,9 @@ svg#play_icon:hover #triangle {
 }
 .footer .newsletter button:hover,
 .footer .newsletter button:focus{
-	background-color: #002935;
+	background-color: #FF686B;
+	border-color: #FF686B;
+	color: #fff;
 }
 .footer-bottom{
 	border-top: 1px solid rgba(225,225,225,0.08);
@@ -2232,10 +2235,10 @@ svg#play_icon:hover #triangle {
 }
 .footer-title::after {
 	content: '';
-	background-image: url(../img/shapes/footer-title.svg);
 	position: absolute;
 	width: 50px;
 	height: 3px;
+	background: #FFD23F;
 	bottom: -21px;
 	left: 0;
 }
@@ -2253,7 +2256,7 @@ svg#play_icon:hover #triangle {
 	padding-right: 15px;
 	padding-top: 6px;
 	font-size: 24px;
-	color: #0D5FF9;
+	color: #FFD23F;
 }
 
 .contact-info p span{
@@ -2281,10 +2284,10 @@ svg#play_icon:hover #triangle {
 	height: 40px;
 	line-height: 43px;
 	display:block;
-	background: #1D2B45;
+	background: #FFD23F;
 	text-align: center;
 	font-size: 22px;
-	color: #B4C1D2;
+	color: #644C93;
 	border-radius: 10px;
 	transform: rotate(50deg);
 	transition: .5s;
@@ -2294,7 +2297,7 @@ svg#play_icon:hover #triangle {
 }
 .fot-social a:hover,
 .fot-social a:focus{
-	background: #0D5FF9;
+	background: #FF686B;
 	color: #fff;
 }
 .newsletter p{
@@ -2302,7 +2305,7 @@ svg#play_icon:hover #triangle {
 }
 .copyright {
 	padding: 22px 30px;
-	background: rgba(13, 95, 249, 0.05);
+	background: rgba(100, 76, 147, 0.15);
 	margin-top: 70px;
 }
 .copyright p{
@@ -2349,6 +2352,10 @@ svg#play_icon:hover #triangle {
 .fshape3 svg {
 	width: 95px;
 }
+.fshape3 svg circle {
+	stroke: #FFD23F;
+	stroke-opacity: 0.15;
+}
 .fshape4 {
 	position: absolute;
 	left: 26px;
@@ -2364,6 +2371,10 @@ svg#play_icon:hover #triangle {
 }
 .fshape5 svg{
 	width: 100px;
+}
+.fshape5 svg circle {
+	fill: #FFD23F !important;
+	fill-opacity: 0.15 !important;
 }
 
 /*-------------------------------
@@ -3689,9 +3700,9 @@ li.comment{
 	width: 45px;
 	height: 45px;
 	line-height: 44px;
-	background-color: #0F2B5A;
-	border: 2px solid #0F2B5A;
-	color: #fff;
+	background-color: #FFD23F;
+	border: 2px solid #FFD23F;
+	color: #644C93;
 	text-align: center;
 	border-radius: 50%;
 	transition: .5s;
@@ -3700,7 +3711,8 @@ li.comment{
 }
 .topcontrol:hover,
 .topcontrol:focus{
-	background-color: #0D5FF9;
+	background-color: #FF686B;
+	border-color: #FF686B;
 	color: #fff;
 }
 
@@ -3920,3 +3932,12 @@ li.comment{
 }
 
 /* Contact PHP */
+
+.footer .edumon-logo {
+	color: #FFD23F;
+}
+
+.footer .edumon-logo:hover,
+.footer .edumon-logo:focus {
+	color: #FF686B;
+}
