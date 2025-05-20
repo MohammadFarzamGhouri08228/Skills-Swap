@@ -5,6 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { LampContainer } from '@/components/ui/lamp';
+import Wrapper from '@/layouts/Wrapper';
+import HomeOne from '@/components/homes/home';
 
 const fadeIn = (direction: "up" | "down" | "left" | "right" = "up", delay: number = 0) => ({
   hidden: {
