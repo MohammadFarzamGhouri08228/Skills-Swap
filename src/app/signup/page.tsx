@@ -1,18 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LampContainer } from '@/components/ui/lamp';
 import Link from 'next/link';
 import { UserData } from '../api/profile/userDataService';
 import axios from 'axios';
-import { Toaster } from 'react-hot-toast';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { Card } from '@/components/ui/card';
 
 //singup page
 const fadeIn = (direction = "up", delay = 0) => {
@@ -49,6 +53,10 @@ export default function Signup() {
   const [shake, setShake] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isValidatingEmail, setIsValidatingEmail] = useState(false);
+  const [emailWarning, setEmailWarning] = useState('');
+  const router = useRouter();
 
   const currentDate = new Date();
 
@@ -123,6 +131,72 @@ export default function Signup() {
 
   const isPasswordMatch = password && confirmPassword && password === confirmPassword;
 
+  useEffect(() => {
+    const validateEmail = async () => {
+      if (!email) {
+        setEmailValidation({ isValid: false, message: '', checking: false });
+        setEmailWarning('');
+        return;
+      }
+
+      // Basic format validation first
+      const basicRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!basicRegex.test(email)) {
+        setEmailValidation({ 
+          isValid: false, 
+          message: 'Please enter a valid email format.',
+          checking: false 
+        });
+        setEmailWarning('');
+        return;
+      }
+
+      setEmailValidation(prev => ({ ...prev, checking: true }));
+      setEmailWarning('');
+      
+      try {
+        const response = await axios.post('/api/validate-email', { email });
+        const { isValid, message, details, warning } = response.data;
+
+        if (!isValid) {
+          setEmailValidation({ 
+            isValid: false,
+            message: message || 'Invalid email address',
+            checking: false
+          });
+          setEmailWarning('');
+          setEmailExists(false);
+          return;
+        }
+
+        // If warning is present, set warning state
+        if (warning) {
+          setEmailWarning(message || 'Email domain is valid, but the address could not be verified. Please double-check your email.');
+        } else {
+          setEmailWarning('');
+        }
+
+        setEmailValidation({ 
+          isValid: true,
+          message: message || 'Valid email address',
+          checking: false
+        });
+      } catch (error) {
+        console.error('Email validation error:', error);
+        setEmailValidation({ 
+          isValid: false, 
+          message: 'Unable to validate email. Please try again.',
+          checking: false
+        });
+        setEmailWarning('');
+      }
+    };
+
+    // Debounce email validation to avoid excessive API calls
+    const timeoutId = setTimeout(validateEmail, 800);
+    return () => clearTimeout(timeoutId);
+  }, [email]);
+
   const handleSignup = async () => {
     try {
       if (!firstName.trim() || !surname.trim()) {
@@ -141,7 +215,7 @@ export default function Signup() {
       }
 
       if (!email || !emailValidation.isValid) {
-        toast.error('Please enter a valid email address');
+        toast.error(emailValidation.message || 'Please enter a valid email address');
         return;
       }
 
@@ -173,7 +247,7 @@ export default function Signup() {
         surname: surname.trim(),
         dob: `${dob.day} ${dob.month} ${dob.year}`,
         gender,
-        currentBalance: 0, // Initialize current balance to zero
+        currentBalance: 0,
         createdAt: new Date().toISOString(),
         emailValidated: emailValidation.isValid,
       };
@@ -181,10 +255,7 @@ export default function Signup() {
       await setDoc(doc(db, 'users', user.uid), userData);
 
       toast.success('Account created successfully!');
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 2000);
-
+      router.push('/login');
     } catch (error: any) {
       console.error('Signup error:', error);
       
@@ -208,304 +279,265 @@ export default function Signup() {
     }
   };
 
-  useEffect(() => {
-    const validateEmail = async () => {
-      if (!email) {
-        setEmailValidation({ isValid: false, message: '', checking: false });
-        return;
-      }
-
-      setEmailValidation(prev => ({ ...prev, checking: true }));
-      
-      try {
-        const response = await axios.post('/api/validate-email', { email });
-        setEmailValidation({ 
-          ...response.data, 
-          checking: false,
-          message: response.data.message
-        });
-      } catch (error) {
-        console.error('Email validation error:', error);
-        // Fall back to basic validation
-        const basicRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const isValid = basicRegex.test(email);
-        
-        setEmailValidation({ 
-          isValid, 
-          message: isValid ? 'Valid Email' : 'Please enter a valid email.',
-          checking: false
-        });
-      }
-    };
-
-    // Debounce email validation to avoid excessive API calls
-    const timeoutId = setTimeout(validateEmail, 800);
-    return () => clearTimeout(timeoutId);
-  }, [email]);
-
   return (
-    <>
+    <div className="flex flex-col min-h-screen overflow-x-hidden relative bg-gradient-to-b from-purple-950 via-purple-900 to-purple-950 text-white">
       <Toaster position="top-center" />
-      <div className="flex flex-col min-h-screen overflow-x-hidden relative bg-gradient-to-b from-purple-950 via-purple-900 to-purple-950 text-white">
-        {/* Subtle Lamp Background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-950/50 via-purple-900/50 to-purple-950/50 z-0" />
-        
-        {/* Fixed LampContainer */}
-        <LampContainer className="fixed top-0 left-0 w-full h-full -z-10 opacity-30">
-          <div className="h-full w-full bg-transparent"></div>
-        </LampContainer>
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-950/50 via-purple-900/50 to-purple-950/50 z-0" />
+      
+      <LampContainer className="fixed top-0 left-0 w-full h-full -z-10 opacity-30">
+        <div className="h-full w-full bg-transparent"></div>
+      </LampContainer>
 
-        {/* Main Content */}
-        <div className="relative z-10 flex-1 flex items-center justify-center p-4">
+      <div className="relative z-10 flex-1 flex items-center justify-center p-4">
+        <motion.div
+          initial="hidden"
+          animate="show"
+          variants={fadeIn("up")}
+          className="w-full max-w-2xl"
+        >
           <motion.div
-            initial="hidden"
-            animate="show"
-            variants={fadeIn("up")}
-            className="w-full max-w-2xl"
+            animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : {}}
+            transition={{ duration: 0.4 }}
+            className="bg-purple-900/80 backdrop-blur-sm rounded-2xl p-8 border border-purple-400/20 shadow-2xl"
           >
-            <motion.div
-              animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : {}}
-              transition={{ duration: 0.4 }}
-              className="bg-purple-900/80 backdrop-blur-sm rounded-2xl p-8 border border-purple-400/20 shadow-2xl"
-            >
-              {/* Logo Section */}
-              <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-[#a78bfa]">Skill</h1>
-                <p className="text-4xl font-bold text-[#a78bfa] mb-4">SWAP</p>
-                <img src="/logo.png" alt="Logo" className="h-32 mx-auto mb-8" />
-                <h2 className="text-4xl font-bold bg-gradient-to-br from-purple-300 to-purple-500 bg-clip-text text-transparent">
-                  Create Account
-                </h2>
-                <p className="text-purple-200 mt-2">It's quick and easy.</p>
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold text-purple-400">Skill</h1>
+              <p className="text-4xl font-bold text-purple-400 mb-4">SWAP</p>
+              <div className="relative h-32 w-32 mx-auto mb-8">
+                <Image
+                  src="/logo.png"
+                  alt="SkillSwap Logo"
+                  width={128}
+                  height={128}
+                  className="object-contain"
+                  priority
+                />
               </div>
+              <h2 className="text-4xl font-bold bg-gradient-to-br from-purple-300 to-purple-500 bg-clip-text text-transparent">
+                Create Account
+              </h2>
+              <p className="text-purple-200 mt-2">It's quick and easy.</p>
+            </div>
 
-              {/* Form Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Left Column */}
-                <div className="space-y-4">
-                  {/* Name Fields */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <input 
-                        type="text" 
-                        placeholder="First name" 
-                        value={firstName} 
-                        onChange={(e) => setFirstName(e.target.value)} 
-                        className="w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500" 
-                      />
-                    </div>
-                    <div>
-                      <input 
-                        type="text" 
-                        placeholder="Surname" 
-                        value={surname} 
-                        onChange={(e) => setSurname(e.target.value)} 
-                        className="w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500" 
-                      />
-                    </div>
-                  </div>
-
-                  {/* Email Field */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        setEmailExists(false);
-                      }}
-                      className="w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    <input 
+                      type="text" 
+                      placeholder="First name" 
+                      value={firstName} 
+                      onChange={(e) => setFirstName(e.target.value)} 
+                      className="w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500" 
                     />
-                    {emailValidation.checking && (
-                      <p className="text-purple-300/50 text-sm mt-1">Validating email...</p>
-                    )}
-                    {!emailValidation.checking && email && emailValidation.message && (
-                      <p className={`text-sm mt-1 ${emailValidation.isValid ? 'text-green-400' : 'text-red-400'}`}>
-                        {emailValidation.message}
-                      </p>
-                    )}
-                    {emailExists && (
-                      <p className="text-red-400 text-sm mt-1">
-                        This email is already registered. Please use a different email.
-                      </p>
-                    )}
                   </div>
-
-                  {/* Password Fields */}
-                  <div className="space-y-4">
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="New password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-300/50 hover:text-purple-300"
-                      >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                      </button>
-                    </div>
-                    {password && (
-                      <p className="text-sm" style={{ color: getPasswordStrength().color }}>
-                        Strength: {getPasswordStrength().level}
-                      </p>
-                    )}
-
-                    <div className="relative">
-                      <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-300/50 hover:text-purple-300"
-                      >
-                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                      </button>
-                    </div>
-                    {confirmPassword && (
-                      <p className={`text-sm ${isPasswordMatch ? 'text-green-400' : 'text-red-400'}`}>
-                        {isPasswordMatch ? "Passwords match" : "Passwords do not match"}
-                      </p>
-                    )}
+                  <div>
+                    <input 
+                      type="text" 
+                      placeholder="Surname" 
+                      value={surname} 
+                      onChange={(e) => setSurname(e.target.value)} 
+                      className="w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500" 
+                    />
                   </div>
                 </div>
 
-                {/* Right Column */}
-                <div className="space-y-4">
-                  {/* Date of Birth */}
-                  <div>
-                    <label className="text-purple-200 mb-2 block">Date of Birth</label>
-                    <div className="grid grid-cols-3 gap-6">
-                      <div className="relative">
-                        <select 
-                          value={dob.year} 
-                          onChange={(e) => handleDateChange('year', e.target.value)}
-                          className={`w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none ${!dob.year ? 'text-purple-300/50' : 'text-white'}`}
-                        >
-                          <option value="" disabled hidden>Year</option>
-                          {Array.from({ length: 100 }, (_, i) => (
-                            <option key={2025 - i} value={2025 - i}>{2025 - i}</option>
-                          ))}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-300">
-                          <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="relative">
-                        <select 
-                          value={dob.month} 
-                          onChange={(e) => handleDateChange('month', e.target.value)}
-                          className={`w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none ${!dob.month ? 'text-purple-300/50' : 'text-white'}`}
-                        >
-                          <option value="" disabled hidden>Month</option>
-                          {months.map(m => (
-                            <option key={m.value} value={m.value}>{m.label}</option>
-                          ))}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-300">
-                          <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="relative">
-                        <select 
-                          value={dob.day} 
-                          onChange={(e) => {
-                            if (!dob.month) {
-                              toast.error('Please select a month first');
-                              return;
-                            }
-                            handleDateChange('day', e.target.value);
-                          }}
-                          onClick={(e) => {
-                            if (!dob.month) {
-                              e.preventDefault();
-                              toast.error('Please select a month first');
-                              return;
-                            }
-                          }}
-                          className={`w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none ${!dob.day ? 'text-purple-300/50' : 'text-white'}`}
-                        >
-                          <option value="" disabled hidden>Day</option>
-                          {dob.month && getDaysInMonth(dob.month, dob.year).map(day => (
-                            <option key={day} value={day}>{day}</option>
-                          ))}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-300">
-                          <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div>
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailExists(false);
+                    }}
+                    className="w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  {emailValidation.checking && (
+                    <p className="text-purple-300/50 text-sm mt-1">Validating email...</p>
+                  )}
+                  {!emailValidation.checking && email && emailValidation.message && !emailWarning && (
+                    <p className={`text-sm mt-1 ${emailValidation.isValid ? 'text-green-400' : 'text-red-400'}`}>
+                      {emailValidation.message}
+                    </p>
+                  )}
+                  {!emailValidation.checking && emailWarning && (
+                    <p className="text-orange-400 text-sm mt-1">{emailWarning}</p>
+                  )}
+                  {emailExists && (
+                    <p className="text-red-400 text-sm mt-1">
+                      This email is already registered. Please use a different email.
+                    </p>
+                  )}
+                </div>
 
-                  {/* Gender */}
-                  <div>
-                    <label className="text-purple-200 mb-2 block">Gender</label>
-                    <div className="grid grid-cols-3 gap-4">
-                      {["Female", "Male", "Custom"].map(g => (
-                        <label key={g} className="flex items-center justify-center p-2 rounded-lg bg-purple-800/50 border border-purple-400/20 hover:bg-purple-800/70 cursor-pointer">
-                          <input 
-                            type="radio" 
-                            name="gender" 
-                            value={g} 
-                            checked={gender === g} 
-                            onChange={(e) => setGender(e.target.value)} 
-                            className="accent-purple-500 mr-2" 
-                          />
-                          <span className="text-white text-sm">{g}</span>
-                        </label>
-                      ))}
-                    </div>
+                <div className="space-y-4">
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="New password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-300/50 hover:text-purple-300"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
                   </div>
+                  {password && (
+                    <p className="text-sm" style={{ color: getPasswordStrength().color }}>
+                      Strength: {getPasswordStrength().level}
+                    </p>
+                  )}
+
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-300/50 hover:text-purple-300"
+                    >
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                  {confirmPassword && (
+                    <p className={`text-sm ${isPasswordMatch ? 'text-green-400' : 'text-red-400'}`}>
+                      {isPasswordMatch ? "Passwords match" : "Passwords do not match"}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Sign Up Button */}
-              <Button
-                onClick={handleSignup}
-                disabled={!!(emailExists || loading || (email && !emailValidation.isValid && !emailValidation.checking))}
-                className={`w-full py-6 rounded-lg text-lg font-semibold mt-8 ${
-                  emailExists || loading || (email && !emailValidation.isValid && !emailValidation.checking) 
-                    ? 'bg-purple-600/50 cursor-not-allowed' 
-                    : 'bg-purple-600 hover:bg-purple-700'
-                }`}
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-                    Creating Account...
+              <div className="space-y-4">
+                <div>
+                  <label className="text-purple-200 mb-2 block">Date of Birth</label>
+                  <div className="grid grid-cols-3 gap-6">
+                    <div className="relative">
+                      <select 
+                        value={dob.year} 
+                        onChange={(e) => handleDateChange('year', e.target.value)}
+                        className={`w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none ${!dob.year ? 'text-purple-300/50' : 'text-white'}`}
+                      >
+                        <option value="" disabled hidden>Year</option>
+                        {Array.from({ length: 100 }, (_, i) => (
+                          <option key={2025 - i} value={2025 - i}>{2025 - i}</option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-300">
+                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                          <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <select 
+                        value={dob.month} 
+                        onChange={(e) => handleDateChange('month', e.target.value)}
+                        className={`w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none ${!dob.month ? 'text-purple-300/50' : 'text-white'}`}
+                      >
+                        <option value="" disabled hidden>Month</option>
+                        {months.map(m => (
+                          <option key={m.value} value={m.value}>{m.label}</option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-300">
+                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                          <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <select 
+                        value={dob.day} 
+                        onChange={(e) => {
+                          if (!dob.month) {
+                            toast.error('Please select a month first');
+                            return;
+                          }
+                          handleDateChange('day', e.target.value);
+                        }}
+                        onClick={(e) => {
+                          if (!dob.month) {
+                            e.preventDefault();
+                            toast.error('Please select a month first');
+                            return;
+                          }
+                        }}
+                        className={`w-full p-3 rounded-lg bg-purple-800/50 border border-purple-400/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none ${!dob.day ? 'text-purple-300/50' : 'text-white'}`}
+                      >
+                        <option value="" disabled hidden>Day</option>
+                        {dob.month && getDaysInMonth(dob.month, dob.year).map(day => (
+                          <option key={day} value={day}>{day}</option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-300">
+                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                          <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                        </svg>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  'Sign Up'
-                )}
-              </Button>
+                </div>
 
-              {/* Login Link */}
-              <p className="text-center mt-6 text-purple-300/70">
-                Already have an account?{' '}
-                <Link href="/login" className="text-purple-300 hover:text-purple-200 underline">
-                  Login here
-                </Link>
-              </p>
-            </motion.div>
+                <div>
+                  <label className="text-purple-200 mb-2 block">Gender</label>
+                  <div className="grid grid-cols-3 gap-4">
+                    {["Female", "Male", "Custom"].map(g => (
+                      <label key={g} className="flex items-center justify-center p-2 rounded-lg bg-purple-800/50 border border-purple-400/20 hover:bg-purple-800/70 cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="gender" 
+                          value={g} 
+                          checked={gender === g} 
+                          onChange={(e) => setGender(e.target.value)} 
+                          className="accent-purple-500 mr-2" 
+                        />
+                        <span className="text-white text-sm">{g}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSignup}
+              disabled={!!(emailExists || loading || (email && !emailValidation.isValid && !emailValidation.checking))}
+              className={`w-full py-6 rounded-lg text-lg font-semibold mt-8 ${
+                emailExists || loading || (email && !emailValidation.isValid && !emailValidation.checking) 
+                  ? 'bg-purple-600/50 cursor-not-allowed' 
+                  : 'bg-purple-600 hover:bg-purple-700'
+              }`}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                  Creating Account...
+                </div>
+              ) : (
+                'Sign Up'
+              )}
+            </Button>
+
+            <p className="text-center mt-6 text-purple-300/70">
+              Already have an account?{' '}
+              <Link href="/login" className="text-purple-300 hover:text-purple-200 underline">
+                Login here
+              </Link>
+            </p>
           </motion.div>
-        </div>
+        </motion.div>
       </div>
-    </>
+    </div>
   );
 }

@@ -86,13 +86,13 @@ export default function LoginForm() {
                 animate="show"
               >
                 <Label htmlFor="email" className="text-purple-200">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" size={20} />
+                <div className="flex items-center gap-3 w-full">
+                  <Mail className="text-purple-400 flex-shrink-0" size={22} />
                   <Input
                     id="email"
                     type="email"
                     placeholder="Enter your email"
-                    className="pl-10 bg-purple-800/50 border-purple-400/20 text-white placeholder-purple-300/50"
+                    className="flex-1 bg-purple-800/50 border-purple-400/20 text-white placeholder-purple-300/50 h-11 text-base"
                     required
                   />
                 </div>
@@ -104,21 +104,22 @@ export default function LoginForm() {
                 animate="show"
               >
                 <Label htmlFor="password" className="text-purple-200">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400" size={20} />
+                <div className="flex items-center gap-3 w-full">
+                  <Lock className="text-purple-400 flex-shrink-0" size={22} />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
-                    className="pl-10 bg-purple-800/50 border-purple-400/20 text-white placeholder-purple-300/50"
+                    className="flex-1 bg-purple-800/50 border-purple-400/20 text-white placeholder-purple-300/50 h-11 text-base"
+                    style={{ fontSize: '1rem', letterSpacing: '0.1em' }}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-400 hover:text-purple-300"
+                    className="flex-1 bg-purple-800/50 border-purple-400/20 text-white placeholder-purple-300/50 h-11 text-base"
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
                   </button>
                 </div>
               </motion.div>
