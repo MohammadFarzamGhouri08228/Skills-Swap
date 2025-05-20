@@ -121,7 +121,7 @@ export default function FooterOne() {
             </div>
 
             <div className="fshape2 eitem" defaultValue=".5">
-              <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#0D5FF9" /></svg>
+              <svg fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#FFD23F" /></svg>
             </div>
 
             <div className="fshape3">
@@ -133,7 +133,7 @@ export default function FooterOne() {
             </div>
 
             <div className="fshape5 eitem">
-              <svg fill="none" viewBox="0 0 199 199"><circle cx="99.5" cy="99.5" r="99.5" fill="#0D5FF9" fillOpacity=".05" /></svg>
+              <svg fill="none" viewBox="0 0 199 199"><circle cx="99.5" cy="99.5" r="99.5" fill="#FFD23F" fillOpacity=".05" /></svg>
             </div>
 
           </div>
