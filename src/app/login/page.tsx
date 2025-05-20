@@ -94,7 +94,7 @@ export default function LoginPage() {
             >
               <div className="relative h-24 w-24 mx-auto mb-4">
                 <Image
-                  src="/logo.png"
+                  src="/images/logo.png"
                   alt="SkillSwap Logo"
                   width={96}
                   height={96}

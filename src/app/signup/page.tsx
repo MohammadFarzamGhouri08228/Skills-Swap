@@ -301,11 +301,9 @@ export default function Signup() {
             className="bg-purple-900/80 backdrop-blur-sm rounded-2xl p-8 border border-purple-400/20 shadow-2xl"
           >
             <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-purple-400">Skill</h1>
-              <p className="text-4xl font-bold text-purple-400 mb-4">SWAP</p>
               <div className="relative h-32 w-32 mx-auto mb-8">
                 <Image
-                  src="/logo.png"
+                  src="/images/logo.png"
                   alt="SkillSwap Logo"
                   width={128}
                   height={128}
@@ -313,7 +311,8 @@ export default function Signup() {
                   priority
                 />
               </div>
-              <h2 className="text-4xl font-bold bg-gradient-to-br from-purple-300 to-purple-500 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold text-purple-400">SkillSwap</h1>
+              <h2 className="text-xl font-semibold text-purple-200 mt-2">
                 Create Account
               </h2>
               <p className="text-purple-200 mt-2">It's quick and easy.</p>
