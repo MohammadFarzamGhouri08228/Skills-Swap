@@ -71,7 +71,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-purple-950 via-purple-900 to-purple-950 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-[#5EC8F2] via-[#6A4C93] to-[#5EC8F2] relative overflow-hidden">
       {/* Animated background elements */}
       <LampContainer className="fixed top-0 left-0 w-full h-full -z-10 opacity-30">
         <div className="h-full w-full bg-transparent"></div>
@@ -83,7 +83,7 @@ export default function LoginPage() {
         variants={fadeIn("up")}
         className="w-full max-w-md"
       >
-        <Card className="bg-purple-900/80 backdrop-blur-sm border-purple-400/20 shadow-2xl">
+        <Card className="bg-[#A8E66A]/80 backdrop-blur-sm border-[#FF914D] shadow-2xl">
           <div className="p-8">
             {/* Logo and Title */}
             <motion.div
@@ -92,7 +92,7 @@ export default function LoginPage() {
               transition={{ duration: 0.5 }}
               className="text-center mb-8"
             >
-              <div className="relative h-24 w-24 mx-auto mb-4">
+              <div className="relative h-24 w-24 mx-auto mb-4 bg-white rounded-full flex items-center justify-center">
                 <Image
                   src="/logo.png"
                   alt="SkillSwap Logo"
@@ -102,10 +102,10 @@ export default function LoginPage() {
                   priority
                 />
               </div>
-              <h1 className="text-4xl font-bold bg-gradient-to-br from-purple-300 to-purple-500 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-br from-[#5EC8F2] to-[#6A4C93] bg-clip-text text-transparent">
                 SkillSwap
               </h1>
-              <p className="text-purple-200 mt-2">Connect, Learn, and Grow Together</p>
+              <p className="text-[#6A4C93] mt-2">Connect, Learn, and Grow Together</p>
             </motion.div>
 
             {/* Login Form */}
@@ -115,14 +115,14 @@ export default function LoginPage() {
                 initial="hidden"
                 animate="show"
               >
-                <Label htmlFor="email" className="text-purple-200">Email</Label>
+                <Label htmlFor="email" className="text-[#6A4C93]">Email</Label>
                 <div className="flex items-center gap-3 w-full">
-                  <Mail className="text-purple-400 flex-shrink-0" size={22} />
+                  <Mail className="text-[#6A4C93] flex-shrink-0" size={22} />
                   <Input
                     id="email"
                     type="email"
                     placeholder="Enter your email"
-                    className="flex-1 bg-purple-800/50 border-purple-400/20 text-white placeholder-purple-300/50 h-11 text-base"
+                    className="flex-1 bg-[#FFFFFF] border-[#6A4C93] text-[#1A1A1A] placeholder-[#6A4C93]/50 h-12 text-base rounded-l-md border-r-0"
                     required
                   />
                 </div>
@@ -133,24 +133,27 @@ export default function LoginPage() {
                 initial="hidden"
                 animate="show"
               >
-                <Label htmlFor="password" className="text-purple-200">Password</Label>
+                <Label htmlFor="password" className="text-[#6A4C93]">Password</Label>
                 <div className="flex items-center gap-3 w-full">
-                  <Lock className="text-purple-400 flex-shrink-0" size={22} />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    className="flex-1 bg-purple-800/50 border-purple-400/20 text-white placeholder-purple-300/50 h-11 text-base"
-                    style={{ fontSize: '1rem', letterSpacing: '0.1em' }}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="ml-2 text-purple-400 hover:text-purple-300 flex-shrink-0"
-                  >
-                    {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
-                  </button>
+                  <Lock className="text-[#6A4C93] flex-shrink-0" size={22} />
+                  <div className="flex w-full">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      className="flex-1 bg-[#FFFFFF] border-[#6A4C93] text-[#1A1A1A] placeholder-[#6A4C93]/50 h-12 text-base rounded-l-md border-r-0"
+                      style={{ fontSize: '1rem', letterSpacing: '0.1em' }}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="h-12 px-4 bg-[#FFFFFF] border border-[#6A4C93] text-[#1A1A1A] rounded-r-md flex items-center justify-center focus:outline-none"
+                      style={{ borderLeft: 'none' }}
+                    >
+                      {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+                    </button>
+                  </div>
                 </div>
               </motion.div>
 
@@ -164,13 +167,13 @@ export default function LoginPage() {
                   <input
                     type="checkbox"
                     id="remember"
-                    className="rounded border-purple-400/20 bg-purple-800/50"
+                    className="rounded border-[#6A4C93] bg-[#FFFFFF]"
                   />
-                  <Label htmlFor="remember" className="ml-2 text-purple-200">Remember me</Label>
+                  <Label htmlFor="remember" className="ml-2 text-[#6A4C93]">Remember me</Label>
                 </div>
                 <Link
                   href="/forgot-password"
-                  className="text-purple-300 hover:text-purple-200 text-base"
+                  className="text-[#FFD23F] hover:text-[#FF6B6B] text-base underline"
                 >
                   Forgot password?
                 </Link>
@@ -183,12 +186,12 @@ export default function LoginPage() {
               >
                 <Button
                   type="submit"
-                  className="w-full py-6 bg-purple-600 hover:bg-purple-700 text-lg font-semibold"
+                  className="w-full py-6 bg-[#FFD23F] hover:bg-[#FF6B6B] text-lg font-semibold text-[#1A1A1A]"
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#1A1A1A] mr-2"></div>
                       Signing in...
                     </div>
                   ) : (
@@ -207,10 +210,10 @@ export default function LoginPage() {
             >
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-purple-400/20"></div>
+                  <div className="w-full border-t border-[#FF914D]"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-purple-900/80 text-purple-300">Or continue with</span>
+                  <span className="px-2 bg-[#A8E66A]/80 text-[#6A4C93]">Or continue with</span>
                 </div>
               </div>
 
@@ -218,11 +221,11 @@ export default function LoginPage() {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={isGoogleLoading}
-                className="w-full mt-6 py-6 bg-white hover:bg-gray-100 text-gray-800 font-semibold flex items-center justify-center gap-2"
+                className="w-full mt-6 py-6 bg-[#FFFFFF] border-[#6A4C93] hover:bg-[#5EC8F2] text-[#1A1A1A] font-semibold flex items-center justify-center gap-2"
               >
                 {isGoogleLoading ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-800 mr-2"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#1A1A1A] mr-2"></div>
                     Signing in...
                   </div>
                 ) : (
@@ -258,9 +261,9 @@ export default function LoginPage() {
               animate="show"
               className="mt-8 text-center"
             >
-              <p className="text-purple-300">
+              <p className="text-[#6A4C93]">
                 Don't have an account?{' '}
-                <Link href="/signup" className="text-purple-200 hover:text-purple-100 font-semibold">
+                <Link href="/signup" className="text-[#FFD23F] hover:text-[#FF6B6B] font-semibold underline">
                   Sign up
                 </Link>
               </p>
