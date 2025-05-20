@@ -1,6 +1,12 @@
-
 /* @import "~bootstrap/scss/bootstrap"; */
 
+/* Import Google Fonts - Montserrat */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+/* Define Montserrat font-family */
+:root {
+  --font-montserrat: 'Montserrat', sans-serif;
+}
 
 @import "swiper/css/bundle";   
 @import 'react-modal-video/css/modal-video.css';
