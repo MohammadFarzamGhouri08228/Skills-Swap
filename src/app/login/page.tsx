@@ -51,7 +51,7 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       if (result.user) {
         // Redirect after successful login
-        router.push("/dashboard");
+        router.push("/#");
       }
     } catch (error: any) {
       console.error("Google sign-in error:", error);
