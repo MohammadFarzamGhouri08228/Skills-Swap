@@ -69,37 +69,9 @@ export default function HeroHomeOne() {
                     <a href="#" className="wborder_btn bt">Contact Us</a>
                   </div>
 
-<<<<<<< Updated upstream
                   <div className="sinfo">
                     <img src="assets/img/rev-img.png" alt="image" />
                     <span>24k + Happy Students</span>
-=======
-                  <div className="sinfo" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 24 }}>
-                    <img
-                      src={revImg.src}
-                      alt="image"
-                      style={{
-                        width: '220px',
-                        height: '220px',
-                        objectFit: 'cover',
-                        borderRadius: '50%',
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-                        marginBottom: 12,
-                        border: '3px solid #e0e7ff'
-                      }}
-                    />
-                    <hr
-                      style={{
-                        width: 60,
-                        border: 'none',
-                        borderTop: '2px solid #6366f1',
-                        margin: '0 0 12px 0'
-                      }}
-                    />
-                    <span style={{ color: '#fff', fontWeight: 500, fontSize: 16, textAlign: 'center' }}>
-                      Continue to Share Your Skills And Learn
-                    </span>
->>>>>>> Stashed changes
                   </div>
                 </div>
               </div>
