@@ -5,6 +5,15 @@ Version      : 1.0
 */
 
 /*
+THEME COLORS:
+
+#5B21B6 Bright Purple 
+#2E1065 Deep Midnight Purple
+#FFD23F Yellow
+#FF914D Tangerine
+*/
+
+/*
 * ----------------------------------------------------------------------------------------
 * 01.GENERAL STYLE
 * ----------------------------------------------------------------------------------------
@@ -149,19 +158,20 @@ img{
 }
 
 .bg_btn{
-	background-color: #0D5FF9;
-	border: 2px solid #0D5FF9;
-	color: #fff;
+	background-color: #FFD23F;
+	border: 2px solid #FFF;
+	color: #000;
 	transition: .5s;
 }
 
 .wborder_btn{
+	background-color: #FFD23F;
 	border: 2px solid #fff;
-	color: #fff;
+	color: #000;
 }
 .white-btn{
-	background: #fff;
-	color: #222;	
+	background: #5B21B6;
+	color: #fff;	
 	border: 2px solid #fff;
 }
 
@@ -188,13 +198,13 @@ img{
 }
 
 .bg_btn:before{
-	background: #fff;
+	background: #FFC107;
 }
 .wborder_btn:before{
-	background-color: #0D5FF9;
+	background-color: #FFC107;
 }
 .white-btn:before{
-	background: #0F2B5A;
+	background: #2E1065;
 }
 
 .bg_btn:hover::before,
@@ -205,12 +215,13 @@ img{
 }
 .bg_btn:hover,
 .bg_btn:focus{
-	color: #222;
-	border-color: #0D5FF9;
+	color: #fff;
+	border-color: #FFC107;
 }
 .white-btn:hover,
 .white-btn:focus{
 	color: #fff;
+	background-color: #FFC107;
 	border-color: #fff;
 }
 
@@ -579,13 +590,17 @@ img{
 # Home Banner
 --------------------------------*/
 
-.home-banner{
+.home-banner {
 	background-size: cover;
-	background-color: #002935;
-	color: #fff;
+	background: linear-gradient(
+	  135deg,
+	  #5B21B6 0%,   /* Bright Purple */
+	  #2E1065 100%  /* Deep Midnight Purple */
+	);
+	color: #ffffff;
 	position: relative;
 	height: 750px;
-}
+  }
 .banner-content{
 	height: 750px;
 	position: relative;
@@ -661,7 +676,7 @@ img{
 .total_students_badge .icon {
 	width: 60px;
 	height: 60px;
-	background-color: #0D5FF9;
+	background-color: #5B21B6;
 	border-radius: 50%;
 	text-align: center;
 	line-height: 57px;
@@ -683,7 +698,7 @@ img{
 .total_course_badge .icon {
 	width: 60px;
 	height: 60px;
-	background-color: #0D5FF9;
+	background-color: #5B21B6;
 	border-radius: 50%;
 	text-align: center;
 	line-height: 57px;
@@ -2159,7 +2174,11 @@ svg#play_icon:hover #triangle {
 --------------------------------*/
 
 .footer{
-	background: #644C93;
+	background: linear-gradient(
+	  135deg,
+	  #5B21B6 0%,   /* Bright Purple */
+	  #2E1065 100%  /* Deep Midnight Purple */
+	);
 	color: #fff;
 	padding-top: 80px;
 	position: relative;
