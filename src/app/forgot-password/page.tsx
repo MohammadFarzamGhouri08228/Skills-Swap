@@ -95,6 +95,12 @@ export default function ForgotPasswordPage() {
         return;
       }
 
+      // Check if auth is available before using it
+      if (!auth) {
+        toast.error('Authentication service is not available. Please try again later.');
+        return;
+      }
+
       await sendPasswordResetEmail(auth, email);
       toast.success('Password reset link sent to your email!');
       setEmail('');
