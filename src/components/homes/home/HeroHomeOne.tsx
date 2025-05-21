@@ -92,7 +92,7 @@ export default function HeroHomeOne() {
                         margin: '0 0 12px 0'
                       }}
                     />
-                    <span style={{ color: '#6366f1', fontWeight: 500, fontSize: 16, textAlign: 'center' }}>
+                    <span style={{ color: '#fff', fontWeight: 500, fontSize: 16, textAlign: 'center' }}>
                       Continue to Share Your Skills And Learn
                     </span>
                   </div>

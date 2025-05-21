@@ -5,6 +5,15 @@ Version      : 1.0
 */
 
 /*
+
+#5B21B6 Bright Purple
+#2E1065 Deep Midnight Purple
+#FFD23F Yellow
+#FF914D Tangerine
+
+*/
+
+/*
 * ----------------------------------------------------------------------------------------
 * 01.GENERAL STYLE
 * ----------------------------------------------------------------------------------------
@@ -149,20 +158,21 @@ img{
 }
 
 .bg_btn{
-	background-color: #0D5FF9;
-	border: 2px solid #0D5FF9;
-	color: #fff;
+	background-color: #FFD23F;
+	border: 3px solid #FFF;
+	color: #000;
 	transition: .5s;
 }
 
 .wborder_btn{
-	border: 2px solid #fff;
-	color: #fff;
+	background-color: #FFD23F;
+	border: 3px solid #fff;
+	color: #000;
 }
 .white-btn{
-	background: #fff;
-	color: #222;	
-	border: 2px solid #fff;
+	background: #5B21B6;
+	color: #fff;	
+	border: 3px solid #fff;
 }
 
 .white-btn:before,
@@ -188,13 +198,13 @@ img{
 }
 
 .bg_btn:before{
-	background: #fff;
+	background: #FFC107;
 }
 .wborder_btn:before{
-	background-color: #0D5FF9;
+	background-color: #FFC107;
 }
 .white-btn:before{
-	background: #0F2B5A;
+	background: #2E1065;
 }
 
 .bg_btn:hover::before,
@@ -205,12 +215,13 @@ img{
 }
 .bg_btn:hover,
 .bg_btn:focus{
-	color: #222;
-	border-color: #0D5FF9;
+	color: #fff;
+	border-color: #FFC107;
 }
 .white-btn:hover,
 .white-btn:focus{
 	color: #fff;
+	background-color: #FFC107;
 	border-color: #fff;
 }
 
@@ -580,8 +591,11 @@ img{
 --------------------------------*/
 
 .home-banner{
-	background-size: cover;
-	background-color: #002935;
+	background: linear-gradient(
+    135deg,
+    #5B21B6 0%,   /* Bright Purple */
+    #2E1065 100%  /* Deep Midnight Purple */
+  );
 	color: #fff;
 	position: relative;
 	height: 750px;
@@ -638,11 +652,12 @@ img{
 .total_students_badge {
 	display: inline-block;
 	text-align: center;
-	background-color: #fff;
+	background-color: #FFD23F;
 	color: #444;
 	padding: 22px 20px;
 	border-radius: 8px;
 	box-shadow: 0 9px 65px rgba(255,255,255,0.25);
+	border: 2.5px solid #fff;
 }
 
 .total_students_badge h4 {
@@ -661,7 +676,7 @@ img{
 .total_students_badge .icon {
 	width: 60px;
 	height: 60px;
-	background-color: #0D5FF9;
+	background-color: #5B21B6;
 	border-radius: 50%;
 	text-align: center;
 	line-height: 57px;
@@ -673,17 +688,18 @@ img{
 	display: inline-block;
 }
 .total_course_badge{
-	background-color: #fff;
+	background-color: #FFD23F;
 	color: #444;
 	display: inline-block;
 	padding: 22px 30px;
 	border-radius: 8px;
+	border: 2.5px solid #fff;
 }
 
 .total_course_badge .icon {
 	width: 60px;
 	height: 60px;
-	background-color: #0D5FF9;
+	background-color: #5B21B6;
 	border-radius: 50%;
 	text-align: center;
 	line-height: 57px;
@@ -2159,7 +2175,11 @@ svg#play_icon:hover #triangle {
 --------------------------------*/
 
 .footer{
-	background: #644C93;
+	background: linear-gradient(
+    135deg,
+    #5B21B6 0%,   /* Bright Purple */
+    #2E1065 100%  /* Deep Midnight Purple */
+  );
 	color: #fff;
 	padding-top: 80px;
 	position: relative;
