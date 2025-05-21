@@ -1,8 +1,14 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
-const firebaseConfig = {
+// Check if we have the required Firebase config
+const hasValidConfig = process.env.NEXT_PUBLIC_FIREBASE_API_KEY && 
+                      process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
+                      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+// Use placeholder values if config is missing
+const firebaseConfig = hasValidConfig ? {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -10,14 +16,35 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+} : {
+  // Placeholder config for development
+  apiKey: "demo-api-key",
+  authDomain: "demo-app.firebaseapp.com",
+  projectId: "demo-app",
+  storageBucket: "demo-app.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcdef",
+  measurementId: "G-ABCDEF"
 };
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase - only if valid config or in development mode
+let app: ReturnType<typeof initializeApp> | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let provider = new GoogleAuthProvider();
 
-// Initialize Firebase services
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+try {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+  
+  // Initialize Firebase services
+  auth = getAuth(app);
+  db = getFirestore(app);
+} catch (error) {
+  console.error("Firebase initialization error:", error);
+  // Create mock objects if Firebase init fails
+  app = null;
+  auth = null;
+  db = null;
+}
 
 export { app, auth, db, provider };

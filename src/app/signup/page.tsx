@@ -237,6 +237,13 @@ export default function Signup() {
 
       setLoading(true);
 
+      // Check if auth and db are available before using them
+      if (!auth) {
+        toast.error('Authentication service is not available. Please try again later.');
+        setLoading(false);
+        return;
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
@@ -251,6 +258,14 @@ export default function Signup() {
         createdAt: new Date().toISOString(),
         emailValidated: emailValidation.isValid,
       };
+
+      // Check if db is available before using it
+      if (!db) {
+        toast.error('Database service is not available. Account created but profile data could not be saved.');
+        router.push('/login');
+        setLoading(false);
+        return;
+      }
 
       await setDoc(doc(db, 'users', user.uid), userData);
 
