@@ -11,9 +11,6 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <Wrapper>
-      <div className="bg-red-500 text-white p-10 text-2xl mb-4">
-        If this box is red, Tailwind CSS is working!
-      </div>
       <HomeOne />
     </Wrapper>
   )
