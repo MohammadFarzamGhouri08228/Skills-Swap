@@ -48,6 +48,11 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     try {
       setIsGoogleLoading(true);
+      // Check if auth is available before using it
+      if (!auth) {
+        alert('Authentication service is not available. Please try again later.');
+        return;
+      }
       const result = await signInWithPopup(auth, provider);
       if (result.user) {
         // Redirect after successful login
