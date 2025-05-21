@@ -894,6 +894,16 @@ img{
 --------------------------------*/
 
 
+.features {
+	background: linear-gradient(
+    90deg,
+    #FFD23F 0%,  /* Yellow */
+    #FF914D 100% /* Tangerine */
+  );
+  color: #1A1A1A;
+	padding: 120px 0; /* Keeping existing padding for layout */
+}
+
 .feature-item{
 	border: 2px solid #F5F5F5;
 	padding: 80px 30px 50px;
@@ -961,11 +971,31 @@ img{
 # About
 --------------------------------*/
 
+.about {
+  background: linear-gradient(
+    135deg,
+    #5B21B6 0%,   /* Bright Purple */
+    #2E1065 100%  /* Deep Midnight Purple */
+  );
+  color: #fff;
+  padding: 120px 0; /* Adding padding to maintain layout similar to other sections */
+}
+
 .about-title{
 	margin-bottom: 30px;
 }
+.about-title span,
+.about-title h2 {
+    color: #fff;
+}
 .single_about {
 	margin-bottom: 45px;
+    color: #fff;
+}
+.single_about p,
+.single_about h3,
+.single_about h4 {
+    color: #fff;
 }
 .single_about .aicon{
 	float: left;
@@ -973,6 +1003,9 @@ img{
 }
 .single_about .aicon svg{
 	width: 50px;
+}
+.single_about .aicon svg path{
+    fill: #FFD23F;
 }
 
 /*-------------------------------
