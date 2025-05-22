@@ -20,9 +20,10 @@ import { cn } from '@/lib/utils';
 
 interface UserProfileButtonProps {
   user: UserData | null;
+  dashboardStyle?: boolean;
 }
 
-export function UserProfileButton({ user }: UserProfileButtonProps) {
+export function UserProfileButton({ user, dashboardStyle = false }: UserProfileButtonProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
