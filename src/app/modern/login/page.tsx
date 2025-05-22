@@ -65,9 +65,9 @@ export default function ModernLogin() {
         return;
       }
 
-      // 3. Success: redirect to dashboard
+      // 3. Success: redirect to user page
       toast.success("Login successful!");
-      router.push("/dashboard");
+      router.push("/user");
     } catch (error: any) {
       // Handle Firebase Auth errors
       let message = "Login failed. Please try again.";
@@ -96,8 +96,8 @@ export default function ModernLogin() {
       setIsGoogleLoading(true);
       const result = await signInWithPopup(auth, provider);
       if (result.user) {
-        // Redirect after successful login
-        router.push("/dashboard");
+        // Redirect to user page after successful login
+        router.push("/user");
       }
     } catch (error: any) {
       console.error("Google sign-in error:", error);

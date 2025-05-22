@@ -1,30 +1,19 @@
 "use client"
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import revImg from './rev-img.png';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { userDataService } from '@/app/api/profile/userDataService';
+import { UserData } from '@/app/api/profile/userDataService';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function HeroHomeOne() {
+interface HeroHomeOneProps {
+  user: User | null;
+  userData: UserData | null;
+  isLoading: boolean;
+}
 
-  // const parallax = (event: MouseEvent) => {
-  //   const elements = document.querySelectorAll<HTMLElement>(".eitem");
-
-  //   elements.forEach((shift) => {
-  //     const position = Number(shift.getAttribute("value")); // Convert the attribute value to a number
-  //     const x = (window.innerWidth - event.pageX * position) / 90;
-  //     const y = (window.innerHeight - event.pageY * position) / 90;
-
-  //     shift.style.transform = `translateX(${x}px) translateY(${y}px)`;
-  //   });
-  // };
-
-  // useEffect(() => {
-  //   document.addEventListener("mousemove", parallax);
-
-  //   // Cleanup the event listener on component unmount
-  //   return () => {
-  //     document.removeEventListener("mousemove", parallax);
-  //   };
-  // }, []);
-
+export default function HeroHomeOne({ user, userData, isLoading }: HeroHomeOneProps) {
   const parallax = (event: MouseEvent) => {
     const elements = document.querySelectorAll<HTMLElement>(".eitem");
 
@@ -49,7 +38,6 @@ export default function HeroHomeOne() {
     };
   }, []); // Empty dependency array to ensure it runs once on mount
 
-
   return (
     <>
       <section className="home-banner">
@@ -58,8 +46,28 @@ export default function HeroHomeOne() {
             <div className="col-xl-8 col-lg-7 col-md-12">
               <div className="banner-content d-flex align-items-center">
                 <div className="banner-content-inner">
-                  <span className="subtitle">Skill Sharing Made Simple</span>
-                  <h2 className="title">SkillSwap</h2>
+                  <AnimatePresence mode="wait">
+                    {!isLoading && user && userData && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.5 }}
+                        className="welcome-message mb-4"
+                      >
+                        <span className="subtitle">Welcome back,</span>
+                        <h2 className="title" style={{ color: '#fff', marginBottom: '0.5rem' }}>
+                          {userData.firstName}!
+                        </h2>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  {(!user || !userData) && (
+                    <>
+                      <span className="subtitle">Skill Sharing Made Simple</span>
+                      <h2 className="title">SkillSwap</h2>
+                    </>
+                  )}
                   <p>
                     Exchange Skills. Learn Together.
                     Connect with like-minded people to share your skills and learn something new in return.
