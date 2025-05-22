@@ -13,11 +13,12 @@ import ReviewHomeOne from './ReviewHomeOne'
 import BrandHomeOne from './BrandHomeOne'
 import BlogHomeOne from './BlogHomeOne'
 import FooterOne from '@/layouts/footers/FooterOne'
+import { User } from 'firebase/auth'
 
 type HomeOneProps = {
-  user?: any;
-  userData?: any;
-  isLoading?: boolean;
+  user: User | null;
+  userData: any | null;
+  isLoading: boolean;
 }
 
 export default function HomeOne({ user, userData, isLoading }: HomeOneProps) {
