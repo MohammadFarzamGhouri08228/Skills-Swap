@@ -3,8 +3,13 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
-import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "@/lib/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc } from 'firebase/firestore';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast, { Toaster } from 'react-hot-toast';
+import axios from 'axios';
+import { UserData, userDataService } from '@/app/api/profile/userDataService';
 
 const MotionDiv = dynamic(
   () => import('framer-motion').then(mod => mod.motion.div),
@@ -20,59 +25,262 @@ const MotionButton = dynamic(
 );
 
 export default function ModernSignup() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [dob, setDob] = useState({ day: '', month: '', year: '' });
+  const [emailValidation, setEmailValidation] = useState({ isValid: false, message: '', checking: false });
+  const [emailExists, setEmailExists] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [firebaseAvailable, setFirebaseAvailable] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailWarning, setEmailWarning] = useState('');
   const router = useRouter();
 
-  // Check if Firebase auth is available
+  const currentDate = new Date();
+
+  const months = [
+    { value: 'Jan', label: 'January', days: 31 },
+    { value: 'Feb', label: 'February', days: 28 },
+    { value: 'Mar', label: 'March', days: 31 },
+    { value: 'Apr', label: 'April', days: 30 },
+    { value: 'May', label: 'May', days: 31 },
+    { value: 'Jun', label: 'June', days: 30 },
+    { value: 'Jul', label: 'July', days: 31 },
+    { value: 'Aug', label: 'August', days: 31 },
+    { value: 'Sep', label: 'September', days: 30 },
+    { value: 'Oct', label: 'October', days: 31 },
+    { value: 'Nov', label: 'November', days: 30 },
+    { value: 'Dec', label: 'December', days: 31 }
+  ];
+
+  const getDaysInMonth = (month: string, year: string) => {
+    const monthObj = months.find(m => m.value === month);
+    if (!monthObj) return [];
+    const isLeap = month === 'Feb' && parseInt(year) % 4 === 0;
+    const days = isLeap ? 29 : monthObj.days;
+    return Array.from({ length: days }, (_, i) => i + 1);
+  };
+
+  const handleDateChange = (type: 'day' | 'month' | 'year', value: string) => {
+    const newDob = { ...dob, [type]: value };
+
+    if (type === 'year' && value) {
+      const selectedYear = parseInt(value);
+      const currentYear = currentDate.getFullYear();
+      if (selectedYear > currentYear) {
+        toast.error('Please select a year in the past');
+        return;
+      }
+    }
+
+    if (type === 'month' && value && newDob.year === currentDate.getFullYear().toString()) {
+      const selectedMonth = months.findIndex(m => m.value === value);
+      const currentMonth = currentDate.getMonth();
+      if (selectedMonth > currentMonth) {
+        toast.error('Please select a month in the past');
+        return;
+      }
+    }
+
+    if (newDob.day && newDob.month && newDob.year) {
+      const selectedDate = new Date(
+        parseInt(newDob.year),
+        months.findIndex(m => m.value === newDob.month),
+        parseInt(newDob.day)
+      );
+
+      if (selectedDate > currentDate) {
+        toast.error('Please select a date in the past');
+        return;
+      }
+    }
+
+    setDob(newDob);
+  };
+
+  const getPasswordStrength = () => {
+    if (!password) return { level: '', color: '' };
+    if (password.length < 6) return { level: 'Weak', color: 'red' };
+    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) return { level: 'Medium', color: 'orange' };
+    if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password))
+      return { level: 'Strong', color: 'green' };
+    return { level: 'Medium', color: 'orange' };
+  };
+
+  const isPasswordMatch = password && confirmPassword && password === confirmPassword;
+
   useEffect(() => {
-    setFirebaseAvailable(!!auth);
-  }, []);
+    const validateEmail = async () => {
+      if (!email) {
+        setEmailValidation({ isValid: false, message: '', checking: false });
+        setEmailWarning('');
+        return;
+      }
+
+      // Basic format validation first
+      const basicRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!basicRegex.test(email)) {
+        setEmailValidation({ 
+          isValid: false, 
+          message: 'Please enter a valid email format.',
+          checking: false 
+        });
+        setEmailWarning('');
+        return;
+      }
+
+      setEmailValidation(prev => ({ ...prev, checking: true }));
+      setEmailWarning('');
+      
+      try {
+        const response = await axios.post('/api/validate-email', { email });
+        const { isValid, message, details, warning } = response.data;
+
+        if (!isValid) {
+          setEmailValidation({ 
+            isValid: false,
+            message: message || 'Invalid email address',
+            checking: false
+          });
+          setEmailWarning('');
+          setEmailExists(false);
+          return;
+        }
+
+        // If warning is present, set warning state
+        if (warning) {
+          setEmailWarning(message || 'Email domain is valid, but the address could not be verified. Please double-check your email.');
+        } else {
+          setEmailWarning('');
+        }
+
+        setEmailValidation({ 
+          isValid: true,
+          message: message || 'Valid email address',
+          checking: false
+        });
+      } catch (error) {
+        console.error('Email validation error:', error);
+        setEmailValidation({ 
+          isValid: false, 
+          message: 'Unable to validate email. Please try again.',
+          checking: false
+        });
+        setEmailWarning('');
+      }
+    };
+
+    // Debounce email validation to avoid excessive API calls
+    const timeoutId = setTimeout(validateEmail, 800);
+    return () => clearTimeout(timeoutId);
+  }, [email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Add your signup logic here
-    setTimeout(() => {
-      setIsLoading(false);
-      // Just for demo, redirect after "signup"
-      router.push("/#");
-    }, 2000);
-  };
-
-  const handleGoogleSignIn = async () => {
-    if (!firebaseAvailable || !auth) {
-      alert("Firebase authentication is not configured. Please set up your Firebase credentials.");
-      return;
-    }
-    
     try {
-      setIsGoogleLoading(true);
-      const result = await signInWithPopup(auth, provider);
-      if (result.user) {
-        // Redirect after successful signup
-        router.push("/#");
+      if (!firstName.trim() || !surname.trim()) {
+        toast.error('Please enter your full name');
+        return;
       }
+
+      if (!dob.day || !dob.month || !dob.year) {
+        toast.error('Please enter a valid date of birth');
+        return;
+      }
+
+      if (!email || !emailValidation.isValid) {
+        toast.error(emailValidation.message || 'Please enter a valid email address');
+        return;
+      }
+
+      // Check if email already exists in Firestore
+      setIsLoading(true);
+      const existingUser = await userDataService.getUserByEmail(email);
+      if (existingUser) {
+        setEmailExists(true);
+        toast.error('This email is already registered. Please use a different email.');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!password || password.length < 8) {
+        toast.error('Password must be at least 8 characters long');
+        setIsLoading(false);
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        toast.error('Passwords do not match');
+        setIsLoading(false);
+        return;
+      }
+
+      const passwordStrength = getPasswordStrength();
+      if (passwordStrength.level === 'Weak') {
+        toast.error('Please choose a stronger password');
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if auth and db are available before using them
+      if (!auth) {
+        toast.error('Authentication service is not available. Please try again later.');
+        setIsLoading(false);
+        return;
+      }
+
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      const userData: UserData = {
+        uid: user.uid,
+        email,
+        firstName: firstName.trim(),
+        surname: surname.trim(),
+        dob: `${dob.day} ${dob.month} ${dob.year}`,
+        gender: '', // Removed gender field as per request
+        createdAt: new Date().toISOString(),
+      };
+
+      // Check if db is available before using it
+      if (!db) {
+        toast.error('Database service is not available. Account created but profile data could not be saved.');
+        router.push('/login');
+        setIsLoading(false);
+        return;
+      }
+
+      await setDoc(doc(db, 'users', user.uid), userData);
+
+      toast.success('Account created successfully!');
+      router.push('/modern/login');
     } catch (error: any) {
-      console.error("Google sign-in error:", error);
-      // Handle specific error cases
-      if (error.code === 'auth/popup-closed-by-user') {
-        alert('Sign-in popup was closed before completing the sign-in.');
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        alert('Sign-in popup was cancelled.');
-      } else if (error.code === 'auth/popup-blocked') {
-        alert('Sign-in popup was blocked by the browser. Please allow popups for this site.');
-      } else {
-        alert('An error occurred during sign-in. Please try again.');
+      console.error('Signup error:', error);
+      
+      const errorMessages: Record<string, string> = {
+        'auth/email-already-in-use': 'This email is already registered',
+        'auth/invalid-email': 'Invalid email address',
+        'auth/weak-password': 'Password is too weak',
+      };
+      
+      const errorMessage = errorMessages[error?.code] || error?.message || JSON.stringify(error) || 'Failed to create account. Please try again.';
+
+      if (error.code === 'auth/email-already-in-use') {
+        setEmailExists(true);
       }
+
+      toast.error(`Signup failed: ${errorMessage}`);
     } finally {
-      setIsGoogleLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#5B21B6] via-[#4C1D95] to-[#2E1065] py-16 px-4">
+    <section className="min-h-screen flex items-center justify-center bg-[#000000] py-16 px-4">
+      <Toaster position="top-center" />
       <MotionDiv
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -81,8 +289,8 @@ export default function ModernSignup() {
       >
         {/* Signup Card */}
         <MotionDiv
-          whileHover={{ scale: 1.04, boxShadow: '0 12px 32px 0 rgba(255,145,77,0.25)' }}
-          className="relative bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-10 w-full max-w-md flex flex-col items-center border border-white/20 transition-all duration-300"
+          whileHover={{ scale: 1.04, boxShadow: '0 12px 32px 0 rgba(0, 252, 252, 0.8)' }}
+          className="relative bg-gradient-to-br from-purple-800 via-purple-900 to-purple-950/90 backdrop-blur-sm rounded-3xl shadow-2xl p-10 w-full max-w-md flex flex-col items-center border border-purple-400/20 transition-all duration-300"
         >
           {/* 3D floating circle */}
           <MotionDiv
@@ -93,30 +301,35 @@ export default function ModernSignup() {
           />
           <h2 className="text-2xl md:text-3xl font-extrabold mb-8 text-white drop-shadow-lg text-center">Create A New Account:</h2>
           <form className="w-full space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="signup-username" className="block text-base font-semibold text-white mb-2">Username</label>
-              <MotionInput
-                whileFocus={{ scale: 1.03, boxShadow: '0 0 0 4px rgba(255,210,63,0.3)' }}
-                type="text"
-                id="signup-username"
-                placeholder="Enter Username"
-                className="w-full h-12 px-4 rounded-lg border border-white/30 bg-white/10 text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/50"
-                name="username"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="signup-firstname" className="block text-base font-semibold text-white mb-2">First Name</label>
+                <MotionInput
+                  whileFocus={{ scale: 1.03, boxShadow: '0 0 0 4px rgba(255,210,63,0.3)' }}
+                  type="text"
+                  id="signup-firstname"
+                  placeholder="Enter First Name"
+                  className="w-full h-12 px-4 rounded-lg border border-white/10 bg-[#280137] text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/30"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="signup-surname" className="block text-base font-semibold text-white mb-2">Surname</label>
+                <MotionInput
+                  whileFocus={{ scale: 1.03, boxShadow: '0 0 0 4px rgba(255,210,63,0.3)' }}
+                  type="text"
+                  id="signup-surname"
+                  placeholder="Enter Surname"
+                  className="w-full h-12 px-4 rounded-lg border border-white/10 bg-[#280137] text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/30"
+                  value={surname}
+                  onChange={(e) => setSurname(e.target.value)}
+                  required
+                />
+              </div>
             </div>
-            <div>
-              <label htmlFor="signup-fullname" className="block text-base font-semibold text-white mb-2">Full Name</label>
-              <MotionInput
-                whileFocus={{ scale: 1.03, boxShadow: '0 0 0 4px rgba(255,210,63,0.3)' }}
-                type="text"
-                id="signup-fullname"
-                placeholder="Enter Full Name"
-                className="w-full h-12 px-4 rounded-lg border border-white/30 bg-white/10 text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/50"
-                name="fullname"
-                required
-              />
-            </div>
+
             <div>
               <label htmlFor="signup-email" className="block text-base font-semibold text-white mb-2">Email Address</label>
               <MotionInput
@@ -124,113 +337,291 @@ export default function ModernSignup() {
                 type="email"
                 id="signup-email"
                 placeholder="Enter Email Address"
-                className="w-full h-12 px-4 rounded-lg border border-white/30 bg-white/10 text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/50"
-                name="email"
+                className="w-full h-12 px-4 rounded-lg border border-white/10 bg-[#280137] text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/30"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailExists(false);
+                }}
                 required
               />
+              {emailValidation.checking && (
+                <p className="text-purple-300/50 text-sm mt-1">Validating email...</p>
+              )}
+              {!emailValidation.checking && email && emailValidation.message && !emailWarning && (
+                <p className={`text-sm mt-1 ${emailValidation.isValid ? 'text-green-400' : 'text-red-400'}`}>
+                  {emailValidation.message}
+                </p>
+              )}
+              {!emailValidation.checking && emailWarning && (
+                <p className="text-orange-400 text-sm mt-1">{emailWarning}</p>
+              )}
+              {emailExists && (
+                <p className="text-red-400 text-sm mt-1">
+                  This email is already registered. Please use a different email.
+                </p>
+              )}
             </div>
+
+            <div>
+              <label className="block text-base font-semibold text-white mb-2">Date of Birth</label>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="relative">
+                  <select 
+                    value={dob.year} 
+                    onChange={(e) => handleDateChange('year', e.target.value)}
+                    className={`w-full h-12 px-4 rounded-lg border border-white/10 bg-[#280137] text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 appearance-none ${!dob.year ? 'text-white/30' : 'text-white'}`}
+                  >
+                    <option value="" disabled hidden>Year</option>
+                    {Array.from({ length: 100 }, (_, i) => (
+                      <option key={2025 - i} value={2025 - i}>{2025 - i}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-300">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className="relative">
+                  <select 
+                    value={dob.month} 
+                    onChange={(e) => handleDateChange('month', e.target.value)}
+                    className={`w-full h-12 px-4 rounded-lg border border-white/10 bg-[#280137] text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 appearance-none ${!dob.month ? 'text-white/30' : 'text-white'}`}
+                  >
+                    <option value="" disabled hidden>Month</option>
+                    {months.map(m => (
+                      <option key={m.value} value={m.value}>{m.label}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-300">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                    </svg>
+                  </div>
+                </div>
+                <div className="relative">
+                  <select 
+                    value={dob.day} 
+                    onChange={(e) => {
+                      if (!dob.month) {
+                        toast.error('Please select a month first');
+                        return;
+                      }
+                      handleDateChange('day', e.target.value);
+                    }}
+                    onClick={(e) => {
+                      if (!dob.month) {
+                        e.preventDefault();
+                        toast.error('Please select a month first');
+                        return;
+                      }
+                    }}
+                    className={`w-full h-12 px-4 rounded-lg border border-white/10 bg-[#280137] text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 appearance-none ${!dob.day ? 'text-white/30' : 'text-white'}`}
+                  >
+                    <option value="" disabled hidden>Day</option>
+                    {dob.month && getDaysInMonth(dob.month, dob.year).map(day => (
+                      <option key={day} value={day}>{day}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-purple-300">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div>
               <label htmlFor="signup-password" className="block text-base font-semibold text-white mb-2">Password</label>
-              <MotionInput
-                whileFocus={{ scale: 1.03, boxShadow: '0 0 0 4px rgba(255,210,63,0.3)' }}
-                type="password"
-                id="signup-password"
-                placeholder="Enter Password"
-                className="w-full h-12 px-4 rounded-lg border border-white/30 bg-white/10 text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/50"
-                name="password"
-                required
-              />
+              <div className="relative flex items-center gap-2">
+                <MotionInput
+                  whileFocus={{ scale: 1.03, boxShadow: '0 0 0 4px rgba(255,210,63,0.3)' }}
+                  type={showPassword ? "text" : "password"}
+                  id="signup-password"
+                  placeholder="Enter Password"
+                  className="w-full h-12 px-4 rounded-lg border border-white/10 bg-black/70 text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/30"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <MotionButton
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="flex items-center justify-center h-12 w-12 text-white/70 hover:text-white transition-colors bg-black/70 rounded-lg border border-white/10 hover:bg-black/80"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <AnimatePresence mode="wait">
+                    {showPassword ? (
+                      <motion.svg
+                        key="eye-open"
+                        initial={{ opacity: 0, rotate: -90 }}
+                        animate={{ opacity: 1, rotate: 0 }}
+                        exit={{ opacity: 0, rotate: 90 }}
+                        transition={{ duration: 0.2 }}
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <motion.path
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.3 }}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <motion.path
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.3, delay: 0.1 }}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </motion.svg>
+                    ) : (
+                      <motion.svg
+                        key="eye-closed"
+                        initial={{ opacity: 0, rotate: 90 }}
+                        animate={{ opacity: 1, rotate: 0 }}
+                        exit={{ opacity: 0, rotate: -90 }}
+                        transition={{ duration: 0.2 }}
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <motion.path
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.3 }}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                        />
+                      </motion.svg>
+                    )}
+                  </AnimatePresence>
+                </MotionButton>
+              </div>
+              {password && (
+                <p className="text-sm mt-1" style={{ color: getPasswordStrength().color }}>
+                  Strength: {getPasswordStrength().level}
+                </p>
+              )}
             </div>
+
             <div>
               <label htmlFor="signup-confirm-password" className="block text-base font-semibold text-white mb-2">Confirm Password</label>
-              <MotionInput
-                whileFocus={{ scale: 1.03, boxShadow: '0 0 0 4px rgba(255,210,63,0.3)' }}
-                type="password"
-                id="signup-confirm-password"
-                placeholder="Confirm Password"
-                className="w-full h-12 px-4 rounded-lg border border-white/30 bg-white/10 text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/50"
-                name="confirmPassword"
-                required
-              />
+              <div className="relative flex items-center gap-2">
+                <MotionInput
+                  whileFocus={{ scale: 1.03, boxShadow: '0 0 0 4px rgba(255,210,63,0.3)' }}
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="signup-confirm-password"
+                  placeholder="Confirm Password"
+                  className="w-full h-12 px-4 rounded-lg border border-white/10 bg-black/70 text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/30"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <MotionButton
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="flex items-center justify-center h-12 w-12 text-white/70 hover:text-white transition-colors bg-black/70 rounded-lg border border-white/10 hover:bg-black/80"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <AnimatePresence mode="wait">
+                    {showConfirmPassword ? (
+                      <motion.svg
+                        key="eye-open"
+                        initial={{ opacity: 0, rotate: -90 }}
+                        animate={{ opacity: 1, rotate: 0 }}
+                        exit={{ opacity: 0, rotate: 90 }}
+                        transition={{ duration: 0.2 }}
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <motion.path
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.3 }}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <motion.path
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.3, delay: 0.1 }}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </motion.svg>
+                    ) : (
+                      <motion.svg
+                        key="eye-closed"
+                        initial={{ opacity: 0, rotate: 90 }}
+                        animate={{ opacity: 1, rotate: 0 }}
+                        exit={{ opacity: 0, rotate: -90 }}
+                        transition={{ duration: 0.2 }}
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <motion.path
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 0.3 }}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                        />
+                      </motion.svg>
+                    )}
+                  </AnimatePresence>
+                </MotionButton>
+              </div>
+              {confirmPassword && (
+                <p className={`text-sm mt-1 ${isPasswordMatch ? 'text-green-400' : 'text-red-400'}`}>
+                  {isPasswordMatch ? "Passwords match" : "Passwords do not match"}
+                </p>
+              )}
             </div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="inline-block w-5 h-5 rounded-full bg-[#FFD23F] shadow-md border-2 border-[#FFD23F] mr-2"></span>
-              <label htmlFor="terms" className="text-base text-white font-medium select-none cursor-pointer">
-                I agree to the <Link href="/terms" className="text-[#FFD23F] hover:underline">Terms and Conditions</Link>
-              </label>
-            </div>
+
             <MotionButton
-              whileHover={{ scale: 1.03, boxShadow: '0 6px 24px 0 rgba(255,145,77,0.4)' }}
-              className="w-full h-12 rounded-lg bg-gradient-to-r from-[#FFD23F] to-[#FF914D] text-[#2E1065] font-bold text-lg shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FFD23F]"
+              whileHover={{ scale: 1.03, boxShadow: '0 6px 24px 0 rgba(34, 197, 94, 0.4)' }}
+              className="w-full h-12 rounded-lg bg-gradient-to-r from-green-500 to-green-600 text-white font-bold text-lg shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500"
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || emailExists || Boolean(email && !emailValidation.isValid && !emailValidation.checking)}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#2E1065] mr-2"></div>
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
                   Creating account...
                 </div>
               ) : (
                 'Signup Now'
               )}
             </MotionButton>
-
-            {/* Google Sign In */}
-            <div className="relative mt-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/20"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#4C1D95] text-white/80">Or continue with</span>
-              </div>
-            </div>
-
-            <MotionButton
-              whileHover={{ scale: 1.03, boxShadow: '0 6px 24px 0 rgba(255,255,255,0.2)' }}
-              className="w-full h-12 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold text-lg shadow-lg hover:bg-white/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FFD23F] flex items-center justify-center gap-2"
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isGoogleLoading || !firebaseAvailable}
-            >
-              {isGoogleLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-                  Signing up...
-                </div>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path
-                      fill="currentColor"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    />
-                  </svg>
-                  Continue with Google
-                </>
-              )}
-            </MotionButton>
-            
-            {!firebaseAvailable && (
-              <div className="text-yellow-300 text-sm text-center bg-yellow-900/50 p-2 rounded-md mt-2 border border-yellow-500/30">
-                Firebase authentication not configured. Google login is disabled.
-              </div>
-            )}
           </form>
           <div className="mt-6 text-white/80 text-base text-center">
             <p>Already have an account?{' '}
-              <Link href="/modern/login" className="text-[#FFD23F] font-semibold hover:underline transition-colors">
+              <Link href="/modern/login" className="text-sky-400 font-semibold hover:text-sky-300 transition-colors">
                 Sign in
               </Link>
             </p>
