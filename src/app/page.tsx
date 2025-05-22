@@ -74,13 +74,13 @@ export default function LandingPage() {
               className="w-full flex flex-col items-center gap-6"
             >
               <Link
-                href="/login"
+                href="/modern/login"
                 className="w-full py-4 rounded-lg text-lg font-semibold bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white text-center shadow-lg transition"
               >
                 Get Started / Login
               </Link>
               <Link
-                href="/signup"
+                href="/modern/signup"
                 className="w-full py-4 rounded-lg text-lg font-semibold bg-gradient-to-r from-purple-200 to-purple-400 hover:from-purple-300 hover:to-purple-500 text-purple-900 text-center shadow-lg transition"
               >
                 Create an Account
