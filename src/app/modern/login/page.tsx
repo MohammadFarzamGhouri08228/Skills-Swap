@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { setPersistence, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
@@ -36,12 +37,24 @@ export default function ModernLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Add your login logic here
-    setTimeout(() => {
+    try {
+      if (!auth) {
+        throw new Error("Authentication service is not available.");
+      }
+      // Set persistence based on rememberMe
+      await setPersistence(
+        auth,
+        rememberMe ? browserLocalPersistence : browserSessionPersistence
+      );
+      // Add your login logic here, e.g.:
+      // await signInWithEmailAndPassword(auth, email, password);
+      // Redirect to dashboard
+      router.push("/dashboard");
+    } catch (error) {
+      // handle error, e.g. show toast
+    } finally {
       setIsLoading(false);
-      // Just for demo, redirect after "login"
-      router.push("/#");
-    }, 2000);
+    }
   };
 
   const handleGoogleSignIn = async () => {

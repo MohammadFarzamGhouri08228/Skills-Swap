@@ -9,7 +9,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast, { Toaster } from 'react-hot-toast';
 import axios from 'axios';
-import { UserData } from '@/app/api/profile/userDataService';
+import { UserData, userDataService } from '@/app/api/profile/userDataService';
 
 const MotionDiv = dynamic(
   () => import('framer-motion').then(mod => mod.motion.div),
@@ -196,23 +196,34 @@ export default function ModernSignup() {
         return;
       }
 
+      // Check if email already exists in Firestore
+      setIsLoading(true);
+      const existingUser = await userDataService.getUserByEmail(email);
+      if (existingUser) {
+        setEmailExists(true);
+        toast.error('This email is already registered. Please use a different email.');
+        setIsLoading(false);
+        return;
+      }
+
       if (!password || password.length < 8) {
         toast.error('Password must be at least 8 characters long');
+        setIsLoading(false);
         return;
       }
 
       if (password !== confirmPassword) {
         toast.error('Passwords do not match');
+        setIsLoading(false);
         return;
       }
 
       const passwordStrength = getPasswordStrength();
       if (passwordStrength.level === 'Weak') {
         toast.error('Please choose a stronger password');
+        setIsLoading(false);
         return;
       }
-
-      setIsLoading(true);
 
       // Check if auth and db are available before using them
       if (!auth) {
@@ -231,9 +242,7 @@ export default function ModernSignup() {
         surname: surname.trim(),
         dob: `${dob.day} ${dob.month} ${dob.year}`,
         gender: '', // Removed gender field as per request
-        currentBalance: 0,
         createdAt: new Date().toISOString(),
-        emailValidated: emailValidation.isValid,
       };
 
       // Check if db is available before using it
@@ -247,7 +256,7 @@ export default function ModernSignup() {
       await setDoc(doc(db, 'users', user.uid), userData);
 
       toast.success('Account created successfully!');
-      router.push('/login');
+      router.push('/modern/login');
     } catch (error: any) {
       console.error('Signup error:', error);
       
@@ -257,13 +266,13 @@ export default function ModernSignup() {
         'auth/weak-password': 'Password is too weak',
       };
       
-      const errorMessage = errorMessages[error?.code] || 'Failed to create account. Please try again.';
+      const errorMessage = errorMessages[error?.code] || error?.message || JSON.stringify(error) || 'Failed to create account. Please try again.';
 
       if (error.code === 'auth/email-already-in-use') {
         setEmailExists(true);
       }
 
-      toast.error(errorMessage);
+      toast.error(`Signup failed: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }

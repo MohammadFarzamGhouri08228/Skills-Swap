@@ -1,5 +1,5 @@
 'use client';
-
+import { setPersistence, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
 import { useState, useEffect } from 'react';
 import { createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
