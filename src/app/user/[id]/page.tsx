@@ -53,48 +53,52 @@ export default function UserProfilePage() {
         setUserData(profileData);
 
         // Get current user data if logged in
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-          if (user) {
-            const currentUserData = await userDataService.getUser(user.uid);
-            setCurrentUser(currentUserData);
-          }
-          setIsLoading(false);
-        });
+        if (auth) {
+          const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+              const currentUserData = await userDataService.getUser(user.uid);
+              setCurrentUser(currentUserData);
+            }
+            setIsLoading(false);
+          });
 
-        // Mock data for lesson previews (replace with actual data fetching)
-        setLessonPreviews([
-          {
-            id: '1',
-            title: 'Introduction to JavaScript',
-            thumbnail: '/lessons/js-intro.jpg',
-            duration: '5:00',
-            skill: 'JavaScript'
-          },
-          {
-            id: '2',
-            title: 'React Hooks Basics',
-            thumbnail: '/lessons/react-hooks.jpg',
-            duration: '5:00',
-            skill: 'React'
-          }
-        ]);
-
-        // Mock data for exchange history (replace with actual data fetching)
-        setExchangeHistory([
-          {
-            id: '1',
-            date: '2024-03-15',
-            skill: 'JavaScript',
-            partner: {
-              name: 'John Doe',
-              avatar: '/avatars/john.jpg'
+          // Mock data for lesson previews (replace with actual data fetching)
+          setLessonPreviews([
+            {
+              id: '1',
+              title: 'Introduction to JavaScript',
+              thumbnail: '/lessons/js-intro.jpg',
+              duration: '5:00',
+              skill: 'JavaScript'
             },
-            rating: 5,
-            feedback: 'Great teaching session! Very knowledgeable.'
-          }
-        ]);
+            {
+              id: '2',
+              title: 'React Hooks Basics',
+              thumbnail: '/lessons/react-hooks.jpg',
+              duration: '5:00',
+              skill: 'React'
+            }
+          ]);
 
-        return () => unsubscribe();
+          // Mock data for exchange history (replace with actual data fetching)
+          setExchangeHistory([
+            {
+              id: '1',
+              date: '2024-03-15',
+              skill: 'JavaScript',
+              partner: {
+                name: 'John Doe',
+                avatar: '/avatars/john.jpg'
+              },
+              rating: 5,
+              feedback: 'Great teaching session! Very knowledgeable.'
+            }
+          ]);
+
+          return () => unsubscribe();
+        } else {
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
         setIsLoading(false);
