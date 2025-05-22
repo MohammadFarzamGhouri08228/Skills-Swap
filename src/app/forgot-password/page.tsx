@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { LampContainer } from '@/components/ui/lamp';
 import Link from 'next/link';
-import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast'
 
 const fadeIn = (direction = "up", delay = 0) => {
   return {
@@ -210,7 +210,7 @@ export default function ForgotPasswordPage() {
             >
               <p className="text-purple-300">
                 Remember your password?{' '}
-                <Link href="/login" className="text-purple-200 hover:text-purple-100 font-semibold">
+                <Link href="/modern/login" className="text-purple-200 hover:text-purple-100 font-semibold">
                   Sign in
                 </Link>
               </p>

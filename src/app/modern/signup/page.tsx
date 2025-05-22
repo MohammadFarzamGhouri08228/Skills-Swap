@@ -106,7 +106,7 @@ export default function ModernSignup() {
     if (password.length < 6) return { level: 'Weak', color: 'red' };
     if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) return { level: 'Medium', color: 'orange' };
     if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password))
-      return { level: 'Strong', color: 'green' };
+      return { level: 'Strong', color: '#00FF99' };
     return { level: 'Medium', color: 'orange' };
   };
 

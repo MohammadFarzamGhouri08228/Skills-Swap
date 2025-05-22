@@ -4,9 +4,12 @@ import { setPersistence, browserLocalPersistence, browserSessionPersistence } fr
 import dynamic from 'next/dynamic';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase";
 import { motion, AnimatePresence } from 'framer-motion';
+import { doc, getDoc } from "firebase/firestore";
+import toast, { Toaster } from "react-hot-toast";
+import { db } from "@/lib/firebase";
 
 const MotionDiv = dynamic(
   () => import('framer-motion').then(mod => mod.motion.div),
@@ -28,6 +31,8 @@ export default function ModernLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   // Check if Firebase auth is available
   useEffect(() => {
@@ -38,20 +43,44 @@ export default function ModernLogin() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      if (!auth) {
-        throw new Error("Authentication service is not available.");
-      }
-      // Set persistence based on rememberMe
+      if (!auth) throw new Error("Authentication service is not available.");
+      if (!db) throw new Error("Database service is not available.");
+
       await setPersistence(
         auth,
         rememberMe ? browserLocalPersistence : browserSessionPersistence
       );
-      // Add your login logic here, e.g.:
-      // await signInWithEmailAndPassword(auth, email, password);
-      // Redirect to dashboard
+
+      // 1. Try to sign in with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 2. Check if user exists in Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (!userDoc.exists()) {
+        // User not found in Firestore, sign out and show error
+        await signOut(auth);
+        toast.error("Account not found. Please sign up first.");
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Success: redirect to dashboard
+      toast.success("Login successful!");
       router.push("/dashboard");
-    } catch (error) {
-      // handle error, e.g. show toast
+    } catch (error: any) {
+      // Handle Firebase Auth errors
+      let message = "Login failed. Please try again.";
+      if (error.code === "auth/user-not-found") {
+        message = "No account found with this email.";
+      } else if (error.code === "auth/wrong-password") {
+        message = "Incorrect password.";
+      } else if (error.code === "auth/too-many-requests") {
+        message = "Too many failed attempts. Please try again later.";
+      } else if (error.message) {
+        message = error.message;
+      }
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -87,6 +116,15 @@ export default function ModernLogin() {
     }
   };
 
+  const getPasswordStrength = () => {
+    if (!password) return { level: '', color: '' };
+    if (password.length < 6) return { level: 'Weak', color: '#FF3B3B' }; // Vibrant red
+    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) return { level: 'Medium', color: '#FFD23F' }; // Vibrant yellow
+    if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password))
+      return { level: 'Strong', color: '#00FF99' }; // Vibrant green
+    return { level: 'Medium', color: '#FFD23F' };
+  };
+
   return (
     <section className="min-h-screen flex items-center justify-center bg-[#000000] py-16 px-4">
       <MotionDiv
@@ -119,6 +157,8 @@ export default function ModernLogin() {
                 className="w-full h-12 px-4 rounded-lg border border-white/10 bg-[#280137] text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/30"
                 name="email"
                 required
+                value={email}
+                onChange={e => setEmail(e.target.value)}
               />
             </div>
             <div>
@@ -132,6 +172,8 @@ export default function ModernLogin() {
                   className="w-full h-12 px-4 rounded-lg border border-white/10 bg-black/70 text-white font-medium shadow-inner focus:outline-none focus:ring-2 focus:ring-[#FFD23F] transition-all duration-200 placeholder-white/30"
                   name="password"
                   required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
                 />
                 <MotionButton
                   type="button"
@@ -288,6 +330,15 @@ export default function ModernLogin() {
                 Firebase authentication not configured. Google login is disabled.
               </div>
             )}
+
+            {password && (
+              <p
+                className="text-sm mt-1"
+                style={{ color: getPasswordStrength().color, fontWeight: 'bold' }}
+              >
+                Strength: {getPasswordStrength().level}
+              </p>
+            )}
           </form>
           <div className="mt-6 text-white/80 text-base text-center">
             <p>Don't have an account?{' '}
@@ -301,6 +352,7 @@ export default function ModernLogin() {
           </div>
         </MotionDiv>
       </MotionDiv>
+      <Toaster position="top-center" />
     </section>
   );
 } 
