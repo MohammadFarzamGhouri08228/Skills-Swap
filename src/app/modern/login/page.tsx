@@ -97,7 +97,7 @@ export default function ModernLogin() {
       const result = await signInWithPopup(auth, provider);
       if (result.user) {
         // Redirect after successful login
-        router.push("/#");
+        router.push("/dashboard");
       }
     } catch (error: any) {
       console.error("Google sign-in error:", error);
