@@ -1,5 +1,3 @@
-
-
 import HeaderOne from '@/layouts/headers/HeaderOne'
 import React from 'react'
 import HeroHomeOne from './HeroHomeOne'
@@ -16,7 +14,13 @@ import BrandHomeOne from './BrandHomeOne'
 import BlogHomeOne from './BlogHomeOne'
 import FooterOne from '@/layouts/footers/FooterOne'
 
-export default function HomeOne() {
+type HomeOneProps = {
+  user?: any;
+  userData?: any;
+  isLoading?: boolean;
+}
+
+export default function HomeOne({ user, userData, isLoading }: HomeOneProps) {
   return (
     <>
       <HeaderOne />

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function index() {
   return (
     <Wrapper>
-      <HomeOne />
+      <HomeOne user={{}} userData={{}} isLoading={false} />
     </Wrapper>
   )
 }
