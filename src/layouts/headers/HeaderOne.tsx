@@ -1,13 +1,46 @@
 "use client"
 import Link from 'next/link'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import NavMenu from './NavMenu'
 import MobileMenu from './MobileMenu'
+import { UserProfileButton } from '@/components/user-profile-button'
+import { auth } from '@/lib/firebase'
+import { onAuthStateChanged } from 'firebase/auth'
+import { userDataService } from '@/app/api/profile/userDataService'
+import { UserData } from '@/app/api/profile/userDataService'
 
 export default function HeaderOne() {
 
   const [open, setOpen] = useState(false)
   const [opneMenu, setOpneMenu] = useState(false)
+  const [user, setUser] = useState<UserData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    if (!auth) {
+      console.error('Firebase Auth is not initialized')
+      setIsLoading(false)
+      return
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      if (!authUser) {
+        setUser(null)
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const data = await userDataService.getUser(authUser.uid)
+        setUser(data)
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+      }
+      setIsLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   return (
     <>
@@ -52,7 +85,7 @@ export default function HeaderOne() {
                   <span>3</span>
                 </div>
               </div>
-              <Link href="/login" className="white-btn bt">Login / Register</Link>
+              <UserProfileButton user={user} />
             </div>
 
           </div>
