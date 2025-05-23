@@ -116,15 +116,6 @@ export default function ModernLogin() {
     }
   };
 
-  const getPasswordStrength = () => {
-    if (!password) return { level: '', color: '' };
-    if (password.length < 6) return { level: 'Weak', color: '#FF3B3B' }; // Vibrant red
-    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) return { level: 'Medium', color: '#FFD23F' }; // Vibrant yellow
-    if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password))
-      return { level: 'Strong', color: '#00FF99' }; // Vibrant green
-    return { level: 'Medium', color: '#FFD23F' };
-  };
-
   return (
     <section className="min-h-screen flex items-center justify-center bg-[#000000] py-16 px-4">
       <MotionDiv
@@ -329,15 +320,6 @@ export default function ModernLogin() {
               <div className="text-yellow-300 text-sm text-center bg-yellow-900/50 p-2 rounded-md mt-2 border border-yellow-500/30">
                 Firebase authentication not configured. Google login is disabled.
               </div>
-            )}
-
-            {password && (
-              <p
-                className="text-sm mt-1"
-                style={{ color: getPasswordStrength().color, fontWeight: 'bold' }}
-              >
-                Strength: {getPasswordStrength().level}
-              </p>
             )}
           </form>
           <div className="mt-6 text-white/80 text-base text-center">
