@@ -17,6 +17,7 @@ import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { UserData } from '@/app/api/profile/userDataService';
 import { cn } from '@/lib/utils';
+import '@/styles/user-profile-button.css';
 
 interface UserProfileButtonProps {
   user: UserData | null;
@@ -40,57 +41,13 @@ export function UserProfileButton({ user, dashboardStyle = false }: UserProfileB
 
   if (!user) {
     return (
-      <>
-        <style>{`
-          .bg_btn {
-            background: linear-gradient(90deg, #5B21B6 0%, #22D3A0 100%);
-            border: 3px solid #FFF;
-            color: #000;
-            transition: .5s, transform 0.3s cubic-bezier(0.4,0,0.2,1);
-            padding: 8px 35px;
-            border-radius: 30px;
-            font-size: 17px;
-            font-weight: 600;
-            display: inline-block;
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
-          }
-          .bg_btn:before {
-            content: '';
-            z-index: -1;
-            position: absolute;
-            top: 50%;
-            left: 100%;
-            margin: -15px 0 0 1px;
-            width: 15%;
-            height: 30px;
-            border-radius: 50%;
-            background: linear-gradient(90deg, #16A34A 0%, #22D3A0 100%);
-            transform-origin: 100% 50%;
-            transform: scale3d(1, 2, 1);
-            transition: transform 0.3s, opacity 0.3s;
-            transition-timing-function: cubic-bezier(0.7,0,0.9,1);
-          }
-          .bg_btn:hover::before {
-            transform: scale3d(9, 9, 1);
-          }
-          .bg_btn:hover,
-          .bg_btn:focus {
-            color: #fff;
-            border-color: #22D3A0;
-            background: linear-gradient(90deg, #5B21B6 0%, #16A34A 100%);
-            transform: scale(1.07);
-          }
-        `}</style>
-        <Button
-          variant="outline"
-          onClick={() => router.push('/modern/login')}
-          className="bg_btn"
-        >
-          Login / Register
-        </Button>
-      </>
+      <Button
+        variant="outline"
+        onClick={() => router.push('/modern/login')}
+        className="bg_btn"
+      >
+        Login / Register
+      </Button>
     );
   }
 
