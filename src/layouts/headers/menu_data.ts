@@ -22,11 +22,11 @@ const menu_data: DataType[] = [
 	}, 
 	{
 		id: 2,
-		title: "Courses",
+		title: "Skills",
 		link: "#",
 		has_dropdown: true,
 		sub_menus: [
-			{ link: "/courses", title: "Course Style1" },
+			{ link: "/skills", title: "Skills List" },
 			{ link: "/courses-2", title: "Course Style2" },
 			{ link: "/course-details", title: "Course Details" },
 		],
