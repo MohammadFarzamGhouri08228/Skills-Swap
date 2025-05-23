@@ -215,21 +215,21 @@ img{
 }
 .bg_btn:hover,
 .bg_btn:focus{
-	color: #fff;
+	color: #000;
 	border-color: #FFC107;
 }
 .white-btn:hover,
 .white-btn:focus{
 	color: #fff;
-	background-color: #FFC107;
-	border-color: #fff;
+	background-color: #2E1065;
+	border-color: #2E1065;
 }
 
 
 .wborder_btn:hover,
 .wborder_btn:focus{
-	color: #fff;
-	border-color: #fff;	
+	color: #000;
+	border-color: #FFC107;	
 }
 
 /* Header */
@@ -237,6 +237,20 @@ img{
 #navigation {
 	position: relative;
 	padding: 20px 20px;
+}
+#navigation::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+    background: linear-gradient(
+    135deg,
+    #F2E9DE 0%,    /* Slightly Darker Pale Cream */
+    #EBE3D3 100%   /* Deeper Cream */
+    );
+	z-index: -2; /* Below header.svg (-1) and content (default/auto) */
 }
 #navigation::after {
 	position: absolute;
@@ -246,7 +260,7 @@ img{
 	background-image: url(../img/shapes/header.svg);
 	right: 0;
 	top: 0;
-	z-index: -1;
+	z-index: -1; /* Above the purple background (-2) but below content (default/auto) */
 	background-repeat: no-repeat;
 	background-size: cover;
 }
@@ -893,80 +907,148 @@ img{
 # Features
 --------------------------------*/
 
-
 .features {
 	background: linear-gradient(
-    90deg,
-    #FFD23F 0%,  /* Yellow */
-    #FF914D 100% /* Tangerine */
-  );
-  color: #1A1A1A;
-	padding: 120px 0; /* Keeping existing padding for layout */
-}
-
-.feature-item{
-	border: 2px solid #F5F5F5;
+	  90deg,
+	  #FFD23F 0%, /* Yellow */
+	  #FF914D 100% /* Tangerine */
+	);
+	color: #1A1A1A;
+	padding: 120px 0;
+  }
+  
+  .feature-item {
+	/* Removed border for a cleaner look with shadow, we can re-add if needed */
 	padding: 80px 30px 50px;
 	text-align: center;
 	position: relative;
-	transition: .5s;
-	border-radius: 8px ;
+	transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smoother transition */
+	border-radius: 12px; /* Slightly more rounded for a softer look */
 	margin-bottom: 30px;
-}
-.feature-item:hover{
+	background-color: #5B21B6; /* Original deep purple */
+  
+	/* --- NEW / IMPROVED STYLES --- */
+  
+	/* Add a subtle initial shadow */
+	box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.15); /* Soft, subtle lift */
+  
+	/* Ensure text is white for contrast against dark purple */
+	color: #FFFFFF;
+  }
+  
+  .feature-item:hover {
+	/* Keep the unique border-radius, but refine the look */
 	border-radius: 8px 60px 8px 8px;
-	background-color: #fff;
-	border-color: #0D5FF9;
-}
-.feature-item:hover h3{
-
-}
-.feature-item:hover .fnumber{
-
-}
-.fea-icon{
+	background-color: #4A148C; /* Slightly lighter on hover, or a different hue */
+	/* OR: background-color: #2E1065; (your original darker hover, combined with lift) */
+  
+	/* Lift effect */
+	transform: translateY(-12px); /* Lifts the box significantly */
+  
+	/* More prominent shadow on hover */
+	box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.3); /* Larger, more defined shadow */
+  
+	/* Change border-color to a more harmonious one or remove */
+	border-color: transparent; /* Remove or change based on preference */
+	/* If you want a border on hover, consider a soft yellow/orange glow: */
+	/* border: 2px solid #FFD23F; */
+  }
+  
+  
+  /* --- ICON CONTAINER --- */
+  .fea-icon {
 	width: 75px;
 	height: 75px;
+	/* `line-height` can be removed if `display: flex` is used for centering */
 	line-height: 75px;
-	background: #E5F8F8;
+	background: #FFFFFF; /* White background for icons for better contrast */
 	text-align: center;
 	border-radius: 50%;
 	margin-bottom: 25px;
-	display: inline-block;
-	transition: .5s;
-}
-.feature-item:hover svg path{
-	fill: #fff;
-}
-.feature-item:hover .fea-icon{
-	background: #0D5FF9;
-}
-.fea-icon svg{
+	/* Ensure it's a flex container for proper centering of the SVG */
+	display: flex;
+	justify-content: center; /* Horizontally center the SVG */
+	align-items: center;   /* Vertically center the SVG */
+  
+	/* REMOVED: padding-left and padding-top from here */
+  
+	transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smoother transition */
+  
+	/* Add a subtle shadow to the icon circle itself */
+	box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  
+	/* Center the block element within its parent and add vertical margin */
+	margin: 35px auto;
+  }
+  
+  .feature-item:hover .fea-icon {
+	background: #FFD23F; /* Use the yellow from your background for hover icon */
+	transform: scale(1.05); /* Slightly enlarge icon on hover */
+	box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2); /* Slightly larger shadow */
+  }
+  
+  /* --- SVG ICON ITSELF --- */
+  .fea-icon svg {
 	width: 40px;
-}
-.fea-icon svg path{
-	fill: #0D5FF9;
-}
-.feature-item h3{
-	font-size: 24px;
-	transition: .5s;
-}
-.feature-item p{
-	transition: .5s;
-	margin-bottom: 0;
-}
-.fnumber {
-	background: #0D5FF9;
-	color: #fff;
+	height: 40px; /* Explicitly set height for consistency */
+	/* --- ADDED: transform to shift the SVG within its container --- */
+	/* transform: translate(5px, 5px); /* Moves 5px right, 5px down */
+	/* Add transition for the transform property if you want it smooth */
+	transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .fea-icon svg path {
+	fill: #5B21B6; /* Fill icon with the original box purple for contrast */
+	transition: fill 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smooth fill transition */
+  }
+  
+  .feature-item:hover svg path {
+	fill: #FFFFFF; /* Fill icon with white on hover */
+  }
+  
+  
+  /* --- FEATURE NUMBER (01, 02, etc.) --- */
+  .fnumber {
+	background: #FFD23F; /* Yellow from background for consistency */
+	color: #5B21B6; /* Use box purple for number text */
 	border-radius: 0 0 7px 7px;
-	padding: 0 8px;
+	padding: 0 10px; /* Slightly more padding for better visual weight */
 	display: inline-block;
 	position: absolute;
-	top: -2px;
-	left: 31px;
+	top: 0; /* Align perfectly with the top edge */
+	left: 50%; /* Center horizontally */
+	transform: translateX(-50%); /* Adjust for true centering */
 	line-height: 33px;
-}
-
+	font-weight: bold; /* Make the number bolder */
+	font-size: 1.1em; /* Slightly larger */
+	box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for the number */
+  }
+  
+  /* --- FEATURE TITLE (h3) --- */
+  .feature-item h3 {
+	color: #fff;
+	font-size: 24px;
+	font-weight: bold; /* Make it bold for more impact */
+	margin-bottom: 15px; /* Add space below title */
+	transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .feature-item:hover h3 {
+	color: #FFD23F; /* Change title color to yellow on hover */
+  }
+  
+  /* --- FEATURE PARAGRAPH (p) --- */
+  .feature-item p {
+	color: #E0E0E0; /* Slightly lighter white for readability */
+	line-height: 1.6; /* Improve readability */
+	transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	margin-bottom: 0;
+  }
+  
+  .feature-item:hover p {
+	color: #FFFFFF; /* Keep white on hover, or a very light yellow */
+  }
+  
 /*-------------------------------
 # About
 --------------------------------*/
