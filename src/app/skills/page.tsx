@@ -1,4 +1,4 @@
-import Courses from '@/components/courses'
+import Courses from '@/components/skills'
 import Wrapper from '@/layouts/Wrapper'
 import { Metadata } from 'next'
 import React from 'react'
