@@ -4166,7 +4166,7 @@ li.comment{
   }
   
   .bookings-title {
-	font-size: 3.5rem;
+	font-size: 3.8rem;
 	font-weight: 800;
 	/* Apply a left-to-right yellow → gold gradient */
 	background: linear-gradient(90deg, #FFD700 0%, #FFC107 100%);
@@ -4181,11 +4181,11 @@ li.comment{
   
   
   .bookings-subtitle {
-	font-size: 1.2rem;
+	font-size: 1.4rem;
 	font-weight: 500;
 	max-width: 600px;
 	margin: 0 auto;
-	color: #fff;
+	color: #fafad2;
   }
   
   .bookings-stats {
@@ -4279,13 +4279,14 @@ li.comment{
 	padding: 15px 15px 15px 50px;
 	border: 2px solid rgba(91, 33, 182, 0.2);
 	border-radius: 15px;
-	background: rgba(255, 255, 255, 0.9);
+	background: #FAFAD2;
 	font-size: 1rem;
 	transition: all 0.3s ease;
 	backdrop-filter: blur(10px);
   }
   
   .bookings-search-input:focus {
+	background: #FAFAD2;
 	outline: none;
 	border-color: #5B21B6;
 	box-shadow: 0 0 0 3px rgba(91, 33, 182, 0.1);
@@ -4301,7 +4302,7 @@ li.comment{
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	background: rgba(255, 255, 255, 0.9);
+	background: #FAFAD2;
 	border-radius: 12px;
 	padding: 8px 15px;
 	backdrop-filter: blur(10px);
@@ -4324,6 +4325,7 @@ li.comment{
   }
   
   .bookings-filter-select:focus {
+	background: #FAFAD2;
 	outline: none;
   }
   
