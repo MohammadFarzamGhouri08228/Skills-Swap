@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Check if we have the required Firebase config
 const hasValidConfig = process.env.NEXT_PUBLIC_FIREBASE_API_KEY && 
@@ -31,6 +32,7 @@ const firebaseConfig = hasValidConfig ? {
 let app: ReturnType<typeof initializeApp> | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
+let storage: ReturnType<typeof getStorage> | null = null;
 let provider = new GoogleAuthProvider();
 
 try {
@@ -39,12 +41,14 @@ try {
   // Initialize Firebase services
   auth = getAuth(app);
   db = getFirestore(app);
+  storage = getStorage(app);
 } catch (error) {
   console.error("Firebase initialization error:", error);
   // Create mock objects if Firebase init fails
   app = null;
   auth = null;
   db = null;
+  storage = null;
 }
 
-export { app, auth, db, provider };
+export { app, auth, db, storage, provider };
