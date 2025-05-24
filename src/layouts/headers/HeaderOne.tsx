@@ -63,6 +63,7 @@ export default function HeaderOne() {
                       <li><a href="#"><i className='bx bxl-shopify' ></i> Shopify</a></li>
                       <li><a href="#"><i className='bx bxl-java' ></i> Java</a></li>
                       <li><a href="#"><i className='bx bxl-php' ></i> PHP</a></li>
+                      <li><a href="/user/bookings"><i className='bx bx-book' ></i>Bookings</a></li>
                     </ul>
                   </li>
                 </ul>
