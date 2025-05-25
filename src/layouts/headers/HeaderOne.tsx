@@ -49,7 +49,7 @@ export default function HeaderOne() {
           <div className="row">
             <div className="col-30 left-col align-self-center rk_style">
               <div className="site-logo">
-                <Link href="/"><img src="assets/img/logo.svg" alt="SkillSwap" /></Link>
+                <Link href="/"><img src="/assets/img/logo.svg" alt="SkillSwap" /></Link>
               </div>
 
               <div className="course_cat">

@@ -270,6 +270,7 @@ img{
 	position: relative;
 	z-index: 11;
 	padding-right: 12px;
+	top: 5px;
 }
 .course_cat{
 	display: inline-block;
@@ -4140,8 +4141,25 @@ li.comment{
   
   .bookings-content-wrapper {
 	min-height: 100vh;
-	background: linear-gradient(180deg, #2E1065 0%, #5B21B6 100%);
+	background: linear-gradient(180deg, #1a0b3d 0%, #2E1065 100%);
+	position: relative;
 	overflow-x: hidden;
+  }
+
+  .bookings-content-wrapper::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: radial-gradient(circle at 50% 20%, rgba(147, 51, 234, 0.1) 0%, transparent 60%);
+	animation: glow 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+	from { opacity: 0.5; }
+	to { opacity: 1; }
   }
   
   .bookings-container {
