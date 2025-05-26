@@ -62,7 +62,6 @@ export default function FooterOne() {
                   <li><a href="#">About Us</a></li>
                   <li><a href="skills">Skills</a></li>
                   <li><a href="#">Categories</a></li>
-                  <li><a href="#">Pricing</a></li>
                   <li><a href="#">Contact</a></li>
                 </ul>
               </div>
