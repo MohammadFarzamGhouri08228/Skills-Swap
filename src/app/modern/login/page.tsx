@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { signInWithPopup, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase";
 import { motion, AnimatePresence } from 'framer-motion';
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import toast, { Toaster } from "react-hot-toast";
 import { db } from "@/lib/firebase";
 
@@ -87,34 +87,46 @@ export default function ModernLogin() {
   };
 
   const handleGoogleSignIn = async () => {
-    if (!firebaseAvailable || !auth) {
-      alert("Firebase authentication is not configured. Please set up your Firebase credentials.");
-      return;
-    }
-    
-    try {
-      setIsGoogleLoading(true);
-      const result = await signInWithPopup(auth, provider);
-      if (result.user) {
-        // Redirect to user page after successful login
-        router.push("/user");
+  if (!firebaseAvailable || !auth) {
+    alert("Firebase authentication is not configured. Please set up your Firebase credentials.");
+    return;
+  }
+
+  try {
+    setIsGoogleLoading(true);
+    const result = await signInWithPopup(auth, provider);
+    if (result.user) {
+      // 1. Check if db is available
+      if (!db) {
+        toast.error("Database service is not available.");
+        setIsGoogleLoading(false);
+        return;
       }
-    } catch (error: any) {
-      console.error("Google sign-in error:", error);
-      // Handle specific error cases
-      if (error.code === 'auth/popup-closed-by-user') {
-        alert('Sign-in popup was closed before completing the sign-in.');
-      } else if (error.code === 'auth/cancelled-popup-request') {
-        alert('Sign-in popup was cancelled.');
-      } else if (error.code === 'auth/popup-blocked') {
-        alert('Sign-in popup was blocked by the browser. Please allow popups for this site.');
-      } else {
-        alert('An error occurred during sign-in. Please try again.');
+      // 2. Check if user exists in Firestore
+      const userRef = doc(db, "users", result.user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        // 3. If not, create user document
+        await setDoc(userRef, {
+          uid: result.user.uid,
+          email: result.user.email,
+          firstName: result.user.displayName?.split(" ")[0] || "",
+          surname: result.user.displayName?.split(" ").slice(1).join(" ") || "",
+          dob: "", // Google does not provide DOB, leave blank or prompt later
+          createdAt: new Date().toISOString(),
+        });
       }
-    } finally {
-      setIsGoogleLoading(false);
+
+      // 4. Redirect to user page after successful login
+      router.push("/user");
     }
-  };
+  } catch (error: any) {
+    // ...your existing error handling...
+  } finally {
+    setIsGoogleLoading(false);
+  }
+};
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-[#000000] py-16 px-4">
