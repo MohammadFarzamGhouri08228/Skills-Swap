@@ -28,7 +28,7 @@ const menu_data: DataType[] = [
 		sub_menus: [
 			{ link: "/skills", title: "Skills List" },
 			{ link: "/user/bookings", title: "Bookings" },
-			{ link: "/courses-2", title: "Course Style2" },
+			{ link: "/my-skills", title: "My Skills" },
 			{ link: "/course-details", title: "Course Details" },
 		],
 	},
