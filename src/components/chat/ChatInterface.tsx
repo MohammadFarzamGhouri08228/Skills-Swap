@@ -10,6 +10,7 @@ import { Send, Image as ImageIcon, Paperclip, Mic, Check, CheckCheck, X } from '
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import toast from 'react-hot-toast';
+import { FirebaseStorage } from 'firebase/storage';
 
 interface ChatInterfaceProps {
   otherUser: UserData;
@@ -132,16 +133,20 @@ export function ChatInterface({ otherUser, currentUser }: ChatInterfaceProps) {
 
   const handleFileUpload = async (file: File, type: MessageType) => {
     if (!threadId) return;
+    if (!storage) {
+      toast.error('Storage is not initialized');
+      return;
+    }
 
     try {
-      const storageRef = ref(storage, `chat/${threadId}/${Date.now()}_${file.name}`);
+      const storageRef = ref(storage as FirebaseStorage, `chat/${threadId}/${Date.now()}_${file.name}`);
       await uploadBytes(storageRef, file);
       const fileUrl = await getDownloadURL(storageRef);
 
       let thumbnailUrl = '';
       if (type === 'image') {
         // Create thumbnail for images
-        const thumbnailRef = ref(storage, `chat/${threadId}/thumbnails/${Date.now()}_${file.name}`);
+        const thumbnailRef = ref(storage as FirebaseStorage, `chat/${threadId}/thumbnails/${Date.now()}_${file.name}`);
         // Here you might want to resize the image before uploading as thumbnail
         thumbnailUrl = fileUrl; // For now, use the same URL
       }
