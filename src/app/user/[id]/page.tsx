@@ -29,6 +29,10 @@ import { Calendar as CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import UserProfileClient from "./UserProfileClient"
+import { auth } from "@/lib/firebase"
+import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth"
+import { userDataService } from "@/app/api/profile/userDataService"
+import { UserData } from "@/app/api/profile/userDataService"
 
 // Mock data for skills
 const mockSkills = {
@@ -154,16 +158,12 @@ export default async function UserProfile({ params }: { params: { id: string } }
 
               {/* Bottom User */}
               <div className="p-4 border-t border-gray-200">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">John Doe</p>
-                    <p className="text-xs text-gray-500">Member</p>
-                  </div>
-                </div>
+                <UserProfileClient 
+                  userId={userId}
+                  initialSkills={mockSkills}
+                  initialCalendarData={mockCalendarData}
+                  showSidebarUser={true}
+                />
               </div>
             </div>
 
@@ -172,6 +172,7 @@ export default async function UserProfile({ params }: { params: { id: string } }
               userId={userId}
               initialSkills={mockSkills}
               initialCalendarData={mockCalendarData}
+              showSidebarUser={false}
             />
           </div>
         </div>

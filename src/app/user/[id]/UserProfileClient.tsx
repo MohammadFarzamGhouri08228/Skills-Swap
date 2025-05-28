@@ -26,9 +26,10 @@ interface UserProfileClientProps {
     upcoming: Array<{ date: Date; title: string; partner: string; type: string }>
     past: Array<{ date: Date; title: string; partner: string; type: string; rating: number }>
   }
+  showSidebarUser?: boolean
 }
 
-export default function UserProfileClient({ userId, initialSkills, initialCalendarData }: UserProfileClientProps) {
+export default function UserProfileClient({ userId, initialSkills, initialCalendarData, showSidebarUser = false }: UserProfileClientProps) {
   const [isEditingSkills, setIsEditingSkills] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
@@ -76,6 +77,36 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
   const getUserInitials = (userData: UserData | null, firebaseUser: FirebaseUser | null) => {
     const name = getUserDisplayName(userData, firebaseUser)
     return name.split(' ').map((n: string) => n[0]).join('')
+  }
+
+  if (showSidebarUser) {
+    if (isLoading || !firebaseUser || !userData) {
+      return (
+        <div className="flex items-center gap-3">
+          <Avatar className="w-8 h-8">
+            <AvatarImage src="/placeholder.svg?height=32&width=32" />
+            <AvatarFallback>...</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900">Loading...</p>
+            <p className="text-xs text-gray-500">Member</p>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex items-center gap-3">
+        <Avatar className="w-8 h-8">
+          <AvatarImage src={userData.profilePicture || firebaseUser.photoURL || "/placeholder.svg?height=32&width=32"} />
+          <AvatarFallback>{getUserInitials(userData, firebaseUser)}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900">{getUserDisplayName(userData, firebaseUser)}</p>
+          <p className="text-xs text-gray-500">Member</p>
+        </div>
+      </div>
+    )
   }
 
   if (isLoading || !firebaseUser || !userData) {
