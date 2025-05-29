@@ -3,16 +3,24 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, User, Filter, Search, Star, ChevronLeft, ChevronRight, Eye, Edit, Trash2, MessageCircle, RefreshCw, ArrowLeftRight, Timer, Plus, X } from 'lucide-react';
 
+// Firebase imports - now importing from main directory
+import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { app, db } from '../../../../firebase/firebase';
+
 // Import Header and Footer components (assuming they exist elsewhere)
 import HeaderOne from '@/layouts/headers/HeaderOne'; // Example import path
 import FooterOne from '@/layouts/footers/FooterOne'; // Example import path
+
+// Initialize Firebase services using the imported app
+const auth = getAuth(app);
 
 // Define an interface for the Booking object
 interface Booking {
   id: number;
   mySkill: string;
   partnerSkill: string;
-  partner: string;
+  peer: string;
   date: string;
   time: string;
   status: string;
@@ -24,13 +32,50 @@ interface Booking {
   description: string;
 }
 
-// Mock data for SkillSwap bookings
+// Interface for user stats
+interface UserStats {
+  totalSessions: number;
+  completedSessions: number;
+  activePeers: number;
+  avgRating: number;
+}
+
+// Interface for peers
+interface Peer {
+  id: string;
+  name: string;
+  skills: string[];
+  rating: number;
+}
+
+// Interface for user skills
+interface UserSkill {
+  id: string;
+  name: string;
+  level: string;
+}
+
+// Interface for new booking form
+interface NewBookingForm {
+  peerId: string;
+  peerName: string;
+  mySkill: string;
+  partnerSkill: string;
+  date: string;
+  time: string;
+  duration: string;
+  isRecurring: boolean;
+  frequency: string | null;
+  description: string;
+}
+
+// Mock data for SkillSwap bookings (fallback if no data from Firebase)
 const mockBookings: Booking[] = [
   {
     id: 1,
     mySkill: "Web Development",
     partnerSkill: "Graphic Design",
-    partner: "Sarah Johnson",
+    peer: "Sarah Johnson",
     date: "2024-06-15",
     time: "10:00 AM",
     status: "confirmed",
@@ -45,7 +90,7 @@ const mockBookings: Booking[] = [
     id: 2,
     mySkill: "Guitar Playing",
     partnerSkill: "Piano Lessons",
-    partner: "Mike Chen",
+    peer: "Mike Chen",
     date: "2024-06-18",
     time: "2:30 PM",
     status: "pending",
@@ -60,7 +105,7 @@ const mockBookings: Booking[] = [
     id: 3,
     mySkill: "Digital Marketing",
     partnerSkill: "Content Writing",
-    partner: "Emma Davis",
+    peer: "Emma Davis",
     date: "2024-06-20",
     time: "9:00 AM",
     status: "confirmed",
@@ -75,7 +120,7 @@ const mockBookings: Booking[] = [
     id: 4,
     mySkill: "Photography",
     partnerSkill: "Video Editing",
-    partner: "Alex Rodriguez",
+    peer: "Alex Rodriguez",
     date: "2024-06-22",
     time: "11:00 AM",
     status: "completed",
@@ -90,7 +135,7 @@ const mockBookings: Booking[] = [
     id: 5,
     mySkill: "Cooking",
     partnerSkill: "Baking",
-    partner: "Lisa Wang",
+    peer: "Lisa Wang",
     date: "2024-06-25",
     time: "6:00 PM",
     status: "confirmed",
@@ -103,6 +148,58 @@ const mockBookings: Booking[] = [
   }
 ];
 
+// Mock data for peers
+const mockPeers: Peer[] = [
+  {
+    id: "1",
+    name: "Sarah Johnson",
+    skills: ["Graphic Design", "UI/UX Design", "Adobe Photoshop", "Illustrator"],
+    rating: 4.8
+  },
+  {
+    id: "2",
+    name: "Mike Chen",
+    skills: ["Piano Lessons", "Music Theory", "Jazz Piano", "Classical Music"],
+    rating: 4.9
+  },
+  {
+    id: "3",
+    name: "Emma Davis",
+    skills: ["Content Writing", "Copywriting", "SEO Writing", "Blog Writing"],
+    rating: 4.7
+  },
+  {
+    id: "4",
+    name: "Alex Rodriguez",
+    skills: ["Video Editing", "Adobe Premiere Pro", "After Effects", "Motion Graphics"],
+    rating: 5.0
+  },
+  {
+    id: "5",
+    name: "Lisa Wang",
+    skills: ["Baking", "Pastry Arts", "Cake Decorating", "French Patisserie"],
+    rating: 4.6
+  },
+  {
+    id: "6",
+    name: "David Kim",
+    skills: ["Python Programming", "Data Science", "Machine Learning", "Django"],
+    rating: 4.5
+  }
+];
+
+// Mock data for user skills
+const mockUserSkills: UserSkill[] = [
+  { id: "1", name: "Web Development", level: "Advanced" },
+  { id: "2", name: "React", level: "Advanced" },
+  { id: "3", name: "JavaScript", level: "Expert" },
+  { id: "4", name: "Guitar Playing", level: "Intermediate" },
+  { id: "5", name: "Digital Marketing", level: "Advanced" },
+  { id: "6", name: "Photography", level: "Intermediate" },
+  { id: "7", name: "Cooking", level: "Beginner" },
+  { id: "8", name: "Spanish Language", level: "Intermediate" }
+];
+
 function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>(mockBookings);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>(mockBookings);
@@ -113,10 +210,107 @@ function BookingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [newBookingModalOpen, setNewBookingModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [editForm, setEditForm] = useState<Partial<Booking>>({});
+  const [userStats, setUserStats] = useState<UserStats>({
+    totalSessions: 0,
+    completedSessions: 0,
+    activePeers: 0,
+    avgRating: 0
+  });
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [peers, setPeers] = useState<Peer[]>(mockPeers);
+  const [userSkills, setUserSkills] = useState<UserSkill[]>(mockUserSkills);
+  const [newBookingForm, setNewBookingForm] = useState<NewBookingForm>({
+    peerId: '',
+    peerName: '',
+    mySkill: '',
+    partnerSkill: '',
+    date: '',
+    time: '',
+    duration: '1 hour',
+    isRecurring: false,
+    frequency: null,
+    description: ''
+  });
+  
   const itemsPerPage = 6;
   const [mounted, setMounted] = useState(false);
+
+  // Fetch user data and stats from Firebase
+  const fetchUserDataAndStats = async (userId: string) => {
+    try {
+      setDataLoading(true);
+      
+      // Get user document
+      const usersRef = collection(db, 'users');
+      const userQuery = query(usersRef, where('uid', '==', userId));
+      const userSnapshot = await getDocs(userQuery);
+      
+      if (!userSnapshot.empty) {
+        const userData = userSnapshot.docs[0].data();
+        
+        // Calculate stats from user data
+        const totalSessions = userData.totalSessions || 0;
+        const completedSessions = userData.completedSessions || 0;
+        const activePeers = userData.activePeers || 0;
+        const avgRating = userData.avgRating || 0;
+        
+        setUserStats({
+          totalSessions,
+          completedSessions,
+          activePeers,
+          avgRating
+        });
+      }
+      
+      // Fetch bookings from Firebase (if you have a bookings collection)
+      // You can uncomment and modify this section when you create the bookings collection
+      /*
+      const bookingsRef = collection(db, 'bookings');
+      const bookingsQuery = query(
+        bookingsRef, 
+        where('userId', '==', userId),
+        orderBy('date', 'desc')
+      );
+      const bookingsSnapshot = await getDocs(bookingsQuery);
+      
+      const firebaseBookings = bookingsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      if (firebaseBookings.length > 0) {
+        setBookings(firebaseBookings);
+      }
+      */
+      
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      // Keep using mock data if Firebase fetch fails
+    } finally {
+      setDataLoading(false);
+    }
+  };
+
+  // Monitor authentication state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user);
+        fetchUserDataAndStats(user.uid);
+      } else {
+        setCurrentUser(null);
+        setDataLoading(false);
+        // If no user is logged in, you might want to redirect to login
+        // or show mock data for demo purposes
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Filter bookings based on search and filters
   useEffect(() => {
@@ -126,7 +320,7 @@ function BookingsPage() {
       filtered = filtered.filter(booking =>
         booking.mySkill.toLowerCase().includes(searchTerm.toLowerCase()) ||
         booking.partnerSkill.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.partner.toLowerCase().includes(searchTerm.toLowerCase())
+        booking.peer.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -161,8 +355,99 @@ function BookingsPage() {
   };
 
   const handleMakeBooking = () => {
-    // Navigate to Skills List page
-    window.location.href = '/skills'; // or use router.push('/skills') if using Next.js router
+    setNewBookingModalOpen(true);
+  };
+
+  const handlePeerSelect = (peerId: string) => {
+    const selectedPeer = peers.find(peer => peer.id === peerId);
+    if (selectedPeer) {
+      setNewBookingForm(prev => ({
+        ...prev,
+        peerId: peerId,
+        peerName: selectedPeer.name,
+        partnerSkill: '' // Reset partner skill when peer changes
+      }));
+    }
+  };
+
+  const handleCreateBooking = () => {
+    setIsLoading(true);
+    
+    // Simulate API call to create booking
+    setTimeout(() => {
+      const newBooking: Booking = {
+        id: bookings.length + 1,
+        mySkill: newBookingForm.mySkill,
+        partnerSkill: newBookingForm.partnerSkill,
+        peer: newBookingForm.peerName,
+        date: newBookingForm.date,
+        time: newBookingForm.time,
+        status: 'pending',
+        rating: 0,
+        isRecurring: newBookingForm.isRecurring,
+        frequency: newBookingForm.frequency,
+        duration: newBookingForm.duration,
+        nextSession: newBookingForm.isRecurring ? calculateNextSession(newBookingForm.date, newBookingForm.frequency) : null,
+        description: newBookingForm.description
+      };
+
+      setBookings(prev => [newBooking, ...prev]);
+      setNewBookingModalOpen(false);
+      resetNewBookingForm();
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  const calculateNextSession = (currentDate: string, frequency: string | null): string => {
+    if (!frequency) return currentDate;
+    
+    const date = new Date(currentDate);
+    switch (frequency) {
+      case 'Daily':
+        date.setDate(date.getDate() + 1);
+        break;
+      case 'Weekly':
+        date.setDate(date.getDate() + 7);
+        break;
+      case 'Bi-weekly':
+        date.setDate(date.getDate() + 14);
+        break;
+      case 'Monthly':
+        date.setMonth(date.getMonth() + 1);
+        break;
+    }
+    return date.toISOString().split('T')[0];
+  };
+
+  const resetNewBookingForm = () => {
+    setNewBookingForm({
+      peerId: '',
+      peerName: '',
+      mySkill: '',
+      partnerSkill: '',
+      date: '',
+      time: '',
+      duration: '1 hour',
+      isRecurring: false,
+      frequency: null,
+      description: ''
+    });
+  };
+
+  const getSelectedPeerSkills = (): string[] => {
+    const selectedPeer = peers.find(peer => peer.id === newBookingForm.peerId);
+    return selectedPeer ? selectedPeer.skills : [];
+  };
+
+  const isNewBookingFormValid = (): boolean => {
+    return !!(
+      newBookingForm.peerId &&
+      newBookingForm.mySkill &&
+      newBookingForm.partnerSkill &&
+      newBookingForm.date &&
+      newBookingForm.time &&
+      newBookingForm.duration
+    );
   };
 
   const handleView = (booking: Booking) => {
@@ -214,6 +499,24 @@ function BookingsPage() {
     setMounted(true);
   }, []);
 
+  // Show loading state while fetching data
+  if (dataLoading) {
+    return (
+      <>
+        <HeaderOne />
+        <div className="bookings-page">
+          <div className="bookings-content-wrapper">
+            <div className="bookings-loading">
+              <div className="bookings-loading-spinner"></div>
+              <p>Loading your bookings...</p>
+            </div>
+          </div>
+        </div>
+        <FooterOne />
+      </>
+    );
+  }
+
   return (
     <>
       <HeaderOne />
@@ -224,25 +527,25 @@ function BookingsPage() {
             <div className="bookings-container">
               <div className="bookings-header-content">
                 <h1 className="bookings-title">My SkillSwap Sessions</h1>
-                <p className="bookings-subtitle">Manage your skill exchange sessions and partnerships</p>
+                <p className="bookings-subtitle">Manage your skill exchange sessions and peers</p>
               </div>
               
-              {/* Stats Cards */}
+              {/* Stats Cards - Now using real data from Firebase */}
               <div className="bookings-stats">
                 <div className="bookings-stat-card">
-                  <div className="bookings-stat-number">12</div>
+                  <div className="bookings-stat-number">{userStats.totalSessions}</div>
                   <div className="bookings-stat-label">Total Sessions</div>
                 </div>
                 <div className="bookings-stat-card">
-                  <div className="bookings-stat-number">8</div>
+                  <div className="bookings-stat-number">{userStats.completedSessions}</div>
                   <div className="bookings-stat-label">Completed</div>
                 </div>
                 <div className="bookings-stat-card">
-                  <div className="bookings-stat-number">3</div>
-                  <div className="bookings-stat-label">Active Partners</div>
+                  <div className="bookings-stat-number">{userStats.activePeers}</div>
+                  <div className="bookings-stat-label">Active Peers</div>
                 </div>
                 <div className="bookings-stat-card">
-                  <div className="bookings-stat-number">4.8</div>
+                  <div className="bookings-stat-number">{userStats.avgRating.toFixed(1)}</div>
                   <div className="bookings-stat-label">Avg Rating</div>
                 </div>
               </div>
@@ -257,7 +560,7 @@ function BookingsPage() {
                   <Search className="bookings-search-icon" />
                   <input
                     type="text"
-                    placeholder="Search sessions or partners..."
+                    placeholder="Search sessions or peers..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="bookings-search-input"
@@ -354,7 +657,7 @@ function BookingsPage() {
                           <div className="bookings-card-meta">
                             <div className="bookings-meta-item">
                               <User className="bookings-meta-icon" />
-                              <span>{booking.partner}</span>
+                              <span>{booking.peer}</span>
                             </div>
                             
                             <div className="bookings-datetime-section">
@@ -454,6 +757,242 @@ function BookingsPage() {
           </div>
         </div>
 
+        {/* New Booking Modal */}
+        {newBookingModalOpen && (
+          <div className="bookings-modal-overlay" onClick={() => setNewBookingModalOpen(false)}>
+            <div className="bookings-modal bookings-new-booking-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="bookings-modal-header">
+                <h2>Create New Booking</h2>
+                <button 
+                  className="bookings-modal-close"
+                  onClick={() => setNewBookingModalOpen(false)}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="bookings-modal-content">
+                <div className="bookings-new-booking-form">
+                  {/* Step 1: Select Peer */}
+                  <div className="bookings-form-section">
+                    <h3>Select a Peer</h3>
+                    <div className="bookings-peers-grid">
+                      {peers.map((peer) => (
+                        <div 
+                          key={peer.id}
+                          className={`bookings-peer-card ${newBookingForm.peerId === peer.id ? 'selected' : ''}`}
+                          onClick={() => handlePeerSelect(peer.id)}
+                        >
+                          <div className="bookings-peer-header">
+                            <h4>{peer.name}</h4>
+                            <div className="bookings-peer-rating">
+                              <Star size={16} />
+                              <span>{peer.rating}</span>
+                            </div>
+                          </div>
+                          <div className="bookings-peer-skills">
+                            <strong>Skills:</strong>
+                            <div className="bookings-skills-list">
+                              {peer.skills.map((skill, index) => (
+                                <span key={index} className="bookings-skill-tag">
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Step 2: Select Skills */}
+                  {newBookingForm.peerId && (
+                    <div className="bookings-form-section">
+                      <h3>Select Skills</h3>
+                      <div className="bookings-skills-selection">
+                        <div className="bookings-form-group">
+                          <label>Skill I will teach:</label>
+                          <select
+                            value={newBookingForm.mySkill}
+                            onChange={(e) => setNewBookingForm(prev => ({...prev, mySkill: e.target.value}))}
+                            className="bookings-form-select"
+                          >
+                            <option value="">Select your skill</option>
+                            {userSkills.map((skill) => (
+                              <option key={skill.id} value={skill.name}>
+                                {skill.name} ({skill.level})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div className="bookings-form-group">
+                          <label>Skill I want to learn:</label>
+                          <select
+                            value={newBookingForm.partnerSkill}
+                            onChange={(e) => setNewBookingForm(prev => ({...prev, partnerSkill: e.target.value}))}
+                            className="bookings-form-select"
+                          >
+                            <option value="">Select peer's skill</option>
+                            {getSelectedPeerSkills().map((skill, index) => (
+                              <option key={index} value={skill}>
+                                {skill}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 3: Schedule Details */}
+                  {newBookingForm.mySkill && newBookingForm.partnerSkill && (
+                    <div className="bookings-form-section">
+                      <h3>Schedule Details</h3>
+                      <div className="bookings-schedule-grid">
+                        <div className="bookings-form-group">
+                          <label>Date:</label>
+                          <input
+                            type="date"
+                            value={newBookingForm.date}
+                            onChange={(e) => setNewBookingForm(prev => ({...prev, date: e.target.value}))}
+                            className="bookings-form-input"
+                            min={new Date().toISOString().split('T')[0]}
+                          />
+                        </div>
+                        
+                        <div className="bookings-form-group">
+                          <label>Time:</label>
+                          <input
+                            type="time"
+                            value={newBookingForm.time}
+                            onChange={(e) => setNewBookingForm(prev => ({...prev, time: e.target.value}))}
+                            className="bookings-form-input"
+                          />
+                        </div>
+                        
+                        <div className="bookings-form-group">
+                          <label>Duration:</label>
+                          <select
+                            value={newBookingForm.duration}
+                            onChange={(e) => setNewBookingForm(prev => ({...prev, duration: e.target.value}))}
+                            className="bookings-form-select"
+                          >
+                            <option value="30 minutes">30 minutes</option>
+                            <option value="1 hour">1 hour</option>
+                            <option value="1.5 hours">1.5 hours</option>
+                            <option value="2 hours">2 hours</option>
+                            <option value="2.5 hours">2.5 hours</option>
+                            <option value="3 hours">3 hours</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="bookings-form-group">
+                        <label className="bookings-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={newBookingForm.isRecurring}
+                            onChange={(e) => setNewBookingForm(prev => ({
+                              ...prev, 
+                              isRecurring: e.target.checked,
+                              frequency: e.target.checked ? 'Weekly' : null
+                            }))}
+                            className="bookings-form-checkbox"
+                          />
+                          Make this a recurring session
+                        </label>
+                      </div>
+                      
+                      {newBookingForm.isRecurring && (
+                        <div className="bookings-form-group">
+                          <label>Frequency:</label>
+                          <select
+                            value={newBookingForm.frequency || ''}
+                            onChange={(e) => setNewBookingForm(prev => ({...prev, frequency: e.target.value}))}
+                            className="bookings-form-select"
+                          >
+                            <option value="Daily">Daily</option>
+                            <option value="Weekly">Weekly</option>
+                            <option value="Bi-weekly">Bi-weekly</option>
+                            <option value="Monthly">Monthly</option>
+                          </select>
+                        </div>
+                      )}
+                      
+                      <div className="bookings-form-group">
+                        <label>Description (Optional):</label>
+                        <textarea
+                          value={newBookingForm.description}
+                          onChange={(e) => setNewBookingForm(prev => ({...prev, description: e.target.value}))}
+                          className="bookings-form-textarea"
+                          rows={3}
+                          placeholder="Add any additional details about this session..."
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Booking Summary */}
+                  {isNewBookingFormValid() && (
+                    <div className="bookings-form-section">
+                      <h3>Booking Summary</h3>
+                      <div className="bookings-summary-card">
+                        <div className="bookings-summary-row">
+                          <strong>Peer:</strong> {newBookingForm.peerName}
+                        </div>
+                        <div className="bookings-summary-row">
+                          <strong>Exchange:</strong> 
+                          <div className="bookings-summary-exchange">
+                            <span>You teach: {newBookingForm.mySkill}</span>
+                            <ArrowLeftRight size={16} />
+                            <span>You learn: {newBookingForm.partnerSkill}</span>
+                          </div>
+                        </div>
+                        <div className="bookings-summary-row">
+                          <strong>Date & Time:</strong> {formatDateTime(newBookingForm.date, newBookingForm.time)}
+                        </div>
+                        <div className="bookings-summary-row">
+                          <strong>Duration:</strong> {newBookingForm.duration}
+                        </div>
+                        {newBookingForm.isRecurring && (
+                          <div className="bookings-summary-row">
+                            <strong>Type:</strong> Recurring ({newBookingForm.frequency})
+                          </div>
+                        )}
+                        {newBookingForm.description && (
+                          <div className="bookings-summary-row">
+                            <strong>Description:</strong> {newBookingForm.description}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Form Actions */}
+                  <div className="bookings-form-actions">
+                    <button
+                      className="bookings-btn-secondary"
+                      onClick={() => {
+                        setNewBookingModalOpen(false);
+                        resetNewBookingForm();
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="bookings-btn-primary"
+                      onClick={handleCreateBooking}
+                      disabled={!isNewBookingFormValid() || isLoading}
+                    >
+                      {isLoading ? 'Creating...' : 'Create Booking'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* View Modal */}
         {viewModalOpen && selectedBooking && (
           <div className="bookings-modal-overlay" onClick={() => setViewModalOpen(false)}>
@@ -484,7 +1023,7 @@ function BookingsPage() {
                   <div className="bookings-view-section">
                     <h3>Session Info</h3>
                     <div className="bookings-view-info">
-                      <div><strong>Partner:</strong> {selectedBooking.partner}</div>
+                      <div><strong>Peer:</strong> {selectedBooking.peer}</div>
                       <div><strong>Date & Time:</strong> {formatDateTime(selectedBooking.date, selectedBooking.time)}</div>
                       <div><strong>Duration:</strong> {selectedBooking.duration}</div>
                       <div><strong>Status:</strong> {selectedBooking.status}</div>
@@ -620,10 +1159,8 @@ function BookingsPage() {
             </div>
           </div>
         )}
-
-        {/* Placeholder for Footer Component */}
-        <FooterOne />
       </div>
+      <FooterOne />
     </>
   );
 }

@@ -10,6 +10,7 @@ Version      : 1.0
 #2E1065 Deep Midnight Purple
 #FFD23F Yellow
 #FF914D Orange
+#FF686B Coral
 
 */
 
@@ -4230,7 +4231,7 @@ li.comment{
 	top: 0;
 	left: 0;
 	right: 0;
-	height: 4px;
+	height: 0px;
 	background: #FF914D;
   }
   
@@ -5246,3 +5247,210 @@ li.comment{
 	  padding: 15px 20px;
 	}
   }
+
+/* ========================================
+   NEW BOOKING MODAL SPECIFICS
+   ======================================== */
+
+.bookings-new-booking-modal .bookings-modal-content {
+  padding: 20px; /* Slightly less padding for denser content */
+}
+
+.bookings-form-section {
+  margin-bottom: 30px;
+  border-bottom: 1px solid #EBE3D3; /* Cream separator */
+  padding-bottom: 25px;
+}
+
+.bookings-form-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.bookings-form-section h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #5B21B6; /* Bright Purple */
+  margin-bottom: 20px;
+  position: relative;
+  padding-left: 15px;
+}
+
+.bookings-form-section h3::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 20px;
+  background-color: #FFD23F; /* Yellow accent */
+  border-radius: 3px;
+}
+
+.bookings-peers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.bookings-peer-card {
+  background: #FFFFFF;
+  border: 2px solid #EBE3D3; /* Cream border */
+  border-radius: 15px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(46, 16, 101, 0.05); /* Subtle purple shadow */
+}
+
+.bookings-peer-card:hover {
+  border-color: #FFD23F; /* Yellow border on hover */
+  box-shadow: 0 6px 15px rgba(255, 210, 63, 0.2);
+}
+
+.bookings-peer-card.selected {
+  border-color: #5B21B6; /* Bright Purple border when selected */
+  background-color: #F8F5FF; /* Very light purple background */
+  box-shadow: 0 0 0 3px rgba(91, 33, 182, 0.2);
+}
+
+.bookings-peer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.bookings-peer-header h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2E1065; /* Deep Midnight Purple */
+  margin: 0;
+}
+
+.bookings-peer-rating {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+  color: #FF914D; /* Tangerine for rating */
+}
+
+.bookings-peer-rating svg {
+  width: 16px;
+  height: 16px;
+  fill: #FF914D; /* Tangerine */
+}
+
+.bookings-peer-skills strong {
+  font-size: 0.85rem;
+  color: #5B21B6; /* Bright Purple */
+  margin-bottom: 5px;
+  display: block;
+}
+
+.bookings-skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bookings-skill-tag {
+  background-color: #EBE3D3; /* Cream */
+  color: #2E1065; /* Deep Midnight Purple */
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+  /* ========================================
+	 RESPONSIVE DESIGN
+	 ======================================== */
+
+.bookings-skills-selection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 600px) {
+  .bookings-skills-selection {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bookings-schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.bookings-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: #2E1065;
+  cursor: pointer;
+}
+
+.bookings-summary-card {
+  background: #F8F5FF; /* Very light purple background */
+  border: 1px solid #D1C4E9; /* Lighter Purple border */
+  border-radius: 15px;
+  padding: 20px;
+  margin-top: 10px;
+}
+
+.bookings-summary-row {
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  color: #2E1065;
+}
+
+.bookings-summary-row:last-child {
+  margin-bottom: 0;
+}
+
+.bookings-summary-row strong {
+  font-weight: 600;
+  color: #5B21B6; /* Bright Purple */
+  margin-right: 8px;
+}
+
+.bookings-summary-exchange {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+  padding: 10px;
+  background-color: #FFFFFF;
+  border-radius: 10px;
+}
+
+.bookings-summary-exchange span {
+  flex: 1;
+}
+
+.bookings-summary-exchange svg {
+  color: #FF914D; /* Tangerine */
+  width: 18px;
+  height: 18px;
+}
+
+.bookings-new-booking-modal .bookings-form-actions .bookings-btn-primary {
+  background-color: #FF914D; /* Tangerine for primary create button */
+  color: white;
+}
+
+.bookings-new-booking-modal .bookings-form-actions .bookings-btn-primary:hover {
+  background-color: #E67E3A; /* Darker Tangerine */
+}
+
+  /* ========================================
+	 RESPONSIVE DESIGN
+	 ======================================== */
