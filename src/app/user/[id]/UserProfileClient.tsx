@@ -15,6 +15,8 @@ import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth"
 import { userDataService } from "@/app/api/profile/userDataService"
 import { UserData } from "@/app/api/profile/userDataService"
 import { useRouter } from "next/navigation"
+import { skillsService, Skill, SkillCategory } from "@/app/api/skills/skillsService"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface UserProfileClientProps {
   userId: string
@@ -29,6 +31,36 @@ interface UserProfileClientProps {
   showSidebarUser?: boolean
 }
 
+interface RequestItemProps {
+  name: string
+  skill: string
+  type: string
+  status: string
+}
+
+function RequestItem({ name, skill, type, status }: RequestItemProps) {
+  return (
+    <div className="flex items-center gap-3 p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow">
+      <Avatar className="w-8 h-8 ring-2 ring-white shadow-sm">
+        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`} />
+        <AvatarFallback>{name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-gray-900">{name}</p>
+        <p className="text-xs text-gray-500">{skill}</p>
+        <div className="flex items-center gap-2 mt-1">
+          <Badge variant="outline" className="text-xs bg-white/50 shadow-sm">
+            {type}
+          </Badge>
+          <Badge variant={status === "Accepted" ? "default" : "secondary"} className="text-xs shadow-sm">
+            {status}
+          </Badge>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function UserProfileClient({ userId, initialSkills, initialCalendarData, showSidebarUser = false }: UserProfileClientProps) {
   const [isEditingSkills, setIsEditingSkills] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
@@ -39,6 +71,11 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const [categories, setCategories] = useState<SkillCategory[]>([])
+  const [availableSkills, setAvailableSkills] = useState<Skill[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<string>("")
+  const [selectedSkill, setSelectedSkill] = useState<string>("")
+  const [skillLevel, setSkillLevel] = useState<string>("Beginner")
 
   useEffect(() => {
     if (!auth) {
@@ -66,6 +103,36 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
 
     return () => unsubscribe()
   }, [router])
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoriesData = await skillsService.getCategories()
+        setCategories(categoriesData)
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+      }
+    }
+    fetchCategories()
+  }, [])
+
+  // Fetch skills for selected category
+  useEffect(() => {
+    const fetchSkillsByCategory = async () => {
+      if (selectedCategory) {
+        try {
+          const skillsData = await skillsService.getSkillsByCategory(selectedCategory)
+          setAvailableSkills(skillsData)
+        } catch (error) {
+          console.error('Error fetching skills by category:', error)
+        }
+      } else {
+        setAvailableSkills([])
+      }
+    }
+    fetchSkillsByCategory()
+  }, [selectedCategory])
 
   const getUserDisplayName = (userData: UserData | null, firebaseUser: FirebaseUser | null) => {
     if (userData?.firstName && userData?.surname) {
@@ -118,6 +185,25 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
         </div>
       </div>
     )
+  }
+
+  // Update the onValueChange handlers to include type annotations
+  const handleCategoryChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
+    const newSkills = { ...skills }
+    newSkills[type][index].category = value
+    setSkills(newSkills)
+  }
+
+  const handleSkillChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
+    const newSkills = { ...skills }
+    newSkills[type][index].name = value
+    setSkills(newSkills)
+  }
+
+  const handleLevelChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
+    const newSkills = { ...skills }
+    newSkills[type][index].level = value
+    setSkills(newSkills)
   }
 
   return (
@@ -276,8 +362,52 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                       <div key={index} className="flex items-center justify-between p-3 bg-white/80 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                         {isEditingSkills ? (
                           <>
-                            <Input defaultValue={skill.name} className="w-1/2" />
-                            <Input defaultValue={skill.level} className="w-1/4" />
+                            <div className="flex-1 flex gap-2">
+                              <Select
+                                value={skill.category}
+                                onValueChange={(value: string) => handleCategoryChange(value, index, 'canTeach')}
+                              >
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories.map((category) => (
+                                    <SelectItem key={category.id} value={category.name}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Select
+                                value={skill.name}
+                                onValueChange={(value: string) => handleSkillChange(value, index, 'canTeach')}
+                              >
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue placeholder="Select skill" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {availableSkills.map((skill) => (
+                                    <SelectItem key={skill.id} value={skill.name}>
+                                      {skill.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Select
+                                value={skill.level}
+                                onValueChange={(value: string) => handleLevelChange(value, index, 'canTeach')}
+                              >
+                                <SelectTrigger className="w-[120px]">
+                                  <SelectValue placeholder="Select level" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Beginner">Beginner</SelectItem>
+                                  <SelectItem value="Intermediate">Intermediate</SelectItem>
+                                  <SelectItem value="Advanced">Advanced</SelectItem>
+                                  <SelectItem value="Expert">Expert</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                             <Button 
                               variant="ghost" 
                               size="sm" 
@@ -303,19 +433,78 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                       </div>
                     ))}
                     {isEditingSkills && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full"
-                        onClick={() => {
-                          const newSkills = { ...skills }
-                          newSkills.canTeach.push({ name: "New Skill", level: "Beginner", category: "Other" })
-                          setSkills(newSkills)
-                        }}
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Skill
-                      </Button>
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Select
+                            value={selectedCategory}
+                            onValueChange={setSelectedCategory}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((category) => (
+                                <SelectItem key={category.id} value={category.name}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={selectedSkill}
+                            onValueChange={setSelectedSkill}
+                            disabled={!selectedCategory}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Select skill" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableSkills.map((skill) => (
+                                <SelectItem key={skill.id} value={skill.name}>
+                                  {skill.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={skillLevel}
+                            onValueChange={setSkillLevel}
+                          >
+                            <SelectTrigger className="w-[120px]">
+                              <SelectValue placeholder="Select level" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Beginner">Beginner</SelectItem>
+                              <SelectItem value="Intermediate">Intermediate</SelectItem>
+                              <SelectItem value="Advanced">Advanced</SelectItem>
+                              <SelectItem value="Expert">Expert</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full"
+                          disabled={!selectedCategory || !selectedSkill}
+                          onClick={() => {
+                            if (selectedCategory && selectedSkill) {
+                              const newSkills = { ...skills }
+                              newSkills.canTeach.push({
+                                name: selectedSkill,
+                                level: skillLevel,
+                                category: selectedCategory
+                              })
+                              setSkills(newSkills)
+                              setSelectedCategory("")
+                              setSelectedSkill("")
+                              setSkillLevel("Beginner")
+                            }
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add Skill
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -339,8 +528,52 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                       <div key={index} className="flex items-center justify-between p-3 bg-white/80 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                         {isEditingSkills ? (
                           <>
-                            <Input defaultValue={skill.name} className="w-1/2" />
-                            <Input defaultValue={skill.level} className="w-1/4" />
+                            <div className="flex-1 flex gap-2">
+                              <Select
+                                value={skill.category}
+                                onValueChange={(value: string) => handleCategoryChange(value, index, 'wantToLearn')}
+                              >
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories.map((category) => (
+                                    <SelectItem key={category.id} value={category.name}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Select
+                                value={skill.name}
+                                onValueChange={(value: string) => handleSkillChange(value, index, 'wantToLearn')}
+                              >
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue placeholder="Select skill" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {availableSkills.map((skill) => (
+                                    <SelectItem key={skill.id} value={skill.name}>
+                                      {skill.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Select
+                                value={skill.level}
+                                onValueChange={(value: string) => handleLevelChange(value, index, 'wantToLearn')}
+                              >
+                                <SelectTrigger className="w-[120px]">
+                                  <SelectValue placeholder="Select level" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Beginner">Beginner</SelectItem>
+                                  <SelectItem value="Intermediate">Intermediate</SelectItem>
+                                  <SelectItem value="Advanced">Advanced</SelectItem>
+                                  <SelectItem value="Expert">Expert</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                             <Button 
                               variant="ghost" 
                               size="sm" 
@@ -366,19 +599,78 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                       </div>
                     ))}
                     {isEditingSkills && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full"
-                        onClick={() => {
-                          const newSkills = { ...skills }
-                          newSkills.wantToLearn.push({ name: "New Skill", level: "Beginner", category: "Other" })
-                          setSkills(newSkills)
-                        }}
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Skill
-                      </Button>
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Select
+                            value={selectedCategory}
+                            onValueChange={setSelectedCategory}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Select category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((category) => (
+                                <SelectItem key={category.id} value={category.name}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={selectedSkill}
+                            onValueChange={setSelectedSkill}
+                            disabled={!selectedCategory}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Select skill" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableSkills.map((skill) => (
+                                <SelectItem key={skill.id} value={skill.name}>
+                                  {skill.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={skillLevel}
+                            onValueChange={setSkillLevel}
+                          >
+                            <SelectTrigger className="w-[120px]">
+                              <SelectValue placeholder="Select level" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Beginner">Beginner</SelectItem>
+                              <SelectItem value="Intermediate">Intermediate</SelectItem>
+                              <SelectItem value="Advanced">Advanced</SelectItem>
+                              <SelectItem value="Expert">Expert</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full"
+                          disabled={!selectedCategory || !selectedSkill}
+                          onClick={() => {
+                            if (selectedCategory && selectedSkill) {
+                              const newSkills = { ...skills }
+                              newSkills.wantToLearn.push({
+                                name: selectedSkill,
+                                level: skillLevel,
+                                category: selectedCategory
+                              })
+                              setSkills(newSkills)
+                              setSelectedCategory("")
+                              setSelectedSkill("")
+                              setSkillLevel("Beginner")
+                            }
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add Skill
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -516,39 +808,6 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
               />
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function RequestItem({
-  name,
-  skill,
-  type,
-  status,
-}: {
-  name: string
-  skill: string
-  type: string
-  status: string
-}) {
-  return (
-    <div className="flex items-center gap-3 p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow">
-      <Avatar className="w-8 h-8 ring-2 ring-white shadow-sm">
-        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`} />
-        <AvatarFallback>{name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-      </Avatar>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900">{name}</p>
-        <p className="text-xs text-gray-500">{skill}</p>
-        <div className="flex items-center gap-2 mt-1">
-          <Badge variant="outline" className="text-xs bg-white/50 shadow-sm">
-            {type}
-          </Badge>
-          <Badge variant={status === "Accepted" ? "default" : "secondary"} className="text-xs shadow-sm">
-            {status}
-          </Badge>
         </div>
       </div>
     </div>
