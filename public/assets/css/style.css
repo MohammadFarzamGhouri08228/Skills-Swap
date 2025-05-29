@@ -10,7 +10,6 @@ Version      : 1.0
 #2E1065 Deep Midnight Purple
 #FFD23F Yellow
 #FF914D Orange
-#FF914D Tangerine
 
 */
 
@@ -248,8 +247,8 @@ img{
 	height: 100%;
     background: linear-gradient(
     135deg,
-    #FAFAD2 0%,    /* Slightly Darker Pale Cream */
-    #FAFAD2 100%   /* Deeper Cream */
+    #FFF 0%,    
+    #FFF 100%  
     );
 	z-index: -2; /* Below header.svg (-1) and content (default/auto) */
 }
@@ -4141,7 +4140,7 @@ li.comment{
   
   .bookings-content-wrapper {
 	min-height: 100vh;
-	background: linear-gradient(180deg, #1a0b3d 0%, #2E1065 100%);
+	background: linear-gradient(180deg, #1a0b3d 0%, #2E1065 30%, #F59E0B 100%);
 	position: relative;
 	overflow-x: hidden;
   }
@@ -4203,7 +4202,7 @@ li.comment{
 	font-weight: 500;
 	max-width: 600px;
 	margin: 0 auto;
-	color: #fafad2;
+	color: #FFF;
   }
   
   .bookings-stats {
@@ -4297,14 +4296,14 @@ li.comment{
 	padding: 15px 15px 15px 50px;
 	border: 2px solid rgba(91, 33, 182, 0.2);
 	border-radius: 15px;
-	background: #FAFAD2;
+	background: #FFF;
 	font-size: 1rem;
 	transition: all 0.3s ease;
 	backdrop-filter: blur(10px);
   }
   
   .bookings-search-input:focus {
-	background: #FAFAD2;
+	background: #FFF;
 	outline: none;
 	border-color: #5B21B6;
 	box-shadow: 0 0 0 3px rgba(91, 33, 182, 0.1);
@@ -4320,7 +4319,7 @@ li.comment{
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	background: #FAFAD2;
+	background: #FFF;
 	border-radius: 12px;
 	padding: 8px 15px;
 	backdrop-filter: blur(10px);
@@ -4343,7 +4342,7 @@ li.comment{
   }
   
   .bookings-filter-select:focus {
-	background: #FAFAD2;
+	background: #FFF;
 	outline: none;
   }
   
@@ -4363,7 +4362,7 @@ li.comment{
   }
   
   .bookings-card {
-	background: #FAFAD2;
+	background: #FFF;
 	backdrop-filter: blur(15px);
 	border-radius: 20px;
 	overflow: hidden;
@@ -4460,7 +4459,7 @@ li.comment{
   }
   
   .bookings-skill-label {
-	font-size: 0.8rem;
+	font-size: 0.9rem; /* Increased from 0.8rem */
 	color: #5B21B6;
 	font-weight: 500;
 	margin-bottom: 5px;
@@ -4469,7 +4468,7 @@ li.comment{
   }
   
   .bookings-skill-name {
-	font-size: 1.1rem;
+	font-size: 1.2rem; /* Increased from 1.1rem */
 	font-weight: 700;
 	color: #2E1065;
   }
@@ -4483,8 +4482,9 @@ li.comment{
   }
   
   .bookings-card-meta {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
+	display: flex; /* Changed from grid */
+	flex-direction: column; /* Added */
+	align-items: flex-start; /* Added to align items to the start */
 	gap: 12px;
 	margin-bottom: 20px;
   }
@@ -4493,7 +4493,7 @@ li.comment{
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	font-size: 0.9rem;
+	font-size: 1rem; /* Increased from 0.9rem */
 	color: #2E1065;
   }
   
@@ -4686,7 +4686,8 @@ li.comment{
 	}
 	
 	.bookings-card-meta {
-	  grid-template-columns: 1fr;
+	  /* grid-template-columns: 1fr; Removed as base is now flex column */
+	  /* No change needed here as flex-direction: column and align-items: flex-start from base are fine */
 	  gap: 10px;
 	}
 	
@@ -4897,3 +4898,351 @@ li.comment{
 .bookings-page > #navigation .searchcart path {
   fill: #5B21B6 !important; /* Ensure search/cart icons are purple */
 }
+
+/* ========================================
+   MAKE A BOOKING BUTTON
+   ======================================== */
+
+.bookings-make-booking-section {
+  padding: 20px 0;
+  margin-bottom: 30px; /* Space before the bookings grid */
+  text-align: center; /* Center the button if it's inline-block or has a set width */
+}
+
+.bookings-make-booking-btn {
+  display: inline-flex; /* Align icon and text */
+  align-items: center;
+  gap: 10px;
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2E1065;
+  background: radial-gradient(circle at center, #FFD23F 0%, #FFD23F 100%); /* Tangerine to Yellow */
+  border: none;
+  border-radius: 15px; /* Consistent with other elements */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 145, 77, 0.3);
+}
+
+.bookings-make-booking-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 145, 77, 0.4);
+  background: radial-gradient(circle at center, #FFDD6B  0%, #FFDD6B 100%); /* Darker shades on hover */
+}
+
+.bookings-make-booking-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+  /* ========================================
+	 BOOKINGS GRID
+	 ======================================== */
+  
+  .bookings-meta-icon {
+	width: 16px;
+	height: 16px;
+	color: #5B21B6;
+	flex-shrink: 0;
+  }
+
+.bookings-datetime-section {
+  display: flex;
+  flex-direction: column; /* Stack date/time and duration */
+  gap: 8px; /* Space between them */
+}
+  
+  .bookings-pagination-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+  }
+
+/* ========================================
+   MODAL STYLES
+   ======================================== */
+
+.bookings-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(46, 16, 101, 0.8); /* Deep Midnight Purple with opacity */
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure it's on top */
+  padding: 20px;
+  animation: bookings-fadeIn 0.3s ease-out; /* Assuming bookings-fadeIn is defined elsewhere */
+}
+
+.bookings-modal {
+  background: #FFFFFF; /* White background for modal content */
+  border-radius: 20px; /* Consistent with cards */
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 600px; /* Max width for the modal */
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.bookings-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #E0E0E0; /* Light grey border */
+  background: #F2E9DE; /* Cream color for header */
+}
+
+.bookings-modal-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2E1065; /* Deep Midnight Purple */
+  margin: 0;
+}
+
+.bookings-modal-close {
+  background: transparent;
+  border: none;
+  color: #5B21B6; /* Bright Purple */
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.bookings-modal-close:hover {
+  color: #2E1065; /* Deep Midnight Purple */
+}
+
+.bookings-modal-close svg {
+  width: 24px;
+  height: 24px;
+}
+
+.bookings-modal-content {
+  padding: 25px;
+  color: #2E1065; /* Default text color */
+  flex-grow: 1;
+}
+
+/* View Modal Specifics */
+.bookings-view-details {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.bookings-view-section h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #5B21B6; /* Bright Purple */
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #FFD23F; /* Yellow underline */
+  display: inline-block;
+}
+
+.bookings-view-skills div,
+.bookings-view-info div {
+  margin-bottom: 8px;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.bookings-view-skills strong,
+.bookings-view-info strong {
+  font-weight: 600;
+  color: #2E1065;
+  margin-right: 5px;
+}
+
+.bookings-view-section p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #333; /* Darker grey for paragraph text */
+}
+
+/* Edit Modal Form Specifics */
+.bookings-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bookings-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bookings-form-group label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #5B21B6; /* Bright Purple */
+}
+
+.bookings-form-group label input[type="checkbox"] {
+  margin-right: 8px;
+  accent-color: #5B21B6; /* Purple for checkbox */
+}
+
+.bookings-form-input,
+.bookings-form-select,
+.bookings-form-textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #D1C4E9; /* Lighter Purple */
+  border-radius: 10px;
+  font-size: 1rem;
+  color: #2E1065;
+  background-color: #FDFCFE; /* Very light off-white */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.bookings-form-input:focus,
+.bookings-form-select:focus,
+.bookings-form-textarea:focus {
+  outline: none;
+  border-color: #5B21B6; /* Bright Purple */
+  box-shadow: 0 0 0 3px rgba(91, 33, 182, 0.15);
+}
+
+.bookings-form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.bookings-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 10px;
+  padding-top: 20px;
+  border-top: 1px solid #E0E0E0; /* Light grey separator */
+}
+
+.bookings-form-actions .bookings-btn-primary,
+.bookings-form-actions .bookings-btn-secondary {
+  padding: 10px 20px;
+  font-size: 0.95rem;
+}
+
+.bookings-form-actions .bookings-btn-secondary {
+  background: #E0E0E0; /* Grey for cancel */
+  color: #333;
+}
+
+.bookings-form-actions .bookings-btn-secondary:hover {
+  background: #C7C7C7;
+}
+
+  /* ========================================
+	 RESPONSIVE DESIGN
+	 ======================================== */
+  
+  @media (max-width: 768px) {
+	.bookings-title {
+	  font-size: 2.5rem;
+	}
+	
+	.bookings-subtitle {
+	  font-size: 1rem;
+	}
+	
+	.bookings-stats {
+	  grid-template-columns: repeat(2, 1fr);
+	  gap: 15px;
+	}
+	
+	.bookings-stat-card {
+	  padding: 20px 15px;
+	}
+	
+	.bookings-stat-number {
+	  font-size: 2rem;
+	}
+	
+	.bookings-filters-content {
+	  flex-direction: column;
+	  align-items: stretch;
+	}
+	
+	.bookings-search {
+	  max-width: none;
+	}
+	
+	.bookings-filter-group {
+	  justify-content: center;
+	}
+	
+	.bookings-grid {
+	  grid-template-columns: 1fr;
+	  gap: 20px;
+	}
+	
+	.bookings-skill-exchange {
+	  flex-direction: column;
+	  gap: 15px;
+	}
+	
+	.bookings-exchange-icon {
+	  transform: rotate(90deg);
+	  margin: 0;
+	}
+	
+	.bookings-card-meta {
+	  grid-template-columns: 1fr;
+	  gap: 10px;
+	}
+	
+	.bookings-card-actions {
+	  flex-direction: column;
+	}
+	
+	.bookings-action-btn {
+	  flex: none;
+	}
+  }
+  
+  @media (max-width: 480px) {
+	.bookings-container {
+	  padding: 0 15px;
+	}
+	
+	.bookings-header {
+	  padding: 40px 0 30px;
+	}
+	
+	.bookings-title {
+	  font-size: 2rem;
+	}
+	
+	.bookings-stats {
+	  grid-template-columns: 1fr;
+	}
+	
+	.bookings-card {
+	  margin: 0 -5px;
+	}
+	
+	.bookings-skill-exchange {
+	  padding: 15px;
+	}
+	
+	.bookings-card-content {
+	  padding: 15px 20px;
+	}
+	
+	.bookings-card-actions {
+	  padding: 15px 20px;
+	}
+  }

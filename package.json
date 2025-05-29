@@ -20,7 +20,7 @@
     "bootstrap": "^5.3.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "firebase": "^11.7.3",
+    "firebase": "^11.8.1",
     "framer-motion": "^7.10.3",
     "lucide-react": "^0.511.0",
     "next": "^13.5.11",
