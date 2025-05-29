@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSwap - Database Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 SkillSwap Database Setup</h1>
+        <p>Click the button below to create your bookings collection in Firebase!</p>
+        <p><strong>Important:</strong> Open your browser's Developer Tools (press F12) to see detailed logs.</p>
+        
+        <button id="createBookingsBtn">Create Bookings Collection</button>
+        <button id="createAllBtn">Create All Collections</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const resultDiv = document.getElementById('result');
+        
+        // Function to show results on the page
+        function showResult(message, isSuccess = true) {
+            resultDiv.innerHTML = `<div class="${isSuccess ? 'success' : 'error'}">${message}</div>`;
+        }
+
+        // Create bookings collection
+        document.getElementById('createBookingsBtn').addEventListener('click', async () => {
+            try {
+                showResult('Creating bookings collection... Please wait.', true);
+                console.log('🚀 Starting to create bookings collection...');
+                
+                const docRef = await addDoc(collection(db, 'bookings'), {
+                    participants: {
+                        teacher1: {
+                            userId: "demo-user-001",
+                            skillOffered: "React Development"
+                        },
+                        teacher2: {
+                            userId: "demo-user-002", 
+                            skillOffered: "UI/UX Design"
+                        }
+                    },
+                    timeSlot: {
+                        startTime: new Date('2024-06-20T15:00:00'),
+                        endTime: new Date('2024-06-20T16:00:00'),
+                        duration: 60
+                    },
+                    status: "pending",
+                    location: "Virtual - Google Meet",
+                    createdAt: serverTimestamp(),
+                    notes: "Demo booking created to initialize collection"
+                });
+                
+                const successMessage = `✅ SUCCESS! Bookings collection created!<br>Document ID: ${docRef.id}<br><br>Go check your Firebase Console now!`;
+                showResult(successMessage, true);
+                console.log('✅ Bookings collection created successfully!');
+                console.log('Document ID:', docRef.id);
+                
+            } catch (error) {
+                const errorMessage = `❌ ERROR: ${error.message}<br><br>Check the browser console (F12) for more details.`;
+                showResult(errorMessage, false);
+                console.error('❌ Error creating bookings collection:', error);
+                console.error('Error code:', error.code);
+            }
+        });
+
+        // Create all collections at once
+        document.getElementById('createAllBtn').addEventListener('click', async () => {
+            try {
+                showResult('Creating all collections... Please wait.', true);
+                console.log('🚀 Creating all collections...');
+                
+                // Create bookings collection
+                const bookingRef = await addDoc(collection(db, 'bookings'), {
+                    participants: {
+                        teacher1: { userId: "user-001", skillOffered: "JavaScript" },
+                        teacher2: { userId: "user-002", skillOffered: "Python" }
+                    },
+                    timeSlot: {
+                        startTime: new Date(),
+                        endTime: new Date(Date.now() + 3600000),
+                        duration: 60
+                    },
+                    status: "pending",
+                    location: "Online",
+                    createdAt: serverTimestamp(),
+                    notes: "Sample booking"
+                });
+
+                // Create timeSlots collection
+                const slotRef = await addDoc(collection(db, 'timeSlots'), {
+                    userId: "user-001",
+                    skillOffered: "Web Development",
+                    skillWanted: "Mobile Development", 
+                    startTime: new Date(),
+                    endTime: new Date(Date.now() + 3600000),
+                    isBooked: false,
+                    location: "Coffee Shop",
+                    createdAt: serverTimestamp()
+                });
+
+                // Create users collection
+                const userRef = await addDoc(collection(db, 'users'), {
+                    name: "John Doe",
+                    email: "john@example.com",
+                    skills: ["JavaScript", "React", "Node.js"],
+                    skillsWanted: ["Python", "Django"],
+                    rating: 4.5,
+                    profileImage: "",
+                    createdAt: serverTimestamp()
+                });
+
+                const successMessage = `✅ ALL COLLECTIONS CREATED!<br>
+                    📋 Bookings: ${bookingRef.id}<br>
+                    ⏰ Time Slots: ${slotRef.id}<br>  
+                    👤 Users: ${userRef.id}<br><br>
+                    Check your Firebase Console!`;
+                showResult(successMessage, true);
+                console.log('✅ All collections created successfully!');
+                
+            } catch (error) {
+                const errorMessage = `❌ ERROR: ${error.message}`;
+                showResult(errorMessage, false);
+                console.error('❌ Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -139,7 +139,7 @@ export default function FooterOne() {
         </div>
 
         <div className="copyright text-center wow fadeIn">
-          <p>Copyright © 2024 <a href="#">SkillSwap</a>. All rights reserved.</p>
+          <p>Copyright © 2025 <a href="#">SkillSwap</a>. All rights reserved.</p>
         </div>
       </section>
     </>
