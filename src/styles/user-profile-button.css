@@ -1,7 +1,7 @@
 .bg_btn {
-  background: linear-gradient(90deg, #5B21B6 0%, #22D3A0 100%);
+  background: #000;
   border: 3px solid #FFF;
-  color: #000;
+  color: #FFF;
   transition: .5s, transform 0.3s cubic-bezier(0.4,0,0.2,1);
   padding: 8px 35px;
   border-radius: 30px;
@@ -23,7 +23,7 @@
   width: 15%;
   height: 30px;
   border-radius: 50%;
-  background: linear-gradient(90deg, #16A34A 0%, #22D3A0 100%);
+  background: #22D3A0;
   transform-origin: 100% 50%;
   transform: scale3d(1, 2, 1);
   transition: transform 0.3s, opacity 0.3s;
@@ -36,8 +36,8 @@
 
 .bg_btn:hover,
 .bg_btn:focus {
-  color: #fff;
+  color: #000;
   border-color: #22D3A0;
-  background: linear-gradient(90deg, #5B21B6 0%, #16A34A 100%);
+  background: #22D3A0;
   transform: scale(1.07);
 } 

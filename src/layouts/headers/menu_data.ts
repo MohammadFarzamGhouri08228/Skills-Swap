@@ -16,18 +16,19 @@ const menu_data: DataType[] = [
 		link: "#",
 		has_dropdown: true,
 		sub_menus: [
-			{ link: "/", title: "Home One" },
+			{ link: "/user", title: "User Dashboard" },
 			{ link: "/home-2", title: "Home Two" },
 		],
 	}, 
 	{
 		id: 2,
-		title: "Courses",
+		title: "Skills",
 		link: "#",
 		has_dropdown: true,
 		sub_menus: [
-			{ link: "/courses", title: "Course Style1" },
-			{ link: "/courses-2", title: "Course Style2" },
+			{ link: "/skills", title: "Skills List" },
+			{ link: "/user/bookings", title: "Bookings" },
+			{ link: "/my-skills", title: "My Skills" },
 			{ link: "/course-details", title: "Course Details" },
 		],
 	},

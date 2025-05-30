@@ -37,6 +37,15 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
+  const [showLogin, setShowLogin] = useState(false);
+  const [bgStage, setBgStage] = useState(0); // 0: default, 1: email, 2: password
+
+  // Animate background color based on bgStage
+  const bgColors = [
+    "linear-gradient(to bottom, #5EC8F2, #6A4C93)",
+    "linear-gradient(to bottom, #5EC8F2, #A8E66A)",
+    "linear-gradient(to bottom, #A8E66A, #4CAF50)"
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,10 +95,9 @@ export default function LoginPage() {
       </LampContainer>
 
       <motion.div
-        initial="hidden"
-        animate="show"
-        variants={fadeIn("up")}
-        className="w-full max-w-md"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={showLogin ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0.5 }}
+        onClick={() => setShowLogin(true)}
       >
         <Card className="bg-[#A8E66A]/80 backdrop-blur-sm border-[#FF914D] shadow-2xl">
           <div className="p-8">
@@ -279,6 +287,10 @@ export default function LoginPage() {
           </div>
         </Card>
       </motion.div>
+
+      <div style={{ background: bgColors[bgStage], transition: "background 1s" }}>
+        {/* ... */}
+      </div>
     </div>
   );
 }

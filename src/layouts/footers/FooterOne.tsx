@@ -29,7 +29,7 @@ export default function FooterOne() {
                     <a href="#"><img src="assets/img/footer-logo.svg" alt="SkillSwap" /></a>
                   </div>
                   <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit varius congue Morbi
+                    Swap your skills and learn from others in a vibrant community. Join us to share your expertise and discover new talents.
                   </p>
 
                   <div className="fot-social">
@@ -58,11 +58,10 @@ export default function FooterOne() {
               <div className="single-footer">
                 <h3 className="footer-title">Useful Links</h3>
                 <ul>
-                  <li><a href="#">Home</a></li>
+                  <li><a href="user">Home</a></li>
                   <li><a href="#">About Us</a></li>
-                  <li><a href="#">Courses</a></li>
+                  <li><a href="skills">Skills</a></li>
                   <li><a href="#">Categories</a></li>
-                  <li><a href="#">Pricing</a></li>
                   <li><a href="#">Contact</a></li>
                 </ul>
               </div>
@@ -140,7 +139,7 @@ export default function FooterOne() {
         </div>
 
         <div className="copyright text-center wow fadeIn">
-          <p>Copyright © 2024 <a href="#">SkillSwap</a>. All rights reserved.</p>
+          <p>Copyright © 2025 <a href="#">SkillSwap</a>. All rights reserved.</p>
         </div>
       </section>
     </>

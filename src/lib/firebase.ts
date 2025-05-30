@@ -33,7 +33,7 @@ let app: ReturnType<typeof initializeApp> | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 let storage: ReturnType<typeof getStorage> | null = null;
-let provider = new GoogleAuthProvider();
+let provider: GoogleAuthProvider | null = null;
 
 try {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -42,6 +42,7 @@ try {
   auth = getAuth(app);
   db = getFirestore(app);
   storage = getStorage(app);
+  provider = new GoogleAuthProvider();
 } catch (error) {
   console.error("Firebase initialization error:", error);
   // Create mock objects if Firebase init fails
@@ -49,6 +50,7 @@ try {
   auth = null;
   db = null;
   storage = null;
+  provider = null;
 }
 
 export { app, auth, db, storage, provider };

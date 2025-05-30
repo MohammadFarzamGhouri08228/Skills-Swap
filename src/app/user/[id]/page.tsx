@@ -9,7 +9,7 @@ import {
   Calendar,
   Users,
   MessageSquare,
-  CreditCard,
+  Star,
   Settings,
   Search,
   Plus,
@@ -127,16 +127,16 @@ export default async function UserProfile({ params }: { params: { id: string } }
   const userId = params.id;
   
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gray-50">
+    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="h-full w-full">
-        <div className="h-full bg-white rounded-none shadow-sm border border-gray-200 overflow-hidden">
+        <div className="h-full bg-white/95 backdrop-blur-sm rounded-none shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200/50 overflow-hidden">
           <div className="flex h-full">
             {/* Left Sidebar */}
-            <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+            <div className="w-64 bg-white/80 backdrop-blur-sm border-r border-gray-200/50 flex flex-col h-full shadow-[4px_0_15px_rgba(0,0,0,0.05)]">
               {/* Logo */}
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-6 border-b border-gray-200/50 bg-gradient-to-r from-blue-50 to-white">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
                     <Users className="w-5 h-5 text-white" />
                   </div>
                   <span className="font-semibold text-gray-900">Skill Swap</span>
