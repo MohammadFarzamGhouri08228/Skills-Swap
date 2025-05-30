@@ -74,20 +74,25 @@ export default function ModernLogin() {
   };
 
   const handleGoogleSignIn = async () => {
-    if (!auth) {
-      toast.error("Authentication service is not available.");
-      return;
-    }
-    if (!db) {
-      toast.error("Database service is not available.");
-      return;
-    }
     try {
       setIsGoogleLoading(true);
+
+      if (!auth) {
+        throw new Error("Authentication service is not available.");
+      }
+      if (!provider) {
+        throw new Error("GoogleAuthProvider is not initialized.");
+      }
+      if (!db) {
+        throw new Error("Database service is not available.");
+      }
+
       const result = await signInWithPopup(auth, provider);
+
       if (result.user) {
         const userRef = doc(db, "users", result.user.uid);
         const userSnap = await getDoc(userRef);
+
         if (!userSnap.exists()) {
           await setDoc(userRef, {
             uid: result.user.uid,
@@ -101,7 +106,8 @@ export default function ModernLogin() {
         router.push("/user");
       }
     } catch (error: any) {
-      toast.error("Google sign-in failed.");
+      console.error("Google sign-in failed:", error);
+      toast.error(error.message || "Google sign-in failed.");
     } finally {
       setIsGoogleLoading(false);
     }
