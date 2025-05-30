@@ -29,7 +29,7 @@ const menu_data: DataType[] = [
 			{ link: "/skills", title: "Skills List" },
 			{ link: "/user/bookings", title: "Bookings" },
 			{ link: "/my-skills", title: "My Skills" },
-			{ link: "/course-details", title: "Course Details" },
+			{ link: "/skillsToLearn", title: "Skills I Want To Learn" },
 		],
 	},
 
