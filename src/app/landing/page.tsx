@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const skills = [
   { icon: '🎨', label: 'Design' },
@@ -21,6 +21,24 @@ const chatMessages = [
   "Awesome!"
 ];
 
+// Minimal, modern face (two eyes, subtle mouth)
+function MinimalFace({ playful = false }: { playful?: boolean }) {
+  return (
+    <g>
+      {/* Eyes */}
+      <circle cx="43" cy="30" r="2.2" fill="#222" />
+      <circle cx="57" cy="30" r="2.2" fill="#222" />
+      {/* Mouth: subtle for soft, playful curve for bold */}
+      {playful ? (
+        <path d="M45 38 Q50 44 55 38" stroke="#222" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      ) : (
+        <path d="M45 38 Q50 40 55 38" stroke="#222" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      )}
+    </g>
+  );
+}
+
+// 3D pictogram-style stick figure inspired by user reference
 function StickFigurePictogram({ armUp = false }: { armUp?: boolean }) {
   return (
     <motion.svg
@@ -163,7 +181,6 @@ function SkillSwapWithChat() {
 }
 
 export default function LandingPage() {
-  const router = useRouter();
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 overflow-hidden flex flex-col justify-center items-center">
       {/* Hero Section */}
@@ -205,18 +222,18 @@ export default function LandingPage() {
         </div>
         {/* CTA Buttons */}
         <div className="flex gap-4 justify-center">
-          <button
-            onClick={() => router.push('/dashboard')}
+          <Link
+            href="/dashboard"
             className="px-8 py-4 bg-yellow-400 text-purple-900 rounded-full font-bold hover:bg-yellow-300 transition-colors"
           >
             Get Started
-          </button>
-          <button
-            onClick={() => router.push('/modern/login')}
+          </Link>
+          <Link
+            href="/modern/login"
             className="px-8 py-4 bg-white/10 text-white rounded-full font-bold hover:bg-white/20 transition-colors"
           >
             Sign In
-          </button>
+          </Link>
         </div>
       </div>
       {/* Features section */}
@@ -257,4 +274,4 @@ export default function LandingPage() {
       </motion.div>
     </div>
   );
-}
+} 
