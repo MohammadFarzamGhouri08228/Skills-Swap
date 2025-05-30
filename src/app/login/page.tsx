@@ -13,6 +13,7 @@ import { LampContainer } from '@/components/ui/lamp';
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase";
 import { useRouter } from "next/navigation"; // for Next.js 13+ app router
+import { GoogleAuthProvider } from "firebase/auth";
 
 const fadeIn = (direction: "up" | "down" | "left" | "right" = "up", delay: number = 0) => ({
   hidden: {
@@ -65,7 +66,8 @@ export default function LoginPage() {
         alert('Authentication service is not available. Please try again later.');
         return;
       }
-      const result = await signInWithPopup(auth, provider);
+      // We know provider is initialized in firebase.ts, so we can assert its type
+      const result = await signInWithPopup(auth, provider as GoogleAuthProvider);
       if (result.user) {
         // Redirect after successful login
         router.push("/dashboard");

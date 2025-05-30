@@ -65,6 +65,7 @@ export class AuthService {
 
   async signInWithGoogle(): Promise<User> {
     if (!auth) throw new Error('Firebase Auth is not initialized');
+    if (!provider) throw new Error('Google Auth Provider is not initialized');
 
     try {
       const result = await signInWithPopup(auth, provider);
