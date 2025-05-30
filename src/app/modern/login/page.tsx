@@ -107,7 +107,7 @@ export default function ModernLogin() {
     }
   };
 
-  // SVG fluid background
+  // SVG fluid background with animated waves
   const FluidBg = () => (
     <motion.div
       className="absolute inset-0 -z-10"
@@ -136,6 +136,33 @@ export default function ModernLogin() {
           fill="#FFD23F"
           animate={{ rx: 100 + 10 * progress, fill: progress === 1 ? "#22c55e" : "#FFD23F" }}
           transition={{ duration: 1.2, type: "spring" }}
+        />
+        {/* Animated SVG Waves */}
+        <motion.path
+          d="M0 500 Q200 550 400 500 T800 500 V600 H0 Z"
+          fill="#fff"
+          opacity={0.08}
+          animate={{
+            d: [
+              "M0 500 Q200 550 400 500 T800 500 V600 H0 Z",
+              "M0 500 Q200 520 400 540 T800 500 V600 H0 Z",
+              "M0 500 Q200 550 400 500 T800 500 V600 H0 Z"
+            ]
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.path
+          d="M0 520 Q200 570 400 520 T800 520 V600 H0 Z"
+          fill="#fff"
+          opacity={0.06}
+          animate={{
+            d: [
+              "M0 520 Q200 570 400 520 T800 520 V600 H0 Z",
+              "M0 520 Q200 540 400 560 T800 520 V600 H0 Z",
+              "M0 520 Q200 570 400 520 T800 520 V600 H0 Z"
+            ]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
       </svg>
     </motion.div>
@@ -173,9 +200,9 @@ export default function ModernLogin() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              Sign In
+              Skill Swap
             </motion.h2>
-            <p className="text-white/80 mt-2 text-center">Click to continue</p>
+            <p className="text-white/80 mt-2 text-center">Login</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -189,6 +216,22 @@ export default function ModernLogin() {
             transition={{ duration: 0.7, type: "spring" }}
             className="relative bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-10 w-full max-w-md flex flex-col items-center border border-purple-400/20"
           >
+            {/* Animated loading text when user is typing */}
+            <AnimatePresence>
+              {(email.length > 0 || password.length > 0) && !isLoading && !isGoogleLoading && (
+                <motion.div
+                  key="loading-text"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.4 }}
+                  className="mb-4 text-base text-green-200 font-semibold flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#22c55e" strokeWidth="3" opacity="0.3"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#22c55e" strokeWidth="3" strokeLinecap="round"/></svg>
+                  Getting things ready...
+                </motion.div>
+              )}
+            </AnimatePresence>
             <motion.h2
               className="text-2xl md:text-3xl font-extrabold mb-8 text-white drop-shadow-lg text-center"
               initial={{ opacity: 0, y: 20 }}
@@ -334,7 +377,7 @@ export default function ModernLogin() {
                   <div className="w-full border-t border-purple-400/20"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-purple-900 text-white/80">Or continue with</span>
+                  <span className="px-2 text-white/80">Or continue with</span>
                 </div>
               </div>
               <MotionButton
