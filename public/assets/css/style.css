@@ -5454,3 +5454,43 @@ li.comment{
   /* ========================================
 	 RESPONSIVE DESIGN
 	 ======================================== */
+
+.bookings-action-btn.bookings-btn-danger {
+  background-color: #dc3545; /* Red color for danger */
+  color: white;
+  border: 1px solid #dc3545;
+}
+
+.bookings-action-btn.bookings-btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+.bookings-action-btn.bookings-btn-danger:active {
+  background-color: #bd2130;
+  border-color: #b21f2d;
+}
+
+.bookings-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 10px;
+  padding-top: 20px;
+  border-top: 1px solid #E0E0E0; /* Light grey separator */
+}
+
+.bookings-modal-actions .bookings-btn-primary,
+.bookings-modal-actions .bookings-btn-secondary {
+  padding: 10px 20px;
+  font-size: 0.95rem;
+}
+
+.bookings-modal-actions .bookings-btn-secondary {
+  background: #E0E0E0; /* Grey for cancel */
+  color: #333;
+}
+
+.bookings-modal-actions .bookings-btn-secondary:hover {
+  background: #C7C7C7;
+}
