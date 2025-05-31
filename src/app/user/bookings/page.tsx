@@ -523,7 +523,6 @@ function BookingsPage() {
         if (newBookingForm.frequency === 'Bi-weekly' && newBookingForm.secondaryDate) {
           // For bi-weekly, calculate next session based on the later of the two dates.
           // Assuming 'date' is the first, 'secondaryDate' is the second.
-          const date1 = new Date(newBookingForm.date);
           const date2 = new Date(newBookingForm.secondaryDate);
           nextSessionDate = new Date(calculateNextSession(date2.toISOString().split('T')[0], newBookingForm.frequency));
         } else if (newBookingForm.frequency === 'Daily') {
@@ -531,6 +530,9 @@ function BookingsPage() {
         } else {
           nextSessionDate = new Date(calculateNextSession(newBookingForm.date, newBookingForm.frequency));
         }
+      } else {
+        // For one-time sessions, the "next session" is the session itself
+        nextSessionDate = startDate;
       }
 
       // Construct the booking data for Firestore
@@ -958,7 +960,7 @@ function BookingsPage() {
                             </div> */}
                           </div>
 
-                          {booking.isRecurring && booking.nextSession && (
+                          {booking.nextSession && (
                             <div className="bookings-next-session">
                               <div className="bookings-next-label">Next session:</div>
                               <div className="bookings-next-date">
