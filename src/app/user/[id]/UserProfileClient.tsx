@@ -72,6 +72,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
   const [calendarData] = useState(initialCalendarData)
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null)
   const [userData, setUserData] = useState<UserData | null>(null)
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const [categories, setCategories] = useState<SkillCategory[]>([])
@@ -88,7 +89,6 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState("");
   const [showAddNote, setShowAddNote] = useState(false);
-  const [currentUser, setCurrentUser] = useState<UserData | null>(null);
 
   useEffect(() => {
     if (!auth) {
@@ -99,16 +99,24 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // If no user is logged in, redirect to login page
-        router.push('/modern/login')
+        router.push('/login')
         return
       }
 
       setFirebaseUser(user)
       try {
-        const data = await userDataService.getUser(user.uid)
-        setUserData(data)
-        setCurrentUser(data)
+        // Fetch current user's data
+        const currentUserData = await userDataService.getUser(user.uid)
+        setCurrentUser(currentUserData)
+
+        // Fetch profile user's data
+        const profileUserData = await userDataService.getUser(userId)
+        if (!profileUserData) {
+          console.error('Profile user not found')
+          router.push('/peers')
+          return
+        }
+        setUserData(profileUserData)
       } catch (error) {
         console.error('Error fetching user data:', error)
       }
@@ -116,7 +124,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
     })
 
     return () => unsubscribe()
-  }, [router])
+  }, [router, userId])
 
   // Fetch categories on mount
   useEffect(() => {
@@ -160,6 +168,28 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
     return name.split(' ').map((n: string) => n[0]).join('')
   }
 
+  // Update the onValueChange handlers to include type annotations
+  const handleCategoryChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
+    const newSkills = { ...skills }
+    newSkills[type][index].category = value
+    setSkills(newSkills)
+  }
+
+  const handleSkillChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
+    const newSkills = { ...skills }
+    newSkills[type][index].name = value
+    setSkills(newSkills)
+  }
+
+  const handleLevelChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
+    const newSkills = { ...skills }
+    newSkills[type][index].level = value
+    setSkills(newSkills)
+  }
+
+  // Update the edit buttons visibility based on whether viewing own profile
+  const isOwnProfile = currentUser?.uid === userId
+
   if (showSidebarUser) {
     if (isLoading || !firebaseUser || !userData) {
       return (
@@ -201,25 +231,6 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
     )
   }
 
-  // Update the onValueChange handlers to include type annotations
-  const handleCategoryChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
-    const newSkills = { ...skills }
-    newSkills[type][index].category = value
-    setSkills(newSkills)
-  }
-
-  const handleSkillChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
-    const newSkills = { ...skills }
-    newSkills[type][index].name = value
-    setSkills(newSkills)
-  }
-
-  const handleLevelChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
-    const newSkills = { ...skills }
-    newSkills[type][index].level = value
-    setSkills(newSkills)
-  }
-
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#5C2594]">
       {/* Header */}
@@ -229,24 +240,28 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span>User Profile</span>
               <ChevronRight className="w-4 h-4" />
-              <span className="text-gray-900">{getUserDisplayName(userData, firebaseUser)}</span>
+              <span className="text-gray-900">{getUserDisplayName(userData, null)}</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input placeholder="Search" className="pl-10 w-64 shadow-sm" />
-            </div>
-            <Button size="icon" className="bg-gradient-to-br from-[#0D5FF9] to-[#6366f1] hover:from-[#6366f1] hover:to-[#0D5FF9] shadow-lg shadow-[#0D5FF9]/20">
-              <Plus className="w-4 h-4" />
-            </Button>
-            <Button size="icon" variant="ghost" className="relative hover:bg-gray-100">
-              <Bell className="w-4 h-4" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs shadow-sm"></span>
-            </Button>
-            <Button variant="ghost" className="text-[#0D5FF9] hover:bg-blue-50" onClick={() => setIsEditingProfile(true)}>
-              Edit Profile
-            </Button>
+            {isOwnProfile && (
+              <>
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Input placeholder="Search" className="pl-10 w-64 shadow-sm" />
+                </div>
+                <Button size="icon" className="bg-gradient-to-br from-[#0D5FF9] to-[#6366f1] hover:from-[#6366f1] hover:to-[#0D5FF9] shadow-lg shadow-[#0D5FF9]/20">
+                  <Plus className="w-4 h-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="relative hover:bg-gray-100">
+                  <Bell className="w-4 h-4" />
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs shadow-sm"></span>
+                </Button>
+                <Button variant="ghost" className="text-[#0D5FF9] hover:bg-blue-50" onClick={() => setIsEditingProfile(true)}>
+                  Edit Profile
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -258,43 +273,48 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
           <div className="flex items-start gap-6 mb-8">
             <div className="relative">
               <Avatar className="w-20 h-20 ring-4 ring-white shadow-xl">
-                <AvatarImage src={userData.profilePicture || firebaseUser.photoURL || "/placeholder.svg?height=32&width=32"} />
-                <AvatarFallback className="bg-gradient-to-br from-[#FFD34E] to-[#FFB84E] text-[#5C2594] font-bold">{getUserInitials(userData, firebaseUser)}</AvatarFallback>
+                <AvatarImage src={userData?.profilePicture || "/placeholder.svg?height=32&width=32"} />
+                <AvatarFallback className="bg-gradient-to-br from-[#FFD34E] to-[#FFB84E] text-[#5C2594] font-bold">
+                  {getUserInitials(userData, null)}
+                </AvatarFallback>
               </Avatar>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="absolute bottom-0 right-0 bg-white rounded-full shadow-md hover:bg-gray-100"
-                onClick={() => {
-                  const input = document.createElement('input')
-                  input.type = 'file'
-                  input.accept = 'image/*'
-                  input.onchange = async (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0]
-                    if (file) {
-                      try {
-                        const reader = new FileReader()
-                        reader.onload = async (e) => {
-                          const imageUrl = e.target?.result as string
-                          // Update user data with new image
-                          await userDataService.updateProfilePicture(firebaseUser.uid, imageUrl)
-                          setUserData(prev => prev ? { ...prev, profilePicture: imageUrl } : null)
+              {isOwnProfile && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="absolute bottom-0 right-0 bg-white rounded-full shadow-md hover:bg-gray-100"
+                  onClick={() => {
+                    const input = document.createElement('input')
+                    input.type = 'file'
+                    input.accept = 'image/*'
+                    input.onchange = async (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0]
+                      if (file) {
+                        try {
+                          const reader = new FileReader()
+                          reader.onload = async (e) => {
+                            const imageUrl = e.target?.result as string
+                            if (firebaseUser) {
+                              await userDataService.updateProfilePicture(firebaseUser.uid, imageUrl)
+                              setUserData(prev => prev ? { ...prev, profilePicture: imageUrl } : null)
+                            }
+                          }
+                          reader.readAsDataURL(file)
+                        } catch (error) {
+                          console.error('Error updating profile image:', error)
                         }
-                        reader.readAsDataURL(file)
-                      } catch (error) {
-                        console.error('Error updating profile image:', error)
                       }
                     }
-                  }
-                  input.click()
-                }}
-              >
-                <Upload className="w-4 h-4" />
-              </Button>
+                    input.click()
+                  }}
+                >
+                  <Upload className="w-4 h-4" />
+                </Button>
+              )}
             </div>
             <div className="flex-1 flex items-center gap-4">
-              <span className="ml-4 text-lg font-bold text-yellow-300 drop-shadow">{getUserDisplayName(userData, firebaseUser)}</span>
-              {isEditingProfile && (
+              <span className="ml-4 text-lg font-bold text-yellow-300 drop-shadow">{getUserDisplayName(userData, null)}</span>
+              {isOwnProfile && isEditingProfile && (
                 <Button variant="ghost" size="sm" className="text-[#FFD34E] hover:bg-[#FFD34E]/20 font-bold transition-colors duration-300" onClick={() => setIsEditingProfile(false)}>
                   <Edit2 className="w-4 h-4 mr-1" />
                   Save Changes
@@ -313,15 +333,17 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                   <GraduationCap className="w-5 h-5 text-[#FFD34E]" />
                   Skills I Can Teach
                 </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-[#FFD34E] hover:bg-[#FFD34E]/20 font-bold transition-colors duration-300"
-                  onClick={() => setIsEditingSkills(!isEditingSkills)}
-                >
-                  <Edit2 className="w-4 h-4 mr-1" />
-                  {isEditingSkills ? "Save" : "Edit"}
-                </Button>
+                {isOwnProfile && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-[#FFD34E] hover:bg-[#FFD34E]/20 font-bold transition-colors duration-300"
+                    onClick={() => setIsEditingSkills(!isEditingSkills)}
+                  >
+                    <Edit2 className="w-4 h-4 mr-1" />
+                    {isEditingSkills ? "Save" : "Edit"}
+                  </Button>
+                )}
               </div>
               <div className="space-y-2">
                 {skills.canTeach.map((skill, index) => (
@@ -481,15 +503,17 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                   <BookOpen className="w-5 h-5 text-[#FFD34E]" />
                   Skills I Want to Learn
                 </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-[#FFD34E] hover:bg-[#FFD34E]/20 font-bold transition-colors duration-300"
-                  onClick={() => setIsEditingSkills(!isEditingSkills)}
-                >
-                  <Edit2 className="w-4 h-4 mr-1" />
-                  {isEditingSkills ? "Save" : "Edit"}
-                </Button>
+                {isOwnProfile && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-[#FFD34E] hover:bg-[#FFD34E]/20 font-bold transition-colors duration-300"
+                    onClick={() => setIsEditingSkills(!isEditingSkills)}
+                  >
+                    <Edit2 className="w-4 h-4 mr-1" />
+                    {isEditingSkills ? "Save" : "Edit"}
+                  </Button>
+                )}
               </div>
               <div className="space-y-2">
                 {skills.wantToLearn.map((skill, index) => (
