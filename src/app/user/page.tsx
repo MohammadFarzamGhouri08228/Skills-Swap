@@ -1,4 +1,6 @@
 'use client';
+
+// user feed page
 import HomeOne from '@/components/homes/home'
 import React, { useEffect, useState } from 'react'
 import Wrapper from '@/layouts/Wrapper'

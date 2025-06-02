@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation"
 import { skillsService, Skill, SkillCategory } from "@/app/api/skills/skillsService"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
+import PeerRequests from '@/components/peers/PeerRequests'
 
 interface UserProfileClientProps {
   userId: string
@@ -30,6 +31,7 @@ interface UserProfileClientProps {
     past: Array<{ date: Date; title: string; partner: string; type: string; rating: number }>
   }
   showSidebarUser?: boolean
+  onPeerUpdate?: () => void
 }
 
 interface RequestItemProps {
@@ -62,7 +64,7 @@ function RequestItem({ name, skill, type, status }: RequestItemProps) {
   )
 }
 
-export default function UserProfileClient({ userId, initialSkills, initialCalendarData, showSidebarUser = false }: UserProfileClientProps) {
+export default function UserProfileClient({ userId, initialSkills, initialCalendarData, showSidebarUser = false, onPeerUpdate }: UserProfileClientProps) {
   const [isEditingSkills, setIsEditingSkills] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
@@ -86,6 +88,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState("");
   const [showAddNote, setShowAddNote] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null);
 
   useEffect(() => {
     if (!auth) {
@@ -105,6 +108,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
       try {
         const data = await userDataService.getUser(user.uid)
         setUserData(data)
+        setCurrentUser(data)
       } catch (error) {
         console.error('Error fetching user data:', error)
       }
@@ -719,6 +723,16 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
               <p className="text-sm text-[#5C2594] font-bold">Owed Exchanges</p>
             </div>
           </div>
+
+          {/* Add Peer Requests section */}
+          {currentUser && (
+            <div className="mt-8">
+              <PeerRequests 
+                currentUser={currentUser} 
+                onPeerUpdate={onPeerUpdate}
+              />
+            </div>
+          )}
         </div>
 
         {/* Sidebar and toggle button */}
