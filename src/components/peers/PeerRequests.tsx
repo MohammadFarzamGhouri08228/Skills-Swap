@@ -11,15 +11,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'react-hot-toast';
 import { Check, X, UserPlus, Users, Send } from 'lucide-react';
 
+interface PeerRequest {
+  id: string;
+  fromUser: UserData;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: Date;
+}
+
 interface PeerRequestsProps {
   currentUser: UserData;
   onPeerUpdate?: () => void;
 }
 
 export default function PeerRequests({ currentUser, onPeerUpdate }: PeerRequestsProps) {
-  const [pendingRequests, setPendingRequests] = useState<PeerRequest[]>([]);
+  const [requests, setRequests] = useState<PeerRequest[]>([]);
   const [peers, setPeers] = useState<Peer[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newRequestMessage, setNewRequestMessage] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -32,10 +39,12 @@ export default function PeerRequests({ currentUser, onPeerUpdate }: PeerRequests
   const loadPeerRequests = async () => {
     try {
       const requests = await peerService.getUserPeerRequests(currentUser.uid);
-      setPendingRequests(requests);
+      setRequests(requests);
     } catch (error) {
       console.error('Error loading peer requests:', error);
       toast.error('Failed to load peer requests');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -112,6 +121,20 @@ export default function PeerRequests({ currentUser, onPeerUpdate }: PeerRequests
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="w-6 h-6 border-2 border-[#FFD34E] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  const pendingRequests = requests.filter(request => request.status === 'pending');
+
+  if (pendingRequests.length === 0) {
+    return null;
+  }
+
   return (
     <div className="space-y-6">
       {/* Pending Requests Section */}
@@ -123,48 +146,47 @@ export default function PeerRequests({ currentUser, onPeerUpdate }: PeerRequests
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {pendingRequests.length === 0 ? (
-            <p className="text-gray-500 text-sm">No pending requests</p>
-          ) : (
-            <div className="space-y-4">
-              {pendingRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${request.senderId}`} />
-                      <AvatarFallback>UN</AvatarFallback>
+          <div className="space-y-3">
+            {pendingRequests.map((request) => (
+              <Card key={request.id} className="bg-[#6A35A6] border-[#FFD34E]/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={request.fromUser.profilePicture || undefined} />
+                      <AvatarFallback className="bg-[#FFD34E] text-[#5C2594]">
+                        {request.fromUser.firstName[0]}{request.fromUser.surname[0]}
+                      </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-medium">Request from User</p>
-                      {request.message && (
-                        <p className="text-sm text-gray-600">{request.message}</p>
-                      )}
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-white">
+                        {request.fromUser.firstName} {request.fromUser.surname}
+                      </p>
+                      <p className="text-xs text-[#FFD34E]">
+                        Wants to connect with you
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="bg-[#FFD34E] text-[#5C2594] hover:bg-[#FFD34E]/90"
+                        onClick={() => handleAcceptRequest(request.id)}
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-500 hover:bg-red-500/10"
+                        onClick={() => handleRejectRequest(request.id)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAcceptRequest(request.id)}
-                      disabled={isLoading}
-                    >
-                      <Check className="w-4 h-4 mr-1" />
-                      Accept
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRejectRequest(request.id)}
-                      disabled={isLoading}
-                    >
-                      <X className="w-4 h-4 mr-1" />
-                      Reject
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </CardContent>
       </Card>
 

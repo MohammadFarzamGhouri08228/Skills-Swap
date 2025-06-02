@@ -201,6 +201,11 @@ class PeerService {
       await deleteDoc(doc(db, this.peerRequestsCollection, existingRequest.id));
     }
   }
+
+  // Public method to get existing request between two users
+  async findPeerRequestBetweenUsers(userA: string, userB: string): Promise<PeerRequest | null> {
+    return this.getExistingRequest(userA, userB);
+  }
 }
 
 export const peerService = new PeerService(); 

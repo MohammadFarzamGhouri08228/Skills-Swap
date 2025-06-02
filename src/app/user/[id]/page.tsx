@@ -6,6 +6,7 @@ import UserProfileClient from './UserProfileClient';
 import Wrapper from '@/layouts/Wrapper';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { userDataService } from '@/app/api/profile/userDataService';
 
 // Mock data for initial setup
 const mockSkills = {
@@ -36,6 +37,7 @@ export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!auth) {
@@ -44,18 +46,46 @@ export default function UserProfilePage() {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         console.log('User authenticated:', user.uid);
         setCurrentUserId(user.uid);
+        try {
+          // Fetch user data to check if they exist
+          const userData = await userDataService.getUser(params.id as string);
+          if (!userData) {
+            router.push('/peers');
+            return;
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          router.push('/peers');
+          return;
+        }
       } else {
         console.log('No user authenticated, redirecting to login');
         router.push('/login');
       }
+      setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [router, params.id]);
+
+  if (isLoading) {
+    return (
+      <Wrapper>
+        <div className="min-h-screen bg-[#FFD23F] py-8">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-[#5B21B6] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-[#5B21B6]/70">Loading profile...</p>
+            </div>
+          </div>
+        </div>
+      </Wrapper>
+    );
+  }
 
   if (!params.id) {
     return (

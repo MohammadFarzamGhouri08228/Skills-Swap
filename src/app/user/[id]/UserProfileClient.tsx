@@ -19,6 +19,9 @@ import { skillsService, Skill, SkillCategory } from "@/app/api/skills/skillsServ
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
 import PeerRequests from '@/components/peers/PeerRequests'
+import NotificationsPopover from '@/components/notifications/NotificationsPopover'
+import { peerService } from '@/app/api/peers/peerService'
+import { notificationService } from '@/app/api/notifications/notificationService'
 
 interface UserProfileClientProps {
   userId: string
@@ -89,6 +92,11 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState("");
   const [showAddNote, setShowAddNote] = useState(false);
+  const [isAddingPeer, setIsAddingPeer] = useState(false)
+  const [peerRequestSent, setPeerRequestSent] = useState(false)
+  const [peerRequest, setPeerRequest] = useState<any | null>(null)
+  const [isAccepting, setIsAccepting] = useState(false)
+  const [isRejecting, setIsRejecting] = useState(false)
 
   useEffect(() => {
     if (!auth) {
@@ -156,6 +164,25 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
     fetchSkillsByCategory()
   }, [selectedCategory])
 
+  // Update the edit buttons visibility based on whether viewing own profile
+  const isOwnProfile = currentUser?.uid === userId
+
+  // Check for existing peer request between current user and profile user
+  useEffect(() => {
+    const checkPeerRequest = async () => {
+      if (!currentUser || !userData) return
+      try {
+        const req = await peerService.findPeerRequestBetweenUsers(currentUser.uid, userId)
+        setPeerRequest(req)
+      } catch (error) {
+        setPeerRequest(null)
+      }
+    }
+    if (!isOwnProfile && currentUser && userId) {
+      checkPeerRequest()
+    }
+  }, [currentUser, userId, isOwnProfile, peerRequestSent])
+
   const getUserDisplayName = (userData: UserData | null, firebaseUser: FirebaseUser | null) => {
     if (userData?.firstName && userData?.surname) {
       return `${userData.firstName} ${userData.surname}`
@@ -187,8 +214,81 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
     setSkills(newSkills)
   }
 
-  // Update the edit buttons visibility based on whether viewing own profile
-  const isOwnProfile = currentUser?.uid === userId
+  const handleAddPeer = async () => {
+    if (!currentUser || !userData) return;
+    try {
+      setIsAddingPeer(true);
+      await peerService.sendPeerRequest(currentUser.uid, userId)
+      setPeerRequestSent(true);
+      setIsAddingPeer(false);
+      // Send notification to receiver
+      await notificationService.createNotification({
+        userId: userId,
+        type: 'peer_request',
+        message: 'sent you a friend request',
+        fromUserId: currentUser.uid,
+        fromUser: {
+          firstName: currentUser.firstName,
+          surname: currentUser.surname,
+          profilePicture: currentUser.profilePicture
+        },
+        read: false
+      } as any)
+    } catch (error) {
+      console.error('Error sending peer request:', error);
+      setIsAddingPeer(false);
+    }
+  }
+
+  const handleAcceptPeerRequest = async () => {
+    if (!peerRequest || !currentUser) return
+    setIsAccepting(true)
+    try {
+      await peerService.acceptPeerRequest(peerRequest.id)
+      setPeerRequest(null)
+      // Send notification to sender
+      await notificationService.createNotification({
+        userId: peerRequest.senderId,
+        type: 'peer_accepted',
+        message: 'accepted your friend request',
+        fromUserId: currentUser.uid,
+        fromUser: {
+          firstName: currentUser.firstName,
+          surname: currentUser.surname,
+          profilePicture: currentUser.profilePicture
+        },
+        read: false
+      } as any)
+    } catch (error) {
+      console.error('Error accepting peer request:', error)
+    }
+    setIsAccepting(false)
+  }
+
+  const handleRejectPeerRequest = async () => {
+    if (!peerRequest || !currentUser) return
+    setIsRejecting(true)
+    try {
+      await peerService.rejectPeerRequest(peerRequest.id)
+      setPeerRequest(null)
+      // Optionally, send notification for rejection
+      await notificationService.createNotification({
+        userId: peerRequest.senderId,
+        type: 'peer_rejected',
+        message: 'rejected your friend request',
+        fromUserId: currentUser.uid,
+        fromUser: {
+          firstName: currentUser.firstName,
+          surname: currentUser.surname,
+          profilePicture: currentUser.profilePicture
+        },
+        read: false
+      } as any)
+    } catch (error) {
+      console.error('Error rejecting peer request:', error)
+    }
+    setIsRejecting(false)
+  }
 
   if (showSidebarUser) {
     if (isLoading || !firebaseUser || !userData) {
@@ -244,19 +344,58 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {/* Accept/Reject UI if current user is receiver and viewing sender's profile */}
+            {!isOwnProfile && peerRequest && peerRequest.status === 'pending' && peerRequest.receiverId === currentUser?.uid && peerRequest.senderId === userId && (
+              <>
+                <Button 
+                  size="sm"
+                  className="bg-[#FFD34E] text-[#5C2594] hover:bg-[#FFD34E]/90 font-bold transition-colors duration-300"
+                  onClick={handleAcceptPeerRequest}
+                  disabled={isAccepting}
+                >
+                  {isAccepting ? 'Accepting...' : 'Accept Request'}
+                </Button>
+                <Button 
+                  size="sm"
+                  variant="ghost"
+                  className="text-red-500 hover:bg-red-500/10"
+                  onClick={handleRejectPeerRequest}
+                  disabled={isRejecting}
+                >
+                  {isRejecting ? 'Rejecting...' : 'Reject'}
+                </Button>
+              </>
+            )}
+            {/* Add Peer button if no request exists and not own profile */}
+            {!isOwnProfile && !peerRequest && !peerRequestSent && (
+              <Button 
+                size="sm"
+                className="bg-[#FFD34E] text-[#5C2594] hover:bg-[#FFD34E]/90 font-bold transition-colors duration-300"
+                onClick={handleAddPeer}
+                disabled={isAddingPeer}
+              >
+                {isAddingPeer ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-[#5C2594] border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-4 h-4 mr-2" />
+                    Add Peer
+                  </>
+                )}
+              </Button>
+            )}
+            {/* Request sent badge */}
+            {!isOwnProfile && (peerRequestSent || (peerRequest && peerRequest.status === 'pending' && peerRequest.senderId === currentUser?.uid && peerRequest.receiverId === userId)) && (
+              <Badge variant="outline" className="bg-[#FFD34E] text-[#5C2594] font-bold">
+                Request Sent
+              </Badge>
+            )}
             {isOwnProfile && (
               <>
-                <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <Input placeholder="Search" className="pl-10 w-64 shadow-sm" />
-                </div>
-                <Button size="icon" className="bg-gradient-to-br from-[#0D5FF9] to-[#6366f1] hover:from-[#6366f1] hover:to-[#0D5FF9] shadow-lg shadow-[#0D5FF9]/20">
-                  <Plus className="w-4 h-4" />
-                </Button>
-                <Button size="icon" variant="ghost" className="relative hover:bg-gray-100">
-                  <Bell className="w-4 h-4" />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs shadow-sm"></span>
-                </Button>
+                <NotificationsPopover userId={userId} />
                 <Button variant="ghost" className="text-[#0D5FF9] hover:bg-blue-50" onClick={() => setIsEditingProfile(true)}>
                   Edit Profile
                 </Button>
@@ -752,8 +891,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
           {currentUser && (
             <div className="mt-8">
               <PeerRequests 
-                currentUser={currentUser} 
-                onPeerUpdate={onPeerUpdate}
+                currentUser={currentUser}
               />
             </div>
           )}
