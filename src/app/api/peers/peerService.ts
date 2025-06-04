@@ -69,8 +69,9 @@ class PeerService {
     const requestsRef = collection(db, this.peerRequestsCollection);
     const q = query(
       requestsRef,
-      where('senderId', 'in', [senderId, receiverId]),
-      where('receiverId', 'in', [senderId, receiverId])
+      where('senderId', '==', senderId),
+      where('receiverId', '==', receiverId),
+      where('status', '==', 'pending')
     );
     
     const querySnapshot = await getDocs(q);
