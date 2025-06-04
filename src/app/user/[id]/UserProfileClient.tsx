@@ -23,6 +23,7 @@ import NotificationsPopover from '@/components/notifications/NotificationsPopove
 import { peerService } from '@/app/api/peers/peerService'
 import { notificationService } from '@/app/api/notifications/notificationService'
 import { toast } from "react-hot-toast"
+import { Timestamp } from 'firebase/firestore'
 
 interface UserProfileClientProps {
   userId: string
@@ -245,11 +246,10 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
           profilePicture: currentUser.profilePicture || ''
         },
         read: false,
-        createdAt: new Date()
+        createdAt: Timestamp.now()
       });
 
       console.log('Debug: Peer request sent successfully');
-      console.log('Debug: Notification created for receiver');
       
       toast.success(`${currentUser.firstName} ${currentUser.surname} sent a peer request to ${userData.firstName} ${userData.surname}`);
     } catch (error) {
@@ -405,6 +405,28 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                   </>
                 )}
               </Button>
+            )}
+            {/* Show Accept/Reject buttons if there's a pending request from the profile user to current user */}
+            {!isOwnProfile && peerRequest && peerRequest.status === 'pending' && peerRequest.senderId === userId && peerRequest.receiverId === currentUser?.uid && (
+              <>
+                <Button
+                  size="sm"
+                  className="bg-[#FFD34E] text-[#5C2594] hover:bg-[#FFD34E]/90 font-bold transition-colors duration-300"
+                  onClick={handleAcceptPeerRequest}
+                  disabled={isAccepting}
+                >
+                  {isAccepting ? 'Accepting...' : 'Accept Request'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-500 hover:bg-red-500/10"
+                  onClick={handleRejectPeerRequest}
+                  disabled={isRejecting}
+                >
+                  {isRejecting ? 'Rejecting...' : 'Reject'}
+                </Button>
+              </>
             )}
             {/* Request sent badge */}
             {!isOwnProfile && (peerRequestSent || (peerRequest && peerRequest.status === 'pending' && peerRequest.senderId === currentUser?.uid && peerRequest.receiverId === userId)) && (
