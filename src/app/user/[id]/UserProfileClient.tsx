@@ -22,6 +22,8 @@ import PeerRequests from '@/components/peers/PeerRequests'
 import NotificationsPopover from '@/components/notifications/NotificationsPopover'
 import { peerService } from '@/app/api/peers/peerService'
 import { notificationService } from '@/app/api/notifications/notificationService'
+import { toast } from "react-hot-toast"
+import { Timestamp } from 'firebase/firestore'
 
 interface UserProfileClientProps {
   userId: string
@@ -217,10 +219,21 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
   const handleAddPeer = async () => {
     if (!currentUser || !userData) return;
     try {
+      console.log('Debug: Starting peer request process');
+      console.log('Debug: Sender:', {
+        id: currentUser.uid,
+        name: `${currentUser.firstName} ${currentUser.surname}`
+      });
+      console.log('Debug: Receiver:', {
+        id: userId,
+        name: `${userData.firstName} ${userData.surname}`
+      });
+
       setIsAddingPeer(true);
-      await peerService.sendPeerRequest(currentUser.uid, userId)
+      await peerService.sendPeerRequest(currentUser.uid, userId, '');
       setPeerRequestSent(true);
       setIsAddingPeer(false);
+
       // Send notification to receiver
       await notificationService.createNotification({
         userId: userId,
@@ -228,15 +241,21 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
         message: 'sent you a peer request',
         fromUserId: currentUser.uid,
         fromUser: {
-          firstName: currentUser.firstName,
-          surname: currentUser.surname,
-          profilePicture: currentUser.profilePicture
+          firstName: currentUser.firstName || '',
+          surname: currentUser.surname || '',
+          profilePicture: currentUser.profilePicture || ''
         },
-        read: false
-      } as any)
+        read: false,
+        createdAt: Timestamp.now()
+      });
+
+      console.log('Debug: Peer request sent successfully');
+      
+      toast.success(`${currentUser.firstName} ${currentUser.surname} sent a peer request to ${userData.firstName} ${userData.surname}`);
     } catch (error) {
-      console.error('Error sending peer request:', error);
+      console.error('Debug: Error in handleAddPeer:', error);
       setIsAddingPeer(false);
+      toast.error(`Failed to send peer request: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -386,6 +405,28 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                   </>
                 )}
               </Button>
+            )}
+            {/* Show Accept/Reject buttons if there's a pending request from the profile user to current user */}
+            {!isOwnProfile && peerRequest && peerRequest.status === 'pending' && peerRequest.senderId === userId && peerRequest.receiverId === currentUser?.uid && (
+              <>
+                <Button
+                  size="sm"
+                  className="bg-[#FFD34E] text-[#5C2594] hover:bg-[#FFD34E]/90 font-bold transition-colors duration-300"
+                  onClick={handleAcceptPeerRequest}
+                  disabled={isAccepting}
+                >
+                  {isAccepting ? 'Accepting...' : 'Accept Request'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-500 hover:bg-red-500/10"
+                  onClick={handleRejectPeerRequest}
+                  disabled={isRejecting}
+                >
+                  {isRejecting ? 'Rejecting...' : 'Reject'}
+                </Button>
+              </>
             )}
             {/* Request sent badge */}
             {!isOwnProfile && (peerRequestSent || (peerRequest && peerRequest.status === 'pending' && peerRequest.senderId === currentUser?.uid && peerRequest.receiverId === userId)) && (
