@@ -144,7 +144,7 @@ export default function PeersPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto mb-8">
           <div className="bg-white/90 rounded-xl shadow-lg p-6 mb-6 border border-[#5B21B6]/20 text-center">
-            <h1 className="text-3xl font-bold mb-2 text-[#2E1065]">Find Skill Exchange Partners</h1>
+            <h1 className="text-3xl font-bold mb-2 text-[#2E1065]">Find Skill Exchange Peers</h1>
             <p className="text-gray-600 mb-2">
               {users.length} peers found. Search by name, email, skills, or location.
             </p>

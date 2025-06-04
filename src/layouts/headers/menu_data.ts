@@ -39,6 +39,7 @@ const menu_data: DataType[] = [
 		link: "#",
 		has_dropdown: true,
 		sub_menus: [
+			{ link: "/peers", title: "Peers" },
 			{ link: "/grid-blog", title: "Grid Blog" },
 			{ link: "/standard-blog", title: "Standard Blog" },
 			{ link: "/blog-details", title: "Blog Details" },

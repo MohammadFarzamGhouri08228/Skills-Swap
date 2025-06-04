@@ -7,6 +7,8 @@ import Wrapper from '@/layouts/Wrapper';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { userDataService } from '@/app/api/profile/userDataService';
+import HeaderOne from '@/layouts/headers/HeaderOne'
+import FooterOne from '@/layouts/footers/FooterOne'
 
 // Mock data for initial setup
 const mockSkills = {
@@ -104,12 +106,14 @@ export default function UserProfilePage() {
 
   return (
     <Wrapper>
+      <HeaderOne />
       <UserProfileClient
         userId={params.id as string}
         initialSkills={mockSkills}
         initialCalendarData={mockCalendarData}
         showSidebarUser={false}
       />
+      <FooterOne />
     </Wrapper>
   );
 }

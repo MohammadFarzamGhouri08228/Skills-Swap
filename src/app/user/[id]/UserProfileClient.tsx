@@ -225,7 +225,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
       await notificationService.createNotification({
         userId: userId,
         type: 'peer_request',
-        message: 'sent you a friend request',
+        message: 'sent you a peer request',
         fromUserId: currentUser.uid,
         fromUser: {
           firstName: currentUser.firstName,
@@ -250,7 +250,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
       await notificationService.createNotification({
         userId: peerRequest.senderId,
         type: 'peer_accepted',
-        message: 'accepted your friend request',
+        message: 'accepted your peer request',
         fromUserId: currentUser.uid,
         fromUser: {
           firstName: currentUser.firstName,
@@ -275,7 +275,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
       await notificationService.createNotification({
         userId: peerRequest.senderId,
         type: 'peer_rejected',
-        message: 'rejected your friend request',
+        message: 'rejected your peer request',
         fromUserId: currentUser.uid,
         fromUser: {
           firstName: currentUser.firstName,
