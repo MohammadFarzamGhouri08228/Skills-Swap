@@ -27,7 +27,7 @@ export default function PeersPage() {
   useEffect(() => {
     if (!auth) {
       console.error('Firebase Auth is not initialized');
-      router.push('/login');
+      router.push('/modern/login');
       return;
     }
 

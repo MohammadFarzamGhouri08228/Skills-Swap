@@ -25,7 +25,7 @@ export interface Notification {
     surname: string;
     profilePicture?: string;
   };
-  createdAt: Date;
+  createdAt: Timestamp;
   read: boolean;
 }
 
@@ -51,8 +51,7 @@ class NotificationService {
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt.toDate(),
+        ...doc.data()
       })) as Notification[];
     } catch (error) {
       console.error('Error getting user notifications:', error);

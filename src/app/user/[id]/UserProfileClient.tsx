@@ -22,6 +22,7 @@ import PeerRequests from '@/components/peers/PeerRequests'
 import NotificationsPopover from '@/components/notifications/NotificationsPopover'
 import { peerService } from '@/app/api/peers/peerService'
 import { notificationService } from '@/app/api/notifications/notificationService'
+import { toast } from "react-hot-toast"
 
 interface UserProfileClientProps {
   userId: string
@@ -217,10 +218,21 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
   const handleAddPeer = async () => {
     if (!currentUser || !userData) return;
     try {
+      console.log('Debug: Starting peer request process');
+      console.log('Debug: Sender:', {
+        id: currentUser.uid,
+        name: `${currentUser.firstName} ${currentUser.surname}`
+      });
+      console.log('Debug: Receiver:', {
+        id: userId,
+        name: `${userData.firstName} ${userData.surname}`
+      });
+
       setIsAddingPeer(true);
-      await peerService.sendPeerRequest(currentUser.uid, userId)
+      await peerService.sendPeerRequest(currentUser.uid, userId, '');
       setPeerRequestSent(true);
       setIsAddingPeer(false);
+
       // Send notification to receiver
       await notificationService.createNotification({
         userId: userId,
@@ -228,15 +240,22 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
         message: 'sent you a friend request',
         fromUserId: currentUser.uid,
         fromUser: {
-          firstName: currentUser.firstName,
-          surname: currentUser.surname,
-          profilePicture: currentUser.profilePicture
+          firstName: currentUser.firstName || '',
+          surname: currentUser.surname || '',
+          profilePicture: currentUser.profilePicture || ''
         },
-        read: false
-      } as any)
+        read: false,
+        createdAt: new Date()
+      });
+
+      console.log('Debug: Peer request sent successfully');
+      console.log('Debug: Notification created for receiver');
+      
+      toast.success(`${currentUser.firstName} ${currentUser.surname} sent a peer request to ${userData.firstName} ${userData.surname}`);
     } catch (error) {
-      console.error('Error sending peer request:', error);
+      console.error('Debug: Error in handleAddPeer:', error);
       setIsAddingPeer(false);
+      toast.error(`Failed to send peer request: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
