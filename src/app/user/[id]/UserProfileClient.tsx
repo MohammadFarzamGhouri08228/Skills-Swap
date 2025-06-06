@@ -245,8 +245,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
           surname: currentUser.surname || '',
           profilePicture: currentUser.profilePicture || ''
         },
-        read: false,
-        createdAt: Timestamp.now()
+        read: false
       });
 
       console.log('Debug: Peer request sent successfully');
@@ -277,7 +276,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
           profilePicture: currentUser.profilePicture
         },
         read: false
-      } as any)
+      });
     } catch (error) {
       console.error('Error accepting peer request:', error)
     }
@@ -302,7 +301,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
           profilePicture: currentUser.profilePicture
         },
         read: false
-      } as any)
+      });
     } catch (error) {
       console.error('Error rejecting peer request:', error)
     }
