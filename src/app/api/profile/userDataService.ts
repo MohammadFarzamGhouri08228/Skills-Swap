@@ -128,6 +128,73 @@ export class UserDataService {
     });
   }
 
+  async getAllUsers(searchQuery?: string): Promise<UserData[]> {
+    if (!db) {
+      const error = new Error('Firestore is not initialized');
+      console.error(error);
+      throw error;
+    }
+    
+    try {
+      console.log('Starting to fetch users from Firestore collection:', this.usersCollection);
+      const usersRef = collection(db, this.usersCollection);
+      
+      // Log the query parameters
+      console.log('Fetching all users without filters');
+      const querySnapshot = await getDocs(usersRef);
+      
+      console.log('Raw query response:', querySnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })));
+      
+      let users = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          uid: doc.id,
+          email: data.email || '',
+          firstName: data.firstName || '',
+          surname: data.surname || '',
+          dob: data.dob || '',
+          gender: data.gender || '',
+          createdAt: data.createdAt || '',
+          skills: data.skills || [],
+          location: data.location || '',
+          profilePicture: data.profilePicture || '',
+          isVerified: data.isVerified || false,
+        } as UserData;
+      });
+
+      console.log('Processed users:', users);
+
+      if (searchQuery) {
+        const searchLower = searchQuery.toLowerCase();
+        console.log('Filtering users with search query:', searchLower);
+        
+        users = users.filter(user => {
+          const fullName = `${user.firstName} ${user.surname}`.toLowerCase();
+          const skills = user.skills?.join(' ').toLowerCase() || '';
+          const location = user.location?.toLowerCase() || '';
+          const email = user.email.toLowerCase();
+          
+          const matches = fullName.includes(searchLower) || 
+                         skills.includes(searchLower) ||
+                         location.includes(searchLower) ||
+                         email.includes(searchLower);
+          
+          if (matches) {
+            console.log('Found matching user:', user);
+          }
+          
+          return matches;
+        });
+      }
+
+      console.log(`Returning ${users.length} users`);
+      return users;
+    } catch (error) {
+      console.error('Error in getAllUsers:', error);
+      throw error;
+    }
+  }
+
   async verifyUser(uid: string): Promise<void> {
     if (!db) throw new Error('Firestore is not initialized');
     
