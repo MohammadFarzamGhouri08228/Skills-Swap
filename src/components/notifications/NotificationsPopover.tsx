@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from 'date-fns';
 import { notificationService, Notification } from '@/app/api/notifications/notificationService';
 import { toast } from 'react-hot-toast';
+import { Timestamp } from 'firebase/firestore';
 
 interface NotificationsPopoverProps {
   userId: string;
@@ -141,7 +142,9 @@ export default function NotificationsPopover({ userId }: NotificationsPopoverPro
                         </p>
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
-                        {formatDistanceToNow(notification.createdAt, { addSuffix: true })}
+                        {notification.createdAt instanceof Timestamp 
+                          ? formatDistanceToNow(notification.createdAt.toDate(), { addSuffix: true })
+                          : 'Just now'}
                       </p>
                     </div>
                     {!notification.read && (
