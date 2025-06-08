@@ -290,25 +290,79 @@ export default function MySkillsArea() {
         })
       : [];
 
-  return (
-    <section className="courses section-padding">
-      <div className="container">
+    return (
+  <section className="relative min-h-screen w-full overflow-x-hidden">
+    {/* Full-width yellow block heading */}
+    <div className="relative z-20 w-full bg-gradient-to-br from-yellow-300 via-yellow-200 to-yellow-100 border-b-4 border-yellow-400 shadow-2xl">
+      <div className="flex flex-col items-center gap-6 justify-center py-14">
+        {/* Icon in a glowing circle */}
+        <span className="inline-flex items-center justify-center rounded-full bg-yellow-100/80 shadow-xl p-7 border-4 border-yellow-400 ring-4 ring-yellow-200/40 mb-4 animate-pulse">
+          <svg
+            className="w-16 h-16 text-yellow-500 drop-shadow-lg"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M6.05 17.95l-1.414 1.414m12.728 0l-1.414-1.414M6.05 6.05L4.636 4.636"
+            />
+          </svg>
+        </span>
+        {/* Modern glassy card for heading */}
+        <div className="relative px-10 py-6 rounded-3xl shadow-2xl border-4 border-yellow-300 bg-white/70 backdrop-blur-xl flex flex-col items-center max-w-3xl mx-auto">
+          <h1 className="font-serif text-5xl md:text-7xl font-extrabold tracking-tight text-yellow-700 text-center bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 bg-clip-text text-transparent drop-shadow-[0_4px_24px_rgba(255,215,0,0.35)]">
+            <span className="italic text-yellow-900">My Skills</span>
+          </h1>
+          <div className="mt-4 text-xl md:text-2xl text-yellow-900 font-semibold bg-yellow-50/80 px-8 py-3 rounded-xl shadow border border-yellow-200 backdrop-blur-sm">
+            <p className="text-center">
+              Manage your skills and showcase your expertise to the community.
+            </p>
+          </div>
+          {/* Decorative accent bar */}
+          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-32 h-2 bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-400 rounded-full blur-sm opacity-70"></div>
+        </div>
+      </div>
+    </div>
+
+    {/* Aesthetic background as a normal block, not absolute, so no double scrollbars */}
+    <div className="w-full bg-gradient-to-br from-[#2d0b4e] via-[#1a1333] to-[#3a1c71]">
+      {/* Decorative shapes */}
+      <div className="relative w-full h-0" style={{ minHeight: 0 }}>
+        <div className="pointer-events-none absolute inset-0 z-0">
+          <div className="absolute -top-32 -left-32 w-[32rem] h-[32rem] bg-purple-700 opacity-40 rounded-full animate-pulse-slow"></div>
+          <div className="absolute bottom-0 right-0 w-[28rem] h-[28rem] bg-blue-600 opacity-30 rounded-full animate-pulse-fast"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[20rem] bg-white opacity-10 rounded-full animate-fade-in"></div>
+          <div className="absolute top-10 left-1/4 w-40 h-40 bg-pink-400 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-24 left-1/3 w-32 h-32 bg-yellow-300 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/3 right-10 w-28 h-28 bg-green-400 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-blue-300 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/4 left-2/3 w-36 h-36 bg-purple-300 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-1/2 left-10 w-20 h-20 bg-fuchsia-400 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/2 right-1/3 w-24 h-24 bg-orange-300 opacity-20 rounded-full blur-2xl"></div>
+        </div>
+      </div>
+
+      {/* Content area */}
+      <div className="relative z-10 container mx-auto px-4 pt-12">
         {/* Add Skills Heading */}
-        <h2 className="text-2xl font-bold mb-6 text-center text-purple-900 tracking-wide drop-shadow">
-          <span className="inline-block border-b-4 border-purple-500 pb-1 px-4 bg-white rounded shadow">
+        <h2 className="text-3xl font-extrabold mb-12 text-center text-white tracking-wide drop-shadow-lg">
+          <span className="inline-block border-b-4 border-purple-400 pb-2 px-8 bg-white/10 rounded-xl shadow-lg backdrop-blur">
             Add Skills
           </span>
         </h2>
-        <div className="max-w-3xl mx-auto space-y-6">
+        {/* Make skill menus vertical and centered */}
+        <div className="max-w-2xl mx-auto flex flex-col items-center gap-8">
           {skillsLoading ? (
-            <div className="text-center text-purple-700 py-8">
+            <div className="text-center text-purple-200 py-8 text-xl font-semibold">
               Loading skill categories...
             </div>
           ) : (
             <>
               {normalCategories.map(({ category, skills: catSkills }) => {
                 const isOpen = openCategories[category] ?? false;
-                // Ensure all skills are Skill objects
                 const skillsArray: Skill[] = Array.isArray(catSkills)
                   ? (catSkills as any[]).map((skill, idx) =>
                       typeof skill === "string"
@@ -319,24 +373,23 @@ export default function MySkillsArea() {
                 return (
                   <div
                     key={category}
-                    className="border border-gray-300 rounded shadow-sm"
+                    className="w-full rounded-2xl shadow-xl border border-purple-100 bg-white/80 backdrop-blur-lg transition-all duration-300 hover:shadow-2xl mb-2"
                   >
                     <button
                       onClick={() => toggleCategory(category)}
-                      className="w-full flex justify-between items-center bg-purple-800 text-white text-lg font-semibold px-5 py-3 rounded-t hover:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-700"
+                      className="w-full flex justify-between items-center px-7 py-5 bg-gradient-to-r from-purple-700 to-purple-500 text-white text-xl font-semibold rounded-t-2xl focus:outline-none focus:ring-2 focus:ring-purple-700 transition"
                       aria-expanded={isOpen}
                       aria-controls={`${category}-skills`}
                     >
-                      {category}
+                      <span>{category}</span>
                       <svg
-                        className={`w-5 h-5 transform transition-transform duration-300 ${
+                        className={`w-6 h-6 transform transition-transform duration-300 ${
                           isOpen ? "rotate-180" : "rotate-0"
                         }`}
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2"
                         viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
                         aria-hidden="true"
                       >
                         <path
@@ -346,24 +399,25 @@ export default function MySkillsArea() {
                         ></path>
                       </svg>
                     </button>
-                    {isOpen && (
-                      <ul
-                        id={`${category}-skills`}
-                        className="bg-white border-t border-gray-300 rounded-b max-h-60 overflow-y-auto"
-                      >
+                    <div
+                      className={`transition-all duration-300 ${
+                        isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                      } overflow-hidden`}
+                    >
+                      <ul className="divide-y divide-gray-100">
                         {skillsArray.map((skill) => (
                           <li
                             key={skill.id}
-                            className={`px-6 py-3 border-b border-gray-100 last:border-b-0 flex justify-between items-center ${
+                            className={`flex justify-between items-center px-7 py-3 ${
                               skillsOffered.includes(skill.name)
-                                ? "bg-purple-100 text-purple-700"
-                                : "hover:bg-purple-50"
+                                ? "bg-purple-50 text-purple-800"
+                                : "hover:bg-purple-100"
                             }`}
                           >
                             <span>{skill.name}</span>
                             {skillsOffered.includes(skill.name) ? (
                               <button
-                                className="ml-2 text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded hover:bg-red-400"
+                                className="ml-2 text-xs bg-red-200 text-red-800 px-4 py-1 rounded-full hover:bg-red-400 transition font-semibold"
                                 onClick={() => handleRemoveSkill(skill.name)}
                                 type="button"
                                 disabled={addingSkill && removingSkillName === skill.name}
@@ -374,7 +428,7 @@ export default function MySkillsArea() {
                               </button>
                             ) : (
                               <button
-                                className="ml-2 text-xs bg-purple-200 text-purple-800 px-2 py-0.5 rounded hover:bg-purple-400"
+                                className="ml-2 text-xs bg-purple-200 text-purple-800 px-4 py-1 rounded-full hover:bg-purple-400 transition font-semibold"
                                 onClick={() => handleAddSkill(skill.name)}
                                 type="button"
                                 disabled={addingSkill && addingSkillName === skill.name}
@@ -387,30 +441,29 @@ export default function MySkillsArea() {
                           </li>
                         ))}
                       </ul>
-                    )}
+                    </div>
                   </div>
                 );
               })}
 
-              {/* Other category dropdown styled like the rest */}
+              {/* Other category, visually distinct */}
               {otherCategory && (
-                <div className="border border-gray-300 rounded shadow-sm mt-10">
+                <div className="w-full rounded-2xl shadow-xl border-2 border-purple-700 bg-gradient-to-br from-purple-200 via-white to-purple-100 mt-2 transition-all duration-300 hover:shadow-2xl mb-2">
                   <button
                     onClick={() => toggleCategory(otherCategory.category!)}
-                    className="w-full flex justify-between items-center bg-purple-800 text-white text-lg font-semibold px-5 py-3 rounded-t hover:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-700"
+                    className="w-full flex justify-between items-center px-7 py-5 bg-gradient-to-r from-purple-900 to-purple-700 text-white text-xl font-semibold rounded-t-2xl focus:outline-none focus:ring-2 focus:ring-purple-700 transition"
                     aria-expanded={openCategories[otherCategory.category!] ?? false}
                     aria-controls={`other-category-skills`}
                   >
-                    {otherCategory.category}
+                    <span>{otherCategory.category}</span>
                     <svg
-                      className={`w-5 h-5 transform transition-transform duration-300 ${
+                      className={`w-6 h-6 transform transition-transform duration-300 ${
                         openCategories[otherCategory.category!] ? "rotate-180" : "rotate-0"
                       }`}
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
                       viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
                       aria-hidden="true"
                     >
                       <path
@@ -420,21 +473,25 @@ export default function MySkillsArea() {
                       ></path>
                     </svg>
                   </button>
-                  {openCategories[otherCategory.category!] && (
-                    <div className="bg-white border-t border-gray-300 rounded-b">
+                  <div
+                    className={`transition-all duration-300 ${
+                      openCategories[otherCategory.category!] ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                    } overflow-hidden`}
+                  >
+                    <div className="bg-white/90 rounded-b-2xl px-7 py-5">
                       {otherSkillsArray.length === 0 ? (
-                        <p className="text-purple-300 px-6 py-3">No skills found.</p>
+                        <p className="text-purple-300">No skills found.</p>
                       ) : (
-                        <ul className="max-h-60 overflow-y-auto">
+                        <ul className="divide-y divide-gray-100">
                           {otherSkillsArray.map((skill) => (
                             <li
                               key={skill.id}
-                              className="flex items-center justify-between gap-2 mb-2 px-4 py-2 rounded-lg shadow-sm bg-white text-black border border-gray-200 hover:shadow-md transition-all"
+                              className="flex items-center justify-between py-2"
                             >
                               <span className="font-medium">{skill.name}</span>
                               {skillsOffered.includes(skill.name) ? (
                                 <button
-                                  className="ml-2 text-xs bg-red-200 text-red-800 px-3 py-1 rounded-full hover:bg-red-400 transition"
+                                  className="ml-2 text-xs bg-red-200 text-red-800 px-4 py-1 rounded-full hover:bg-red-400 transition font-semibold"
                                   onClick={() => handleRemoveSkill(skill.name)}
                                   type="button"
                                   disabled={addingSkill && removingSkillName === skill.name}
@@ -445,7 +502,7 @@ export default function MySkillsArea() {
                                 </button>
                               ) : (
                                 <button
-                                  className="ml-2 text-xs bg-purple-300 text-purple-900 px-3 py-1 rounded-full hover:bg-purple-400 transition"
+                                  className="ml-2 text-xs bg-purple-200 text-purple-800 px-4 py-1 rounded-full hover:bg-purple-400 transition font-semibold"
                                   onClick={() => handleAddSkill(skill.name)}
                                   type="button"
                                   disabled={
@@ -463,78 +520,105 @@ export default function MySkillsArea() {
                           ))}
                         </ul>
                       )}
-                      <form onSubmit={handleAddOtherSkill} className="flex gap-2 mt-4 px-4 pb-4">
+                      <form onSubmit={handleAddOtherSkill} className="flex gap-2 mt-4">
                         <input
                           type="text"
                           value={otherSkill}
                           onChange={(e) => setOtherSkill(e.target.value)}
                           placeholder="Add a new skill to Other"
-                          className="flex-1 px-4 py-2 rounded border border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-700 text-gray-900"
+                          className="flex-1 px-4 py-2 rounded-xl border border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-700 text-gray-900 bg-white/80 shadow"
                         />
                         <button
                           type="submit"
-                          className="bg-purple-700 text-white px-4 py-2 rounded hover:bg-purple-900 transition"
+                          className="bg-purple-700 text-white px-6 py-2 rounded-xl hover:bg-purple-900 transition font-semibold shadow"
                           disabled={addingOtherSkill || !otherSkill.trim()}
                         >
                           {addingOtherSkill ? "Adding..." : "Add"}
                         </button>
                       </form>
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
             </>
           )}
-
-          {/* Show user's current skillsOffered */}
-          <div className="mt-12">
-            <h3 className="text-2xl font-bold mb-6 text-center text-purple-900 tracking-wide drop-shadow">
-              <span className="inline-block border-b-4 border-purple-500 pb-1 px-4 bg-white rounded shadow">
-                My Skills
-              </span>
-            </h3>
-            {skillsOffered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <svg
-                  className="w-12 h-12 text-purple-300 mb-2"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 6v6l4 2"
-                  />
-                  <circle cx="12" cy="12" r="10" />
-                </svg>
-                <p className="text-lg text-purple-400">No skills added yet.</p>
-              </div>
-            ) : (
-              <ul className="flex flex-wrap justify-center gap-3">
-                {skillsOffered.map((skill, idx) => (
-                  <li
-                    key={idx}
-                    className="flex items-center bg-purple-100 text-purple-900 px-4 py-2 rounded-full shadow hover:bg-purple-200 transition-all text-base font-medium"
-                  >
-                    <span>{skill}</span>
-                    <button
-                      className="ml-3 text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded-full hover:bg-red-400 transition"
-                      onClick={() => handleRemoveSkill(skill)}
-                      type="button"
-                      disabled={addingSkill && removingSkillName === skill}
-                      aria-label={`Remove ${skill}`}
-                    >
-                      &times;
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </div>
+
+        {/* My Skills Section */}
+        <div className="mt-20 mb-24">
+          <h3 className="text-2xl font-bold mb-8 text-center text-purple-900 tracking-wide drop-shadow-lg">
+            <span className="inline-block border-b-4 border-purple-500 pb-2 px-8 bg-white/80 rounded-xl shadow-lg">
+              My Skills
+            </span>
+          </h3>
+          {skillsOffered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <svg
+                className="w-14 h-14 text-purple-300 mb-3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 6v6l4 2"
+                />
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+              <p className="text-xl text-purple-400">No skills added yet.</p>
+            </div>
+          ) : (
+            <ul className="flex flex-wrap justify-center gap-4 bg-white/70 rounded-2xl shadow-lg p-8 backdrop-blur">
+              {skillsOffered.map((skill, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-center bg-gradient-to-r from-purple-200 to-purple-100 text-purple-900 px-6 py-2 rounded-full shadow hover:bg-purple-200 transition-all text-lg font-semibold"
+                >
+                  <span>{skill}</span>
+                  <button
+                    className="ml-4 text-xl bg-red-200 text-red-800 px-3 py-0.5 rounded-full hover:bg-red-400 transition"
+                    onClick={() => handleRemoveSkill(skill)}
+                    type="button"
+                    disabled={addingSkill && removingSkillName === skill}
+                    aria-label={`Remove ${skill}`}
+                  >
+                    &times;
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        {/* Add space before footer */}
+        <div className="h-16" />
+        {/* Custom animations */}
+        <style jsx global>{`
+          @keyframes pulse-slow {
+            0%, 100% { opacity: 0.4; transform: scale(1);}
+            50% { opacity: 0.6; transform: scale(1.08);}
+          }
+          @keyframes pulse-fast {
+            0%, 100% { opacity: 0.3; transform: scale(1);}
+            50% { opacity: 0.5; transform: scale(1.12);}
+          }
+          @keyframes fade-in {
+            0% { opacity: 0; }
+            100% { opacity: 0.10; }
+          }
+          .animate-pulse-slow {
+            animation: pulse-slow 6s ease-in-out infinite;
+          }
+          .animate-pulse-fast {
+            animation: pulse-fast 3.5s ease-in-out infinite;
+          }
+          .animate-fade-in {
+            animation: fade-in 2s ease-in;
+          }
+        `}</style>
       </div>
-    </section>
-  );
+    </div>
+  </section>
+);
 }
