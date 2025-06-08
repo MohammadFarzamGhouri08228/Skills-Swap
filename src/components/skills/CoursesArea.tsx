@@ -63,108 +63,166 @@ const CourseArea: React.FC = () => {
     }));
   };
 
-  if (loading) return <div className="p-4">Loading...</div>;
-  if (categories.length === 0) return <div className="p-4">No categories found.</div>;
+  if (loading) return (
+    <section className="relative min-h-screen w-full overflow-hidden">
+      <div className="container mx-auto py-24 text-center text-xl text-purple-500">Loading...</div>
+    </section>
+  );
+  if (categories.length === 0) return (
+    <section className="relative min-h-screen w-full overflow-hidden">
+      <div className="container mx-auto py-24 text-center text-xl text-purple-200">No categories found.</div>
+    </section>
+  );
 
   // Separate the "Other" category from the rest
   const normalCategories = categories.filter(c => c.category !== 'Other');
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
-      {normalCategories.map(({ category, skills }) => {
-        const isOpen = openCategories[category] ?? false;
-
-        return (
-          <div key={category} className="border border-gray-300 rounded shadow-sm">
-            <button
-              onClick={() => toggleCategory(category)}
-              className="w-full flex justify-between items-center bg-purple-800 text-white text-lg font-semibold px-5 py-3 rounded-t hover:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-700"
-              aria-expanded={isOpen}
-              aria-controls={`${category}-skills`}
-            >
-              {category}
-              <svg
-                className={`w-5 h-5 transform transition-transform duration-300 ${
-                  isOpen ? 'rotate-180' : 'rotate-0'
-                }`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-
-            {isOpen && (
-              <ul
-                id={`${category}-skills`}
-                className="bg-white border-t border-gray-300 rounded-b max-h-60 overflow-y-auto"
-              >
-                {skills.map(skill => (
-                  <li
-                    key={skill.id}
-                    className="px-6 py-3 border-b border-gray-100 last:border-b-0 hover:bg-purple-50 cursor-pointer"
-                  >
-                    {skill.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        );
-      })}
-
-      {/* Show "Other" in the same dropdown style as the rest */}
-      <div className="border border-gray-300 rounded shadow-sm">
-        <button
-          onClick={() => toggleCategory("Other")}
-          className="w-full flex justify-between items-center bg-purple-800 text-white text-lg font-semibold px-5 py-3 rounded-t hover:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-700"
-          aria-expanded={openCategories["Other"] ?? false}
-          aria-controls={`other-category-skills`}
-        >
-          Other
-          <svg
-            className={`w-5 h-5 transform transition-transform duration-300 ${
-              openCategories["Other"] ? "rotate-180" : "rotate-0"
-            }`}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M19 9l-7 7-7-7"
-            ></path>
-          </svg>
-        </button>
-        {openCategories["Other"] && (
-          <ul
-            id={`other-category-skills`}
-            className="bg-white border-t border-gray-300 rounded-b max-h-60 overflow-y-auto"
-          >
-            {otherSkills.length === 0 ? (
-              <li className="px-6 py-3 text-purple-300">No skills found.</li>
-            ) : (
-              otherSkills.map((skill) => (
-                <li
-                  key={skill.id}
-                  className="px-6 py-3 border-b border-gray-100 last:border-b-0 hover:bg-purple-50 cursor-pointer"
-                >
-                  {skill.name}
-                </li>
-              ))
-            )}
-          </ul>
-        )}
+    <section className="relative min-h-screen w-full overflow-hidden">
+      {/* Gradient background and shapes absolutely positioned to section */}
+      <div className="absolute inset-0 z-0">
+        <div className="w-full h-full bg-gradient-to-br from-[#2d0b4e] via-[#1a1333] to-[#3a1c71] absolute inset-0" />
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-32 -left-32 w-[32rem] h-[32rem] bg-purple-700 opacity-40 rounded-full animate-pulse-slow"></div>
+          <div className="absolute bottom-0 right-0 w-[28rem] h-[28rem] bg-blue-600 opacity-30 rounded-full animate-pulse-fast"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[20rem] bg-white opacity-10 rounded-full animate-fade-in"></div>
+          <div className="absolute top-10 left-1/4 w-40 h-40 bg-pink-400 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-24 left-1/3 w-32 h-32 bg-yellow-300 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/3 right-10 w-28 h-28 bg-green-400 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-blue-300 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/4 left-2/3 w-36 h-36 bg-purple-300 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-1/2 left-10 w-20 h-20 bg-fuchsia-400 opacity-20 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/2 right-1/3 w-24 h-24 bg-orange-300 opacity-20 rounded-full blur-2xl"></div>
+        </div>
       </div>
-    </div>
+      {/* Content area */}
+      <div className="relative z-10">
+        <div className="container mx-auto px-4 pt-16 pb-24">
+          <div className="max-w-2xl mx-auto flex flex-col items-center gap-8">
+            {normalCategories.map(({ category, skills }) => {
+              const isOpen = openCategories[category] ?? false;
+
+              return (
+                <div key={category} className="w-full rounded-2xl shadow-xl border border-purple-100 bg-white/80 backdrop-blur-lg transition-all duration-300 hover:shadow-2xl mb-2">
+                  <button
+                    onClick={() => toggleCategory(category)}
+                    className="w-full flex justify-between items-center px-7 py-5 bg-gradient-to-r from-purple-700 to-purple-500 text-white text-xl font-semibold rounded-t-2xl focus:outline-none focus:ring-2 focus:ring-purple-700 transition"
+                    aria-expanded={isOpen}
+                    aria-controls={`${category}-skills`}
+                  >
+                    <span>{category}</span>
+                    <svg
+                      className={`w-6 h-6 transform transition-transform duration-300 ${
+                        isOpen ? "rotate-180" : "rotate-0"
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 9l-7 7-7-7"
+                      ></path>
+                    </svg>
+                  </button>
+                  <div
+                    className={`transition-all duration-300 ${
+                      isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                    } overflow-hidden`}
+                  >
+                    <ul className="divide-y divide-gray-100">
+                      {skills.map(skill => (
+                        <li
+                          key={skill.id}
+                          className="px-7 py-3 border-b border-gray-100 last:border-b-0 hover:bg-purple-50 cursor-pointer text-purple-900 font-medium"
+                        >
+                          {skill.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Show "Other" in the same dropdown style as the rest */}
+            <div className="w-full rounded-2xl shadow-xl border-2 border-purple-700 bg-gradient-to-br from-purple-200 via-white to-purple-100 mt-2 transition-all duration-300 hover:shadow-2xl mb-2">
+              <button
+                onClick={() => toggleCategory("Other")}
+                className="w-full flex justify-between items-center px-7 py-5 bg-gradient-to-r from-purple-900 to-purple-700 text-white text-xl font-semibold rounded-t-2xl focus:outline-none focus:ring-2 focus:ring-purple-700 transition"
+                aria-expanded={openCategories["Other"] ?? false}
+                aria-controls={`other-category-skills`}
+              >
+                <span>Other</span>
+                <svg
+                  className={`w-6 h-6 transform transition-transform duration-300 ${
+                    openCategories["Other"] ? "rotate-180" : "rotate-0"
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+              <div
+                className={`transition-all duration-300 ${
+                  openCategories["Other"] ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                } overflow-hidden`}
+              >
+                <ul className="divide-y divide-gray-100 bg-white/90 rounded-b-2xl">
+                  {otherSkills.length === 0 ? (
+                    <li className="px-7 py-3 text-purple-300">No skills found.</li>
+                  ) : (
+                    otherSkills.map((skill) => (
+                      <li
+                        key={skill.id}
+                        className="px-7 py-3 border-b border-gray-100 last:border-b-0 hover:bg-purple-50 cursor-pointer text-purple-900 font-medium"
+                      >
+                        {skill.name}
+                      </li>
+                    ))
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+          {/* Custom animations */}
+          <style jsx global>{`
+            @keyframes pulse-slow {
+              0%, 100% { opacity: 0.4; transform: scale(1);}
+              50% { opacity: 0.6; transform: scale(1.08);}
+            }
+            @keyframes pulse-fast {
+              0%, 100% { opacity: 0.3; transform: scale(1);}
+              50% { opacity: 0.5; transform: scale(1.12);}
+            }
+            @keyframes fade-in {
+              0% { opacity: 0; }
+              100% { opacity: 0.10; }
+            }
+            .animate-pulse-slow {
+              animation: pulse-slow 6s ease-in-out infinite;
+            }
+            .animate-pulse-fast {
+              animation: pulse-fast 3.5s ease-in-out infinite;
+            }
+            .animate-fade-in {
+              animation: fade-in 2s ease-in;
+            }
+          `}</style>
+        </div>
+      </div>
+    </section>
   );
 };
 
