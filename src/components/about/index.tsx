@@ -12,7 +12,7 @@ export default function About() {
   return (
     <>
       <HeaderOne />
-      <Breadcrumb title="About Us" subtitle="About Us" />
+      <Breadcrumb title="About Us" />
       <FeatureHomeOne />
       <AboutHomeOne />
       <CounterHomeOne />

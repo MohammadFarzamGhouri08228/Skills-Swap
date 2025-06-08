@@ -9,7 +9,7 @@ export default function Checkout() {
   return (
     <>
       <HeaderOne />
-      <Breadcrumb title="Checkout" subtitle="Checkout" />
+      <Breadcrumb title="Checkout" />
       <CheckoutArea />
       <FooterOne />
     </>

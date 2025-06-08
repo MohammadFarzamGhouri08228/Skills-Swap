@@ -9,7 +9,7 @@ export default function Register() {
   return (
     <>
     <HeaderOne />
-    <Breadcrumb title="Register" subtitle="Register" />
+    <Breadcrumb title="Register" />
     <RegisterForm />
     <FooterOne />
 

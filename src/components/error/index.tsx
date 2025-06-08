@@ -8,7 +8,7 @@ export default function Error() {
   return (
     <>
       <HeaderOne />
-      <Breadcrumb title="Error" subtitle="Error" />
+      <Breadcrumb title="Error" />
       <section className="page_not_found">
         <div className="container">
           <div className="row">

@@ -10,7 +10,7 @@ export default function Cart() {
   return (
     <>
     <HeaderOne />
-    <Breadcrumb title="Cart" subtitle="Cart" />
+    <Breadcrumb title="Cart" />
     <CartArea />
     <FooterOne />
 

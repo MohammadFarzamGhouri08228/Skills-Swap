@@ -9,7 +9,7 @@ export default function GridBlog() {
   return (
     <>
       <HeaderOne />
-      <Breadcrumb title="Grid Blog" subtitle="Grid Blog" />
+      <Breadcrumb title="Grid Blog" />
       <GridBlogArea />
       <FooterOne />
     </>

@@ -10,7 +10,7 @@ export default function StandardBlog() {
   return (
     <>
       <HeaderOne />
-      <Breadcrumb title="Standard Blog" subtitle="Standard Blog" />
+      <Breadcrumb title="Standard Blog" />
       <StandardBlogArea />
       <FooterOne />
     </>

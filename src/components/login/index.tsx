@@ -9,7 +9,7 @@ export default function Login() {
   return (
     <>
     <HeaderOne />
-    <Breadcrumb title="Login" subtitle="Login" />
+    <Breadcrumb title="Login"/>
     <LoginForm />
     <FooterOne />
 

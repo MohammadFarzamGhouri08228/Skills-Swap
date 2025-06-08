@@ -10,7 +10,7 @@ export default function Contact() {
   return (
     <>
       <HeaderOne />
-      <Breadcrumb title="Contact Us" subtitle="Contact Us" />
+      <Breadcrumb title="Contact Us" />
       <ContactForm />
       <GoogleMap />
       <FooterOne />
