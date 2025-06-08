@@ -9,7 +9,7 @@ export default function Courses() {
   return (
     <>
       <HeaderOne />
-      <Breadcrumb title="Skills List" subtitle="Skills List" />
+      <Breadcrumb title="Skills List"/>
       <CoursesArea />
       <FooterOne />
     </>
