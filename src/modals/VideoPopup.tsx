@@ -4,7 +4,7 @@ import ModalVideo from "react-modal-video";
 const VideoPopup = ({
   isVideoOpen,
   setIsVideoOpen,
-  videoId = "bgMEvrd2E", 
+  videoId = "W7kLyV8h3GI", 
   
 }:any ) => {
   return (

@@ -7,12 +7,15 @@ export default function VideoHomeOne() {
 
   const [isVideoOpen, setIsVideoOpen] = useState<boolean>(false);
 
-
   return (
     <>
       <section className="container pb170 wow fadeIn">
         <div className="row">
           <div className="col-xl-10 mx-auto">
+            {/* Video Heading */}
+            <h2 className="text-3xl md:text-4xl font-extrabold text-black-800 text-center mb-8 drop-shadow-lg">
+              Watch This Video To Learn About SkillSwap
+            </h2>
             <div className="video-area">
               <img src="assets/img/bg/video.png" alt="video" />
               <a  
@@ -38,11 +41,9 @@ export default function VideoHomeOne() {
        <VideoPopup
         isVideoOpen={isVideoOpen}
         setIsVideoOpen={setIsVideoOpen}
-        videoId={"qmGYnJgCW1o"}
+        videoId={"W7kLyV8h3GI"}
       />
       {/* video modal end */}
-
-
     </>
   )
 }
