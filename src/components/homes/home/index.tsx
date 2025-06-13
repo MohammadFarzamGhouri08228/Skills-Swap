@@ -30,15 +30,15 @@ export default function HomeOne({ user, userData, isLoading }: HomeOneProps) {
       <HeroHomeOne user={user} userData={userData} isLoading={isLoading} />
       <FeatureHomeOne />
       <AboutHomeOne />
-      <CounterHomeOne />
-      <CoursesHomeOne />
-      <CourseCategoryHomeOne />
+      {/* <CounterHomeOne /> */}
+      {/* <CoursesHomeOne /> */}
+      {/* <CourseCategoryHomeOne /> */}
       <WorkingProcessHomeOne />
-      <InstructorsHomeOne />
+      {/* <InstructorsHomeOne /> */}
       <VideoHomeOne />
-      <ReviewHomeOne />
-      <BrandHomeOne />
-      <BlogHomeOne />
+      {/* <ReviewHomeOne />
+      <BrandHomeOne /> */}
+      {/* <BlogHomeOne /> */}
       <FooterOne />
     </>
   )

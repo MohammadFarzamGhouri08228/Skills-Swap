@@ -1,4 +1,3 @@
-
 "use client"
 import VideoPopup from '@/modals/VideoPopup'
 import React, { useState } from 'react'
@@ -9,19 +8,41 @@ export default function VideoHomeOne() {
 
   return (
     <>
-      <section className="container pb170 wow fadeIn">
-        <div className="row">
+      <section
+        className="relative pb170 wow fadeIn overflow-hidden"
+      >
+        {/* Full dark gradient background */}
+        <div className="absolute inset-0 z-0">
+          <div className="w-full h-full bg-gradient-to-br from-[#2d0b4e] via-[#1a1333] to-[#3a1c71]"></div>
+          {/* Decorative blurred circles */}
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-16 -left-16 w-60 h-60 bg-purple-700 opacity-30 rounded-full blur-2xl"></div>
+            <div className="absolute top-1/2 right-0 w-48 h-48 bg-indigo-400 opacity-20 rounded-full blur-2xl"></div>
+            <div className="absolute bottom-0 left-1/3 w-40 h-40 bg-pink-400 opacity-20 rounded-full blur-2xl"></div>
+            <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-blue-400 opacity-20 rounded-full blur-2xl"></div>
+            <div className="absolute bottom-1/4 left-1/4 w-24 h-24 bg-fuchsia-400 opacity-20 rounded-full blur-2xl"></div>
+          </div>
+        </div>
+        <div className="row relative z-10">
           <div className="col-xl-10 mx-auto">
+            {/* Add space before heading */}
+            <div className="pt-24"></div>
             {/* Video Heading */}
-            <h2 className="text-3xl md:text-4xl font-extrabold text-black-800 text-center mb-8 drop-shadow-lg">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white text-center mb-8 drop-shadow-lg">
               Watch This Video To Learn About SkillSwap
             </h2>
-            <div className="video-area">
-              <img src="assets/img/bg/video.png" alt="video" />
-              <a  
-              onClick={() => setIsVideoOpen(true)}
-              style={{cursor:"pointer"}}
-               className="vbtn">
+            <div className="video-area flex flex-col items-center">
+              <img
+                src="assets/img/bg/video.png"
+                alt="video"
+                className="rounded-2xl shadow-2xl border-4 border-purple-400 mb-6 bg-white/10 backdrop-blur"
+                style={{ maxWidth: 480 }}
+              />
+              <a
+                onClick={() => setIsVideoOpen(true)}
+                style={{ cursor: "pointer" }}
+                className="vbtn flex items-center justify-center"
+              >
                 <svg id="play_icon" viewBox="0 0 163 163" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" x="0px" y="0px">
                   <g fill="none">
                     <g transform="translate(2.000000, 2.000000)" strokeWidth="4">
@@ -33,12 +54,14 @@ export default function VideoHomeOne() {
                 </svg>
               </a>
             </div>
+            {/* Add space after video */}
+            <div className="pb-20"></div>
           </div>
         </div>
       </section>
 
-       {/* video modal start */}
-       <VideoPopup
+      {/* video modal start */}
+      <VideoPopup
         isVideoOpen={isVideoOpen}
         setIsVideoOpen={setIsVideoOpen}
         videoId={"W7kLyV8h3GI"}
