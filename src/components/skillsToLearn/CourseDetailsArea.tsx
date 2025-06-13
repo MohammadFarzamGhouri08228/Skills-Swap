@@ -255,7 +255,7 @@ export default function MySkillsArea() {
   if (loading) {
     return (
       <section className="relative min-h-screen w-full overflow-hidden">
-        <div className="container mx-auto py-24 text-center text-xl text-purple-200">Loading user information...</div>
+        <div className="container mx-auto py-24 text-center text-xl text-purple-400">Loading user information...</div>
       </section>
     );
   }
@@ -315,7 +315,7 @@ export default function MySkillsArea() {
         </h2>
           <div className="max-w-2xl mx-auto flex flex-col items-center gap-8">
             {skillsLoading ? (
-              <div className="text-center text-purple-700 py-8 text-xl font-semibold">
+              <div className="text-center text-purple-200 py-8 text-xl font-semibold">
                 Loading skill categories...
               </div>
             ) : (
