@@ -23,22 +23,19 @@ import {
   CheckCheck,
   Filter,
   SlidersHorizontal,
-  ChevronDown, // For potential dropdowns or accordions
-  ChevronUp,   // For potential dropdowns or accordions
-  AlertTriangle // For empty states or warnings
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
+  Phone,
+  Video,
+  MoreHorizontal
 } from 'lucide-react';
-import { userDataService, UserData } from '@/app/api/profile/userDataService'; // Ensure this path is correct
-import Wrapper from '@/layouts/Wrapper'; // Ensure this path is correct
-import { auth } from '@/lib/firebase'; // Ensure this path is correct
+import { userDataService, UserData } from '@/app/api/profile/userDataService';
+import Wrapper from '@/layouts/Wrapper';
+import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { toast } from '@/components/ui/use-toast'; // Ensure this path is correct
+import { toast } from '@/components/ui/use-toast';
 import { 
-  initializeApp,
-  getApps,
-  getApp
-} from 'firebase/app';
-import { 
-  getFirestore, 
   collection, 
   doc, 
   setDoc, 
@@ -53,32 +50,16 @@ import {
   arrayUnion,
   arrayRemove,
   limit,
-  addDoc
+  addDoc,
+  Timestamp
 } from 'firebase/firestore';
-import HeaderOne from '@/layouts/headers/HeaderOne'; // Ensure this path is correct
-import FooterOne from '@/layouts/footers/FooterOne'; // Ensure this path is correct
+import HeaderOne from '@/layouts/headers/HeaderOne';
+import FooterOne from '@/layouts/footers/FooterOne';
 
-// Firebase Configuration (Ensure your keys are handled securely, e.g., via environment variables)
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // Replace with your actual Firebase config
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID"
-};
+// Import Firebase configuration from your existing setup
+import { db, app } from '@/lib/firebase';
 
-// Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
-
-// Color Palette (for reference, used in Tailwind classes)
-// #5B21B6 Bright Purple
-// #2E1065 Deep Midnight Purple
-// #FFD23F Yellow
-// #FF914D Orange
-// #FF686B Coral
+// Firebase configuration is now imported from your existing file
 
 // Types
 interface PeerRequest {
@@ -86,7 +67,7 @@ interface PeerRequest {
   fromUserId: string;
   toUserId: string;
   status: 'pending' | 'accepted' | 'declined';
-  createdAt: any; // Consider using Firestore Timestamp type
+  createdAt: Timestamp;
   fromUserName: string;
   fromUserEmail: string;
   fromUserProfilePicture: string;
@@ -99,17 +80,17 @@ interface Message {
   senderName: string;
   senderProfilePicture: string;
   text: string;
-  timestamp: any; // Consider using Firestore Timestamp type
+  timestamp: Timestamp;
   read: boolean;
 }
 
 interface Conversation {
   id: string;
   participants: string[];
-  participantDetails: any; // Define more specific type if possible
-  lastMessage: any; // Define more specific type if possible
-  unreadCount: any; // Define more specific type if possible
-  updatedAt: any; // Consider using Firestore Timestamp type
+  participantDetails: any;
+  lastMessage: any;
+  unreadCount: any;
+  updatedAt: Timestamp;
 }
 
 interface ChatPanel {
@@ -144,25 +125,49 @@ export default function ModernPeersPage() {
   const [newMessage, setNewMessage] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [unreadCounts, setUnreadCounts] = useState<{[key: string]: number}>({});
+  const [isTyping, setIsTyping] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatInputRef = useRef<HTMLInputElement>(null);
+  const chatInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Debug state for Firebase connection
+  const [firebaseConnected, setFirebaseConnected] = useState(false);
+
+  // Test Firebase connection
+  useEffect(() => {
+    if (db) {
+      setFirebaseConnected(true);
+      console.log("✅ Firebase connected successfully");
+      console.log("📊 Firebase config loaded from /firebase/firebase.ts");
+    } else {
+      console.error("❌ Firebase not connected");
+      setFirebaseConnected(false);
+    }
+  }, []);
 
   // Auth effect
   useEffect(() => {
     if (!auth) {
-      // router.push('/login'); // Consider redirecting or showing an error
       console.error("Firebase auth is not initialized.");
+      toast({
+        title: "Error",
+        description: "Firebase authentication not configured.",
+        variant: "destructive",
+      });
       return;
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("Auth state changed:", user?.uid || "No user");
       if (user) {
         setCurrentUserId(user.uid);
         try {
           const userData = await userDataService.getUser(user.uid);
           setCurrentUser(userData);
-        } catch (error) {
+          if (userData) {
+            console.log("✅ Current user loaded:", userData.firstName);
+          }
+        } catch (error: any) {
           console.error("Error fetching current user data:", error);
           toast({
             title: "Error",
@@ -171,47 +176,48 @@ export default function ModernPeersPage() {
           });
         }
       } else {
-        // router.push('/login'); // Consider redirecting
         setCurrentUserId(null);
         setCurrentUser(null);
+        console.log("❌ No authenticated user");
       }
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, []);
 
   // Fetch users and setup real-time listeners
   useEffect(() => {
-    if (!currentUserId) {
-      setIsLoading(false); // Not loading if no user
+    if (!currentUserId || !db) {
+      setIsLoading(false);
       return;
     }
+
+    console.log("🔄 Setting up data for user:", currentUserId);
 
     const setupData = async () => {
       setIsLoading(true);
       try {
         const allUsers = await userDataService.getAllUsers();
-        setUsers(allUsers.filter(u => u.uid !== currentUserId)); // Filter out current user from the main list
+        console.log("📥 Loaded users:", allUsers.length);
+        setUsers(allUsers.filter(u => u.uid !== currentUserId));
         
-        // Initial filter application
         applyFilter(activeFilter, allUsers.filter(u => u.uid !== currentUserId));
-
 
         // Setup real-time listeners
         const unsubPeerRequests = setupPeerRequestsListener();
         const unsubUserPeers = setupUserPeersListener();
         const unsubConversations = setupConversationsListener();
         
-        return () => { // Cleanup listeners
+        return () => {
           if (unsubPeerRequests) unsubPeerRequests();
           if (unsubUserPeers) unsubUserPeers();
           if (unsubConversations) unsubConversations();
         };
-      } catch (error) {
-        console.error('Error setting up data:', error);
+      } catch (error: any) {
+        console.error('❌ Error setting up data:', error);
         toast({
           title: "Error",
-          description: "Failed to load peers data. Please try again later.",
+          description: "Failed to load peers data. Please check your Firebase configuration.",
           variant: "destructive",
         });
       } finally {
@@ -220,53 +226,75 @@ export default function ModernPeersPage() {
     };
 
     setupData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUserId]); // Rerun if currentUserId changes
+  }, [currentUserId]);
 
-  // Real-time listeners
+  // Real-time listeners with better error handling
   const setupPeerRequestsListener = () => {
-    if (!currentUserId) return;
+    if (!currentUserId || !db) return;
+    
+    console.log("🔄 Setting up peer requests listener");
     const q = query(
       collection(db, 'peerRequests'),
       where('toUserId', '==', currentUserId),
       where('status', '==', 'pending')
     );
+    
     return onSnapshot(q, (snapshot) => {
-      const requests: PeerRequest[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PeerRequest));
+      const requests: PeerRequest[] = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      } as PeerRequest));
+      console.log("📥 Peer requests updated:", requests.length);
       setPeerRequests(requests);
-    }, (error) => {
-      console.error("Error listening to peer requests:", error);
-      toast({ title: "Real-time Error", description: "Could not update peer requests.", variant: "destructive"});
+    }, (error: any) => {
+      console.error("❌ Error listening to peer requests:", error);
+      toast({ 
+        title: "Connection Error", 
+        description: "Could not update peer requests. Check your Firebase rules.", 
+        variant: "destructive"
+      });
     });
   };
 
   const setupUserPeersListener = () => {
-    if (!currentUserId) return;
+    if (!currentUserId || !db) return;
+    
+    console.log("🔄 Setting up user peers listener");
     const userPeersRef = doc(db, 'userPeers', currentUserId);
+    
     return onSnapshot(userPeersRef, (doc) => {
       if (doc.exists()) {
         const data = doc.data();
+        console.log("📥 User peers updated:", data);
         setUserPeers(data.peers || []);
         setSentRequests(data.pendingRequests?.sent || []);
         setReceivedRequests(data.pendingRequests?.received || []);
-      } else { // Ensure states are reset if doc doesn't exist or user has no peer data
+      } else {
+        console.log("📥 No user peers document found, creating empty state");
         setUserPeers([]);
         setSentRequests([]);
         setReceivedRequests([]);
       }
-    }, (error) => {
-      console.error("Error listening to user peers:", error);
-      toast({ title: "Real-time Error", description: "Could not update your peer connections.", variant: "destructive"});
+    }, (error: any) => {
+      console.error("❌ Error listening to user peers:", error);
+      toast({ 
+        title: "Connection Error", 
+        description: "Could not update your peer connections. Check your Firebase rules.", 
+        variant: "destructive"
+      });
     });
   };
 
   const setupConversationsListener = () => {
-    if (!currentUserId) return;
+    if (!currentUserId || !db) return;
+    
+    console.log("🔄 Setting up conversations listener");
     const q = query(
       collection(db, 'conversations'),
       where('participants', 'array-contains', currentUserId),
       orderBy('updatedAt', 'desc')
     );
+    
     return onSnapshot(q, (snapshot) => {
       const convs: Conversation[] = [];
       const newUnreadCounts: {[key: string]: number} = {};
@@ -275,22 +303,33 @@ export default function ModernPeersPage() {
         convs.push(data);
         newUnreadCounts[doc.id] = data.unreadCount?.[currentUserId] || 0;
       });
+      console.log("📥 Conversations updated:", convs.length);
       setConversations(convs);
       setUnreadCounts(newUnreadCounts);
-    }, (error) => {
-      console.error("Error listening to conversations:", error);
-      toast({ title: "Real-time Error", description: "Could not update messages.", variant: "destructive"});
+    }, (error: any) => {
+      console.error("❌ Error listening to conversations:", error);
+      toast({ 
+        title: "Connection Error", 
+        description: "Could not update messages. Check your Firebase rules.", 
+        variant: "destructive"
+      });
     });
   };
 
-  // Peer request functions
+  // Enhanced peer request function with better error handling
   const sendPeerRequest = async (toUserId: string) => {
-    if (!currentUserId || !currentUser) {
-      toast({ title: "Action Failed", description: "You must be logged in to send peer requests.", variant: "destructive"});
+    if (!currentUserId || !currentUser || !db) {
+      toast({ 
+        title: "Action Failed", 
+        description: "You must be logged in and Firebase must be configured.", 
+        variant: "destructive"
+      });
       return;
     }
+    
+    console.log("📤 Sending peer request to:", toUserId);
     try {
-      const requestId = `${currentUserId}_${toUserId}`; // Simple ID, ensure uniqueness if needed
+      const requestId = `${currentUserId}_${toUserId}`;
       await setDoc(doc(db, 'peerRequests', requestId), {
         fromUserId: currentUserId,
         toUserId,
@@ -305,31 +344,52 @@ export default function ModernPeersPage() {
       const userPeersRef = doc(db, 'userPeers', currentUserId);
       const recipientPeersRef = doc(db, 'userPeers', toUserId);
 
-      // Update current user's sent requests
       const userPeersDoc = await getDoc(userPeersRef);
       if (userPeersDoc.exists()) {
-        await updateDoc(userPeersRef, { 'pendingRequests.sent': arrayUnion(toUserId), updatedAt: serverTimestamp() });
+        await updateDoc(userPeersRef, { 
+          'pendingRequests.sent': arrayUnion(toUserId), 
+          updatedAt: serverTimestamp() 
+        });
       } else {
-        await setDoc(userPeersRef, { userId: currentUserId, peers: [], pendingRequests: { sent: [toUserId], received: [] }, updatedAt: serverTimestamp() });
+        await setDoc(userPeersRef, { 
+          userId: currentUserId, 
+          peers: [], 
+          pendingRequests: { sent: [toUserId], received: [] }, 
+          updatedAt: serverTimestamp() 
+        });
       }
 
-      // Update recipient's received requests
       const recipientDoc = await getDoc(recipientPeersRef);
       if (recipientDoc.exists()) {
-        await updateDoc(recipientPeersRef, { 'pendingRequests.received': arrayUnion(currentUserId), updatedAt: serverTimestamp() });
+        await updateDoc(recipientPeersRef, { 
+          'pendingRequests.received': arrayUnion(currentUserId), 
+          updatedAt: serverTimestamp() 
+        });
       } else {
-        await setDoc(recipientPeersRef, { userId: toUserId, peers: [], pendingRequests: { sent: [], received: [currentUserId] }, updatedAt: serverTimestamp() });
+        await setDoc(recipientPeersRef, { 
+          userId: toUserId, 
+          peers: [], 
+          pendingRequests: { sent: [], received: [currentUserId] }, 
+          updatedAt: serverTimestamp() 
+        });
       }
 
+      console.log("✅ Peer request sent successfully");
       toast({ title: "Peer Request Sent!", description: "Your peer request has been sent successfully." });
-    } catch (error) {
-      console.error('Error sending peer request:', error);
-      toast({ title: "Error", description: "Failed to send peer request. Please try again.", variant: "destructive" });
+    } catch (error: any) {
+      console.error('❌ Error sending peer request:', error);
+      toast({ 
+        title: "Error", 
+        description: `Failed to send peer request: ${error.message}`, 
+        variant: "destructive" 
+      });
     }
   };
 
   const handlePeerRequest = async (requestId: string, status: 'accepted' | 'declined') => {
-    if(!currentUserId) return;
+    if(!currentUserId || !db) return;
+    
+    console.log(`📝 ${status} peer request:`, requestId);
     try {
       const requestRef = doc(db, 'peerRequests', requestId);
       const request = peerRequests.find(r => r.id === requestId);
@@ -341,26 +401,55 @@ export default function ModernPeersPage() {
       const fromUserPeersRef = doc(db, 'userPeers', request.fromUserId);
 
       if (status === 'accepted') {
-        await updateDoc(currentUserPeersRef, { peers: arrayUnion(request.fromUserId), 'pendingRequests.received': arrayRemove(request.fromUserId), updatedAt: serverTimestamp() });
-        await updateDoc(fromUserPeersRef, { peers: arrayUnion(currentUserId), 'pendingRequests.sent': arrayRemove(currentUserId), updatedAt: serverTimestamp() });
+        await updateDoc(currentUserPeersRef, { 
+          peers: arrayUnion(request.fromUserId), 
+          'pendingRequests.received': arrayRemove(request.fromUserId), 
+          updatedAt: serverTimestamp() 
+        });
+        await updateDoc(fromUserPeersRef, { 
+          peers: arrayUnion(currentUserId), 
+          'pendingRequests.sent': arrayRemove(currentUserId), 
+          updatedAt: serverTimestamp() 
+        });
+        console.log("✅ Peer request accepted");
         toast({ title: "Peer Request Accepted!", description: "You are now connected as peers." });
       } else {
-        await updateDoc(currentUserPeersRef, { 'pendingRequests.received': arrayRemove(request.fromUserId), updatedAt: serverTimestamp() });
-        await updateDoc(fromUserPeersRef, { 'pendingRequests.sent': arrayRemove(currentUserId), updatedAt: serverTimestamp() });
+        await updateDoc(currentUserPeersRef, { 
+          'pendingRequests.received': arrayRemove(request.fromUserId), 
+          updatedAt: serverTimestamp() 
+        });
+        await updateDoc(fromUserPeersRef, { 
+          'pendingRequests.sent': arrayRemove(currentUserId), 
+          updatedAt: serverTimestamp() 
+        });
+        console.log("✅ Peer request declined");
         toast({ title: "Peer Request Declined", description: "The peer request has been declined." });
       }
-       // Optimistically update UI or rely on listener
-       setPeerRequests(prev => prev.filter(r => r.id !== requestId));
 
-    } catch (error) {
-      console.error('Error handling peer request:', error);
-      toast({ title: "Error", description: "Failed to handle peer request. Please try again.", variant: "destructive" });
+      setPeerRequests(prev => prev.filter(r => r.id !== requestId));
+
+    } catch (error: any) {
+      console.error('❌ Error handling peer request:', error);
+      toast({ 
+        title: "Error", 
+        description: `Failed to handle peer request: ${error.message}`, 
+        variant: "destructive" 
+      });
     }
   };
 
-  // Messaging functions
+  // Enhanced chat opening with better error handling
   const openChat = async (peer: UserData) => {
-    if (!currentUserId || !currentUser) return;
+    if (!currentUserId || !currentUser || !db) {
+      toast({
+        title: "Error",
+        description: "Authentication or Firebase configuration issue.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    console.log("💬 Opening chat with:", peer.firstName);
     try {
       const participants = [currentUserId, peer.uid].sort();
       const conversationId = `${participants[0]}_${participants[1]}`;
@@ -369,11 +458,20 @@ export default function ModernPeersPage() {
       const conversationDoc = await getDoc(conversationRef);
 
       if (!conversationDoc.exists()) {
+        console.log("📝 Creating new conversation");
         await setDoc(conversationRef, {
           participants,
           participantDetails: {
-            [currentUserId]: { name: `${currentUser.firstName} ${currentUser.surname}`, email: currentUser.email, profilePicture: currentUser.profilePicture || '' },
-            [peer.uid]: { name: `${peer.firstName} ${peer.surname}`, email: peer.email, profilePicture: peer.profilePicture || '' }
+            [currentUserId]: { 
+              name: `${currentUser.firstName} ${currentUser.surname}`, 
+              email: currentUser.email, 
+              profilePicture: currentUser.profilePicture || '' 
+            },
+            [peer.uid]: { 
+              name: `${peer.firstName} ${peer.surname}`, 
+              email: peer.email, 
+              profilePicture: peer.profilePicture || '' 
+            }
           },
           lastMessage: null,
           unreadCount: { [currentUserId]: 0, [peer.uid]: 0 },
@@ -383,33 +481,56 @@ export default function ModernPeersPage() {
       }
 
       setChatPanel({ isOpen: true, isMinimized: false, peer, conversationId });
-      setupMessagesListener(conversationId); // Ensure this returns a cleanup function if needed
+      setupMessagesListener(conversationId);
       markMessagesAsRead(conversationId);
-    } catch (error) {
-      console.error('Error opening chat:', error);
-      toast({ title: "Error", description: "Failed to open chat. Please try again.", variant: "destructive" });
+      
+      console.log("✅ Chat opened successfully");
+    } catch (error: any) {
+      console.error('❌ Error opening chat:', error);
+      toast({ 
+        title: "Error", 
+        description: `Failed to open chat: ${error.message}`, 
+        variant: "destructive" 
+      });
     }
   };
 
   const setupMessagesListener = (conversationId: string) => {
+    if (!db) return;
+    
+    console.log("🔄 Setting up messages listener for:", conversationId);
     const q = query(
       collection(db, 'messages'),
       where('conversationId', '==', conversationId),
       orderBy('timestamp', 'asc'),
-      limit(100) // Load last 100 messages
+      limit(100)
     );
+    
     return onSnapshot(q, (snapshot) => {
-      const msgs: Message[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message));
+      const msgs: Message[] = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      } as Message));
+      console.log("📥 Messages updated:", msgs.length);
       setMessages(msgs);
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    }, (error) => {
-      console.error("Error listening to messages:", error);
-      toast({ title: "Real-time Error", description: "Could not update chat messages.", variant: "destructive"});
+    }, (error: any) => {
+      console.error("❌ Error listening to messages:", error);
+      toast({ 
+        title: "Chat Error", 
+        description: "Could not load messages. Check your Firebase rules.", 
+        variant: "destructive"
+      });
     });
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !chatPanel.conversationId || !currentUserId || !currentUser || !chatPanel.peer) return;
+    if (!newMessage.trim() || !chatPanel.conversationId || !currentUserId || !currentUser || !chatPanel.peer || !db) {
+      console.log("❌ Cannot send message - missing requirements");
+      return;
+    }
+    
+    console.log("📤 Sending message:", newMessage.substring(0, 20) + "...");
     try {
       const messageData = {
         conversationId: chatPanel.conversationId,
@@ -418,36 +539,64 @@ export default function ModernPeersPage() {
         senderProfilePicture: currentUser.profilePicture || '',
         text: newMessage.trim(),
         timestamp: serverTimestamp(),
-        read: false // Will be true for sender, receiver updates on open
+        read: false
       };
-      await addDoc(collection(db, 'messages'), messageData); // Use addDoc for auto-ID
+      
+      // Add message to messages collection
+      await addDoc(collection(db, 'messages'), messageData);
 
       const otherUserId = chatPanel.peer.uid;
-      const currentUnread = unreadCounts[chatPanel.conversationId] || 0; // Get current unread for the other user
+      const currentUnread = unreadCounts[chatPanel.conversationId] || 0;
 
+      // Update conversation with last message and unread count
       await updateDoc(doc(db, 'conversations', chatPanel.conversationId), {
-        lastMessage: { text: newMessage.trim(), senderId: currentUserId, senderName: `${currentUser.firstName} ${currentUser.surname}`, timestamp: serverTimestamp() },
-        [`unreadCount.${otherUserId}`]: currentUnread + 1, // Increment for the other user
+        lastMessage: { 
+          text: newMessage.trim(), 
+          senderId: currentUserId, 
+          senderName: `${currentUser.firstName} ${currentUser.surname}`, 
+          timestamp: serverTimestamp() 
+        },
+        [`unreadCount.${otherUserId}`]: currentUnread + 1,
         updatedAt: serverTimestamp()
       });
+      
       setNewMessage('');
       chatInputRef.current?.focus();
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
+      console.log("✅ Message sent successfully");
+    } catch (error: any) {
+      console.error('❌ Error sending message:', error);
+      toast({ 
+        title: "Error", 
+        description: `Failed to send message: ${error.message}`, 
+        variant: "destructive" 
+      });
     }
   };
 
   const markMessagesAsRead = async (conversationId: string) => {
-    if (!currentUserId || !conversationId) return;
+    if (!currentUserId || !conversationId || !db) return;
+    
     try {
       await updateDoc(doc(db, 'conversations', conversationId), {
         [`unreadCount.${currentUserId}`]: 0,
-        // updatedAt: serverTimestamp() // Optionally update timestamp
       });
-    } catch (error) {
-      console.error('Error marking messages as read:', error);
-      // No toast for this, as it's a background action
+    } catch (error: any) {
+      console.error('❌ Error marking messages as read:', error);
+    }
+  };
+
+  // Auto-resize textarea
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewMessage(e.target.value);
+    // Auto-resize
+    e.target.style.height = 'auto';
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 96)}px`; // max 96px (6 rows)
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
@@ -457,9 +606,8 @@ export default function ModernPeersPage() {
       case 'peers':
         return sourceUsers.filter(user => userPeers.includes(user.uid));
       case 'requests':
-        // Show users who sent requests TO ME
         return sourceUsers.filter(user => peerRequests.some(req => req.fromUserId === user.uid));
-      default: // 'all'
+      default:
         return sourceUsers.filter(user => user.uid !== currentUserId);
     }
   };
@@ -483,14 +631,11 @@ export default function ModernPeersPage() {
 
   useEffect(() => {
     applyFilter(activeFilter, users);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, users, activeFilter, userPeers, peerRequests]);
-
 
   const getUserStatus = (user: UserData) => {
     if (userPeers.includes(user.uid)) return 'peer';
     if (sentRequests.includes(user.uid)) return 'sent';
-    // Check if this user has sent a request TO ME that is still pending
     if (peerRequests.some(req => req.fromUserId === user.uid && req.status === 'pending')) return 'received';
     return 'none';
   };
@@ -500,7 +645,6 @@ export default function ModernPeersPage() {
     return conversations.reduce((sum, conv) => sum + (conv.unreadCount?.[currentUserId] || 0), 0);
   };
 
-
   if (isLoading) {
     return (
       <Wrapper>
@@ -509,6 +653,11 @@ export default function ModernPeersPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#5B21B6] border-t-transparent mx-auto mb-4"></div>
             <p className="text-[#2E1065] font-semibold text-lg">Loading SkillSwappers...</p>
             <p className="text-[#5B21B6]/80 text-sm">Connecting you with the community.</p>
+            {!firebaseConnected && (
+              <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded-lg">
+                <p className="text-red-700 text-xs">⚠️ Firebase connection issue detected</p>
+              </div>
+            )}
           </div>
         </div>
       </Wrapper>
@@ -517,9 +666,8 @@ export default function ModernPeersPage() {
 
   return (
     <>
-      <HeaderOne /> {/* Ensure HeaderOne is styled appropriately */}
+      <HeaderOne />
       <Wrapper>
-        {/* Main page background gradient */}
         <div className="min-h-screen selection:bg-[#5B21B6] selection:text-white" style={{ background: 'linear-gradient(to bottom right, #2E1065, #5B21B6, #FF914D, #FF686B)' }}>
           <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
             
@@ -696,7 +844,7 @@ export default function ModernPeersPage() {
                             <div className="mb-4">
                                <p className="text-xs text-[#2E1065]/70 font-semibold mb-1.5">TOP SKILLS:</p>
                                <div className="flex flex-wrap gap-2">
-                                {user.skills.slice(0, 3).map((skill, index) => ( // Show up to 3 skills
+                                {user.skills.slice(0, 3).map((skill, index) => (
                                   <Badge 
                                     key={index} 
                                     className="bg-gradient-to-r from-[#FFD23F]/20 via-[#FF914D]/10 to-[#FF686B]/5 text-[#2E1065] border border-[#FFD23F]/40 text-xs px-2.5 py-1 rounded-md font-medium"
@@ -723,7 +871,7 @@ export default function ModernPeersPage() {
                             variant="outline"
                             size="sm"
                             className="flex-1 border-[#5B21B6]/70 text-[#5B21B6] hover:bg-[#5B21B6] hover:text-white transition-all duration-300 rounded-lg group/button"
-                            onClick={() => router.push(`/user/${user.uid}`)} // Ensure this route exists
+                            onClick={() => router.push(`/user/${user.uid}`)}
                           >
                             View Profile
                             <span className="ml-1.5 text-[#5B21B6]/70 group-hover/button:text-white transition-colors duration-300">&rarr;</span>
@@ -764,7 +912,7 @@ export default function ModernPeersPage() {
                               <Clock className="h-4 w-4 mr-1.5" /> Request Sent
                             </Button>
                           )}
-                           {status === 'received' && ( // If a user sent ME a request, show on their card if not in requests tab
+                           {status === 'received' && (
                                 <Badge className="flex-1 bg-[#FFD23F]/80 text-[#2E1065] border border-[#FFD23F] text-xs justify-center py-2 rounded-lg">
                                     <Users className="h-4 w-4 mr-1.5" /> Wants to Connect
                                 </Badge>
@@ -788,100 +936,252 @@ export default function ModernPeersPage() {
         </div>
       </Wrapper>
 
-      {/* Chat Panel - Enhanced Styling */}
+      {/* Modern Simplified Chat Panel */}
       {chatPanel.isOpen && chatPanel.peer && (
-        <div 
-          className={`fixed bottom-0 right-0 sm:bottom-4 sm:right-4 m-0 sm:m-0 w-full sm:w-96 h-full sm:h-[70vh] sm:max-h-[600px] bg-white/90 backdrop-blur-lg border border-[#2E1065]/20 rounded-none sm:rounded-xl shadow-2xl flex flex-col z-[100] transition-all duration-300 ease-in-out
-            ${chatPanel.isMinimized ? 'translate-y-[calc(100%-4rem)] sm:translate-y-[calc(100%-4rem)]' : 'translate-y-0'}`
-          }
-          style={{boxShadow: '0 10px 30px -10px rgba(46, 16, 101, 0.3), 0 20px 50px -15px rgba(91, 33, 182, 0.2)'}} // Custom shadow for more punch
-        >
-          {/* Chat Header */}
-          <div className="bg-gradient-to-r from-[#5B21B6] to-[#2E1065] text-white p-3 sm:p-4 flex justify-between items-center cursor-pointer rounded-t-none sm:rounded-t-lg" onClick={() => setChatPanel(prev => ({...prev, isMinimized: !prev.isMinimized}))}>
-            <div className="flex items-center space-x-2">
-              <Avatar className="h-8 w-8 sm:h-10 sm:w-10 border-2 border-white/50">
-                <AvatarImage src={chatPanel.peer.profilePicture} />
-                <AvatarFallback className="bg-white/20 text-white font-semibold">
-                  {chatPanel.peer.firstName?.[0]}{chatPanel.peer.surname?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-semibold text-sm sm:text-base">{chatPanel.peer.firstName} {chatPanel.peer.surname}</h3>
-                {/* Could add online status here if available */}
+        <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[400px] z-50">
+          <div 
+            className={`bg-white rounded-none sm:rounded-3xl shadow-2xl border border-gray-200/50 backdrop-blur-xl 
+              transition-all duration-500 ease-out transform-gpu
+              ${chatPanel.isMinimized 
+                ? 'h-20 sm:h-24' 
+                : 'h-screen sm:h-[650px]'
+              }`}
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.3)'
+            }}
+          >
+            {/* Simplified Modern Header */}
+            <div 
+              className="relative overflow-hidden bg-gradient-to-r from-[#5B21B6] via-[#7C3AED] to-[#2E1065] 
+                text-white p-6 rounded-t-none sm:rounded-t-3xl
+                transition-all duration-300 hover:shadow-lg"
+            >
+              {/* Subtle background pattern */}
+              <div className="absolute inset-0 opacity-5">
+                <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -translate-x-20 -translate-y-20"></div>
+                <div className="absolute bottom-0 right-0 w-32 h-32 bg-white rounded-full translate-x-16 translate-y-16"></div>
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button 
-                onClick={(e) => { e.stopPropagation(); setChatPanel(prev => ({...prev, isMinimized: !prev.isMinimized})); }}
-                className="p-1.5 hover:bg-white/20 rounded-md transition-colors"
-                title={chatPanel.isMinimized ? "Maximize" : "Minimize"}
-              >
-                {chatPanel.isMinimized ? <ChevronUp className="h-5 w-5" /> : <Minimize2 className="h-5 w-5" />}
-              </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); setChatPanel({ isOpen: false, isMinimized: false, peer: null, conversationId: null }); setMessages([]); }}
-                className="p-1.5 hover:bg-white/20 rounded-md transition-colors"
-                title="Close Chat"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Messages Area - Hidden when minimized */}
-          {!chatPanel.isMinimized && (
-            <>
-              <div className="flex-1 p-3 sm:p-4 space-y-3 overflow-y-auto bg-slate-50">
-                {messages.map((msg, index) => {
-                  const isCurrentUser = msg.senderId === currentUserId;
-                  return (
-                    <div key={msg.id || index} className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-                      <div 
-                        className={`p-2.5 sm:p-3 rounded-xl shadow-md max-w-[75%] break-words
-                          ${isCurrentUser 
-                            ? 'bg-gradient-to-br from-[#5B21B6] to-[#4c1d95] text-white rounded-br-none' 
-                            : 'bg-white text-[#2E1065] border border-slate-200 rounded-bl-none'
-                          }`}
-                      >
-                        <p className="text-sm">{msg.text}</p>
-                        <p className={`text-xs mt-1 ${isCurrentUser ? 'text-purple-200/80 text-right' : 'text-gray-400 text-left'}`}>
-                          {msg.timestamp?.toDate?.().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'sending...'}
-                          {isCurrentUser && msg.read && <CheckCheck className="inline ml-1 h-3 w-3 text-sky-300" />}
-                          {isCurrentUser && !msg.read && <Check className="inline ml-1 h-3 w-3 text-purple-300/70" />}
-                        </p>
-                      </div>
+              
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  {/* Modern Avatar */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/user/${chatPanel.peer!.uid}`);
+                    }}
+                    className="relative focus:outline-none focus:ring-2 focus:ring-white/50 rounded-2xl"
+                    title={`View ${chatPanel.peer!.firstName}'s profile`}
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 
+                      flex items-center justify-center border-2 border-white/20 backdrop-blur-sm
+                      shadow-xl transition-transform duration-300 hover:scale-105">
+                      {chatPanel.peer.profilePicture ? (
+                        <Avatar className="w-full h-full rounded-2xl">
+                          <AvatarImage src={chatPanel.peer.profilePicture} className="rounded-2xl" />
+                          <AvatarFallback className="bg-transparent text-white font-bold text-lg rounded-2xl">
+                            {chatPanel.peer.firstName?.[0]}{chatPanel.peer.surname?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        <span className="text-xl font-bold text-white">
+                          {chatPanel.peer.firstName?.[0]}{chatPanel.peer.surname?.[0]}
+                        </span>
+                      )}
                     </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
+                  </button>
+                  
+                  <div className="flex-1">
+                    <h3 className="font-bold text-xl text-white tracking-tight">
+                      {chatPanel.peer!.firstName} {chatPanel.peer!.surname}
+                    </h3>
+                  </div>
+                </div>
+                
+                {/* Action buttons */}
+                <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setChatPanel(prev => ({...prev, isMinimized: !prev.isMinimized})); }}
+                    className="p-3 hover:bg-white/10 rounded-2xl transition-all duration-200 
+                      hover:scale-110 active:scale-95"
+                    title={chatPanel.isMinimized ? "Expand" : "Minimize"}
+                  >
+                    {chatPanel.isMinimized ? 
+                      <ChevronUp className="w-5 h-5" /> : 
+                      <Minimize2 className="w-5 h-5" />
+                    }
+                  </button>
+                  
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setChatPanel({ isOpen: false, isMinimized: false, peer: null, conversationId: null }); 
+                      setMessages([]);
+                    }}
+                    className="p-3 hover:bg-red-500/20 rounded-2xl transition-all duration-200 
+                      hover:scale-110 active:scale-95"
+                    title="Close chat"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
+            </div>
 
-              {/* Input Area */}
-              <div className="p-3 sm:p-4 border-t border-[#5B21B6]/20 bg-white flex items-center space-x-2 sm:space-x-3">
-                <Input
-                  ref={chatInputRef}
-                  type="text"
-                  placeholder="Type a message..."
-                  className="flex-1 border-[#5B21B6]/40 focus:ring-2 focus:ring-[#5B21B6]/50 focus:border-[#5B21B6] rounded-lg px-3 py-2.5 text-sm bg-slate-50 placeholder:text-[#5B21B6]/60 transition-all"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                />
-                <Button 
-                  onClick={sendMessage} 
-                  disabled={!newMessage.trim()}
-                  className="bg-gradient-to-r from-[#FF914D] to-[#FF686B] text-white p-2.5 rounded-lg hover:opacity-90 transition-opacity shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Send Message"
-                >
-                  <Send className="h-5 w-5" />
-                </Button>
+            {/* Messages Area */}
+            {!chatPanel.isMinimized && (
+              <div className="flex-1 flex flex-col h-[calc(100%-theme(spacing.20))] sm:h-[calc(650px-theme(spacing.20))]">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/50 to-white/80">
+                  {messages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[#5B21B6]/10 to-[#2E1065]/5 
+                        rounded-full flex items-center justify-center mb-4">
+                        <MessageCircle className="w-8 h-8 text-[#5B21B6]/60" />
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-700 mb-2">Start a conversation</h4>
+                      <p className="text-sm text-gray-500 max-w-xs">
+                        Send a message to {chatPanel.peer.firstName} to begin your chat!
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {messages.map((msg, index) => {
+                        const isCurrentUser = msg.senderId === currentUserId;
+                        const showTimestamp = index === 0 || 
+                          (msg.timestamp?.toDate && messages[index-1]?.timestamp?.toDate &&
+                          msg.timestamp.toDate().getTime() - messages[index-1].timestamp.toDate().getTime() > 300000);
+                        
+                        return (
+                          <div key={msg.id} className="space-y-2">
+                            {showTimestamp && (
+                              <div className="flex justify-center">
+                                <span className="text-xs text-gray-400 bg-white/80 px-3 py-1 rounded-full border">
+                                  {msg.timestamp?.toDate ? msg.timestamp.toDate().toLocaleTimeString([], { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                  }) : 'Now'}
+                                </span>
+                              </div>
+                            )}
+                            
+                            <div className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} 
+                              animate-in slide-in-from-bottom-2 duration-300`}>
+                              <div className={`group max-w-[85%] ${isCurrentUser ? 'order-2' : 'order-1'}`}>
+                                <div 
+                                  className={`px-4 py-3 rounded-2xl shadow-sm transition-all duration-200 
+                                    hover:shadow-md transform hover:-translate-y-0.5
+                                    ${isCurrentUser 
+                                      ? 'bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white rounded-br-md' 
+                                      : 'bg-white text-gray-800 border border-gray-100 rounded-bl-md'
+                                    }`}
+                                >
+                                  <p className="text-sm leading-relaxed break-words">{msg.text}</p>
+                                  
+                                  <div className={`flex items-center justify-between mt-2 text-xs 
+                                    ${isCurrentUser ? 'text-purple-100' : 'text-gray-400'}`}>
+                                    <span>
+                                      {msg.timestamp?.toDate ? msg.timestamp.toDate().toLocaleTimeString([], { 
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                      }) : 'Sending...'}
+                                    </span>
+                                    {isCurrentUser && (
+                                      <div className="ml-2 transition-all duration-200">
+                                        {msg.read ? (
+                                          <CheckCheck className="w-3 h-3 text-green-300" />
+                                        ) : (
+                                          <Check className="w-3 h-3 text-purple-200" />
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      
+                      {/* Typing indicator */}
+                      {isTyping && (
+                        <div className="flex justify-start animate-in slide-in-from-bottom-2 duration-300">
+                          <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                            <div className="flex space-x-1">
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Enhanced Input Area */}
+                <div className="border-t border-gray-100 bg-white/95 backdrop-blur-sm p-4">
+                  <div className="flex items-end space-x-3">
+                    <div className="flex-1 relative">
+                      <textarea
+                        ref={chatInputRef}
+                        value={newMessage}
+                        onChange={handleTextareaChange}
+                        onKeyPress={handleKeyPress}
+                        placeholder={`Message ${chatPanel.peer.firstName}...`}
+                        className="w-full resize-none rounded-3xl border border-gray-200 bg-gray-50/50 
+                          px-5 py-4 pr-12 text-sm placeholder:text-gray-400 
+                          focus:border-[#5B21B6] focus:bg-white focus:outline-none focus:ring-2 
+                          focus:ring-[#5B21B6]/20 transition-all duration-200 max-h-24"
+                        rows={1}
+                        style={{ 
+                          minHeight: '48px',
+                          height: 'auto'
+                        }}
+                      />
+                      
+                      {/* Character counter for long messages */}
+                      {newMessage.length > 100 && (
+                        <div className="absolute bottom-1 left-3 text-xs text-gray-400">
+                          {newMessage.length}/500
+                        </div>
+                      )}
+                    </div>
+                    
+                    <button
+                      onClick={sendMessage}
+                      disabled={!newMessage.trim()}
+                      className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] 
+                        text-white rounded-2xl shadow-lg hover:shadow-xl disabled:opacity-50 
+                        disabled:cursor-not-allowed transition-all duration-200 
+                        hover:scale-105 active:scale-95 disabled:hover:scale-100
+                        flex items-center justify-center group"
+                      title="Send message"
+                    >
+                      <Send className="w-5 h-5 transform group-hover:translate-x-0.5 transition-transform duration-200" />
+                    </button>
+                  </div>
+                  
+                  {/* Quick actions */}
+                  <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
+                    <span>Press Enter to send, Shift+Enter for new line</span>
+                    <div className="flex items-center space-x-4">
+                      <button className="hover:text-[#5B21B6] transition-colors duration-200">
+                        📎 Attach
+                      </button>
+                      <button className="hover:text-[#5B21B6] transition-colors duration-200">
+                        😊 Emoji
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
       )}
-      <FooterOne /> {/* Ensure FooterOne is styled appropriately */}
+      <FooterOne />
     </>
   );
 }
-
