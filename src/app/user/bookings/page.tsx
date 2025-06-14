@@ -250,30 +250,71 @@ function BookingsPage() {
   const itemsPerPage = 6;
   const [mounted, setMounted] = useState(false);
 
-  // Helper function to fetch peer details from Firebase
-  const fetchPeersDetails = async (peerUids: string[]): Promise<Peer[]> => {
-    if (!peerUids || peerUids.length === 0) return [];
-
-    const usersRef = collection(db, 'users');
-    const fetchedPeers: Peer[] = [];
-
-    // Firestore 'in' query has a limit of 10, so we might need to batch
-    const batchSize = 10;
-    for (let i = 0; i < peerUids.length; i += batchSize) {
-      const batchUids = peerUids.slice(i, i + batchSize);
-      const q = query(usersRef, where('uid', 'in', batchUids));
+  // Helper function to fetch peer details from the userPeers collection
+  const fetchPeersFromUserPeers = async (userId: string): Promise<Peer[]> => {
+    try {
+      console.log('Fetching peers for user:', userId);
+      
+      // Query the userPeers collection for the document with matching userId
+      const userPeersRef = collection(db, 'userPeers');
+      const q = query(userPeersRef, where('userId', '==', userId));
       const snapshot = await getDocs(q);
+      
+      console.log('UserPeers documents found:', snapshot.size);
+      
+      const fetchedPeers: Peer[] = [];
+      let peerUserIds: string[] = [];
+      
+      // Extract peer user IDs from the peers array
       snapshot.forEach(doc => {
         const data = doc.data();
-        fetchedPeers.push({
-          id: data.uid, // Assuming 'uid' is the peer ID
-          name: `${data.firstName || ''} ${data.surname || ''}`.trim() || 'Unknown Peer', // Use firstName and surname for name
-          skills: data.skillsOffered || [], // Use skillsOffered from database
-          rating: data.rating || 0, // Fallback to 0 rating
-        });
+        console.log('Document data for user:', data);
+        
+        if (data.peers && Array.isArray(data.peers)) {
+          console.log('Found peers array:', data.peers);
+          peerUserIds = data.peers;
+        }
       });
+      
+      console.log('Total peer user IDs found:', peerUserIds);
+      
+      // If we have peer user IDs, fetch their details from the users collection
+      if (peerUserIds.length > 0) {
+        const usersRef = collection(db, 'users');
+        
+        // Firestore 'in' query has a limit of 10, so we might need to batch
+        const batchSize = 10;
+        for (let i = 0; i < peerUserIds.length; i += batchSize) {
+          const batchUids = peerUserIds.slice(i, i + batchSize);
+          console.log('Fetching user details for batch:', batchUids);
+          
+          const usersQuery = query(usersRef, where('uid', 'in', batchUids));
+          const usersSnapshot = await getDocs(usersQuery);
+          
+          console.log('Users found in batch:', usersSnapshot.size);
+          
+          usersSnapshot.forEach(userDoc => {
+            const userData = userDoc.data();
+            console.log('User data:', userData);
+            
+            fetchedPeers.push({
+              id: userData.uid,
+              name: `${userData.firstName || ''} ${userData.surname || ''}`.trim() || 'Unknown Peer',
+              skills: userData.skillsOffered || [],
+              rating: userData.rating || 0,
+            });
+          });
+        }
+      } else {
+        console.log('No peer user IDs found for user:', userId);
+      }
+      
+      console.log('Final fetched peers:', fetchedPeers);
+      return fetchedPeers;
+    } catch (error) {
+      console.error('Error fetching peers from userPeers collection:', error);
+      return [];
     }
-    return fetchedPeers;
   };
 
   // Fetch user data and stats from Firebase
@@ -290,15 +331,10 @@ function BookingsPage() {
       if (!userSnapshot.empty) {
         const userData = userSnapshot.docs[0].data();
         
-        // Fetch and set peers based on the user's peer list
-        if (userData.peers && Array.isArray(userData.peers)) {
-           const fetchedPeers = await fetchPeersDetails(userData.peers);
-           setPeers(fetchedPeers);
-           currentSessionPeers = fetchedPeers;
-        } else {
-           setPeers([]); // Set peers to empty if the user has no peer list
-           currentSessionPeers = []; // Ensure it's initialized even if no peers
-        }
+        // Fetch peers from the new userPeers collection structure
+        const fetchedPeers = await fetchPeersFromUserPeers(userId);
+        setPeers(fetchedPeers);
+        currentSessionPeers = fetchedPeers;
         
         // Fetch and set the current user's offered skills
         if (userData.skillsOffered && Array.isArray(userData.skillsOffered)) {
