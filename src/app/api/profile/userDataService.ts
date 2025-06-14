@@ -11,7 +11,7 @@ export interface UserData {
   createdAt: string;
   currentBalance?: number;
   emailValidated?: boolean;
-  skills?: string[];
+  skillsOffered?: string[];
   interests?: string[];
   bio?: string;
   profilePicture?: string;
@@ -155,7 +155,7 @@ export class UserDataService {
           dob: data.dob || '',
           gender: data.gender || '',
           createdAt: data.createdAt || '',
-          skills: data.skills || [],
+          skillsOffered: data.skillsOffered || [],
           location: data.location || '',
           profilePicture: data.profilePicture || '',
           isVerified: data.isVerified || false,
@@ -170,7 +170,7 @@ export class UserDataService {
         
         users = users.filter(user => {
           const fullName = `${user.firstName} ${user.surname}`.toLowerCase();
-          const skills = user.skills?.join(' ').toLowerCase() || '';
+          const skills = user.skillsOffered?.join(' ').toLowerCase() || '';
           const location = user.location?.toLowerCase() || '';
           const email = user.email.toLowerCase();
           

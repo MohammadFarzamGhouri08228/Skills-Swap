@@ -108,7 +108,7 @@ export default function ModernPeersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'peers' | 'requests'>('all');
+  const [activeFilter, setActiveFilter] = useState<'peers' | 'all' | 'requests'>('peers');
   
   const [peerRequests, setPeerRequests] = useState<PeerRequest[]>([]);
   const [userPeers, setUserPeers] = useState<string[]>([]);
@@ -620,9 +620,10 @@ export default function ModernPeersPage() {
       const searchLower = searchQuery.toLowerCase();
       currentFilteredUsers = currentFilteredUsers.filter(user => {
         const fullName = `${user.firstName} ${user.surname}`.toLowerCase();
-        const skills = user.skills?.join(' ').toLowerCase() || '';
+        const skills = user.skillsOffered?.join(' ').toLowerCase() || '';
         const location = user.location?.toLowerCase() || '';
         const email = user.email.toLowerCase();
+        
         return fullName.includes(searchLower) || skills.includes(searchLower) || location.includes(searchLower) || email.includes(searchLower);
       });
     }
@@ -706,7 +707,7 @@ export default function ModernPeersPage() {
 
                 {/* Filter Tabs */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {(['all', 'peers', 'requests'] as const).map(filterKey => {
+                  {(['peers', 'all', 'requests'] as const).map(filterKey => {
                     const counts = {
                         all: users.filter(u => u.uid !== currentUserId).length,
                         peers: userPeers.length,
@@ -840,11 +841,11 @@ export default function ModernPeersPage() {
                             </div>
                           </div>
                           
-                          {user.skills && user.skills.length > 0 && (
+                          {user.skillsOffered && user.skillsOffered.length > 0 && (
                             <div className="mb-4">
                                <p className="text-xs text-[#2E1065]/70 font-semibold mb-1.5">TOP SKILLS:</p>
                                <div className="flex flex-wrap gap-2">
-                                {user.skills.slice(0, 3).map((skill, index) => (
+                                {user.skillsOffered.slice(0, 3).map((skill, index) => (
                                   <Badge 
                                     key={index} 
                                     className="bg-gradient-to-r from-[#FFD23F]/20 via-[#FF914D]/10 to-[#FF686B]/5 text-[#2E1065] border border-[#FFD23F]/40 text-xs px-2.5 py-1 rounded-md font-medium"
@@ -852,12 +853,12 @@ export default function ModernPeersPage() {
                                     {skill}
                                   </Badge>
                                 ))}
-                                {user.skills.length > 3 && (
+                                {user.skillsOffered.length > 3 && (
                                   <Badge 
                                     variant="outline" 
                                     className="border-[#5B21B6]/40 text-[#5B21B6] text-xs px-2.5 py-1 rounded-md font-medium"
                                   >
-                                    +{user.skills.length - 3} more
+                                    +{user.skillsOffered.length - 3} more
                                   </Badge>
                                 )}
                               </div>
