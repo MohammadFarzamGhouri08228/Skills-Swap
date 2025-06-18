@@ -9,8 +9,6 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { userDataService } from '@/app/api/profile/userDataService';
 import HeaderOne from '@/layouts/headers/HeaderOne'
 import FooterOne from '@/layouts/footers/FooterOne'
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
 
 // Mock data for initial setup
 const mockSkills = {

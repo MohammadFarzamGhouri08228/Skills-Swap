@@ -24,8 +24,6 @@ import { peerService } from '@/app/api/peers/peerService'
 import { notificationService } from '@/app/api/notifications/notificationService'
 import { toast } from "react-hot-toast"
 import { Timestamp } from 'firebase/firestore'
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
 
 interface UserProfileClientProps {
   userId: string
