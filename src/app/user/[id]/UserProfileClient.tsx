@@ -503,10 +503,53 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
           </div>
 
           <p className="text-white/80 mb-4">Skill Exchange Profile</p>
-
-          <div className="grid grid-cols-2 gap-8 mb-6">
+        <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          {/* Skills Offered */}
+          <div className="bg-white rounded-xl shadow-lg border border-[#FFD34E]/40 p-6">
+            <h3 className="text-lg font-bold text-[#5C2594] mb-3 flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-[#FFD34E]" />
+              Skills I Can Teach
+            </h3>
+            <div className="space-y-2">
+              {userData?.skillsOffered && userData.skillsOffered.length > 0 ? (
+                userData.skillsOffered.map((skill: string, idx: number) => (
+                  <div
+                    key={idx}
+                    className="bg-[#F3E8FF] text-[#5C2594] px-4 py-2 rounded-lg font-semibold shadow"
+                  >
+                    {skill}
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-400 italic">No skills to teach yet.</div>
+              )}
+            </div>
+          </div>
+          {/* Skills Wanted */}
+            <div className="bg-white rounded-xl shadow-lg border border-[#FFD34E]/40 p-6">
+              <h3 className="text-lg font-bold text-[#5C2594] mb-3 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-[#FFD34E]" />
+                Skills I Want to Learn
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                {Array.isArray(userData?.skillsWanted) && userData.skillsWanted.length > 0 ? (
+                  userData.skillsWanted.map((skill: string, idx: number) => (
+                    <span
+                      key={idx}
+                      className="bg-[#FEF9C3] text-[#92400E] px-4 py-2 rounded-full font-semibold shadow"
+                    >
+                      {skill}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-400 italic">No skills wanted yet.</span>
+                )}
+              </div>
+            </div>
+          </div>
+          {/*<div className="grid grid-cols-2 gap-8 mb-6">
             <div className="relative bg-[#5C2594] rounded-xl p-6 shadow-lg border border-[#FFD34E]/40">
-              <div className="absolute -top-4 left-4 bg-[#FFD34E] text-[#5C2594] font-bold rounded-b-lg px-3 py-1 text-xs shadow">01</div>
+               <div className="absolute -top-4 left-4 bg-[#FFD34E] text-[#5C2594] font-bold rounded-b-lg px-3 py-1 text-xs shadow">01</div>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <GraduationCap className="w-5 h-5 text-[#FFD34E]" />
@@ -845,7 +888,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                 )}
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Calendar Section */}
           <div className="bg-[#5C2594] rounded-xl p-6 shadow-lg border border-[#FFD34E]/40 mb-6">
