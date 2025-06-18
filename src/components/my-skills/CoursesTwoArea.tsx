@@ -368,7 +368,8 @@ export default function MySkillsArea() {
                     <div
                       className={`transition-all duration-300 ${
                         isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                      } overflow-hidden`}
+                      } overflow-y-auto`}
+                      style={{ maxHeight: isOpen ? "24rem" : "0" }} // 24rem = 384px, adjust as needed
                     >
                       <ul className="divide-y divide-gray-100">
                         {skillsArray.map((skill) => (
