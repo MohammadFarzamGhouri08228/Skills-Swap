@@ -321,63 +321,65 @@ export default function MySkillsArea() {
             ) : (
               <>
                 {normalCategories.map(({ category, skills: catSkills }) => {
-                  const isOpen = openCategories[category] ?? false;
-                  // Ensure all skills are Skill objects
-                  const skillsArray: Skill[] = Array.isArray(catSkills)
-                    ? (catSkills as any[]).map((skill, idx) =>
-                        typeof skill === "string"
-                          ? { id: idx.toString(), name: skill }
-                          : skill
-                      )
-                    : [];
-                  return (
-                    <div
-                      key={category}
-                      className="w-full rounded-2xl shadow-xl border border-purple-100 bg-white/80 backdrop-blur-lg transition-all duration-300 hover:shadow-2xl mb-2"
+                const isOpen = openCategories[category] ?? false;
+                // Ensure all skills are Skill objects
+                const skillsArray: Skill[] = Array.isArray(catSkills)
+                  ? (catSkills as any[]).map((skill, idx) =>
+                      typeof skill === "string"
+                        ? { id: idx.toString(), name: skill }
+                        : skill
+                    )
+                  : [];
+                return (
+                  <div
+                    key={category}
+                    className="w-full rounded-2xl shadow-xl border border-purple-100 bg-white/80 backdrop-blur-lg transition-all duration-300 hover:shadow-2xl mb-2"
+                  >
+                    <button
+                      onClick={() => toggleCategory(category)}
+                      className="w-full flex justify-between items-center px-7 py-5 bg-gradient-to-r from-purple-700 to-purple-500 text-white text-xl font-semibold rounded-t-2xl focus:outline-none focus:ring-2 focus:ring-purple-700 transition"
+                      aria-expanded={isOpen}
+                      aria-controls={`${category}-skills`}
                     >
-                      <button
-                        onClick={() => toggleCategory(category)}
-                        className="w-full flex justify-between items-center px-7 py-5 bg-gradient-to-r from-purple-700 to-purple-500 text-white text-xl font-semibold rounded-t-2xl focus:outline-none focus:ring-2 focus:ring-purple-700 transition"
-                        aria-expanded={isOpen}
-                        aria-controls={`${category}-skills`}
+                      <span>{category}</span>
+                      <svg
+                        className={`w-6 h-6 transform transition-transform duration-300 ${
+                          isOpen ? "rotate-180" : "rotate-0"
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
-                        <span>{category}</span>
-                        <svg
-                          className={`w-6 h-6 transform transition-transform duration-300 ${
-                            isOpen ? "rotate-180" : "rotate-0"
-                          }`}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19 9l-7 7-7-7"
-                          ></path>
-                        </svg>
-                      </button>
-                      <div
-                        className={`transition-all duration-300 ${
-                          isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                        } overflow-hidden`}
-                      >
-                        <ul className="divide-y divide-gray-100">
-                          {skillsArray.map((skill) => (
-                            <li
-                              key={skill.id}
-                              className={`px-7 py-3 border-b border-gray-100 last:border-b-0 hover:bg-purple-50 cursor-pointer text-purple-900 font-medium ${
-                                skillsWanted.includes(skill.name)
-                                  ? "bg-purple-100 text-purple-700"
-                                  : ""
-                              }`}
-                            >
-                              <span>{skill.name}</span>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19 9l-7 7-7-7"
+                        ></path>
+                      </svg>
+                    </button>
+                    <div
+                      className={`transition-all duration-300 ${
+                        isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                      } overflow-y-auto`}
+                      style={{ maxHeight: isOpen ? "24rem" : "0" }} // enables scrolling for long lists
+                    >
+                      <ul className="divide-y divide-gray-100">
+                        {skillsArray.map((skill) => (
+                          <li
+                            key={skill.id}
+                            className={`flex justify-between items-center px-7 py-3 ${
+                              skillsWanted.includes(skill.name)
+                                ? "bg-purple-100 text-purple-700"
+                                : "hover:bg-purple-50"
+                            }`}
+                          >
+                            <span>{skill.name}</span>
+                            <div className="flex-shrink-0 ml-4">
                               {skillsWanted.includes(skill.name) ? (
                                 <button
-                                  className="ml-2 text-xs bg-red-200 text-red-800 px-4 py-1 rounded-full hover:bg-red-400 transition font-semibold"
+                                  className="text-xs bg-red-200 text-red-800 px-4 py-1 rounded-full hover:bg-red-400 transition font-semibold"
                                   onClick={() => handleRemoveSkill(skill.name)}
                                   type="button"
                                   disabled={addingSkill && removingSkillName === skill.name}
@@ -388,7 +390,7 @@ export default function MySkillsArea() {
                                 </button>
                               ) : (
                                 <button
-                                  className="ml-2 text-xs bg-purple-200 text-purple-800 px-4 py-1 rounded-full hover:bg-purple-400 transition font-semibold"
+                                  className="text-xs bg-purple-200 text-purple-800 px-4 py-1 rounded-full hover:bg-purple-400 transition font-semibold"
                                   onClick={() => handleAddSkill(skill.name)}
                                   type="button"
                                   disabled={addingSkill && addingSkillName === skill.name}
@@ -398,13 +400,14 @@ export default function MySkillsArea() {
                                     : "Add"}
                                 </button>
                               )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  );
-                })}
+                  </div>
+                );
+              })}
 
                 {/* Other category dropdown styled like the rest */}
                 {otherCategory && (
