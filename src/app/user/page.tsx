@@ -18,22 +18,28 @@ export default function UserPage() {
 
   useEffect(() => {
     if (!auth) {
-      console.error('Firebase Auth is not initialized');
       setIsLoading(false);
       return;
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // If no user is logged in, redirect to login page
         router.push('/modern/login');
         return;
       }
 
       setUser(user);
       try {
-        const data = await userDataService.getUser(user.uid);
-        setUserData(data);
+        let data = await userDataService.getUser(user.uid);
+        // Defensive fix: ensure skillsWanted and skillsOffered are arrays
+        if (data) {
+          data = {
+            ...data,
+            skillsWanted: Array.isArray(data.skillsWanted) ? data.skillsWanted : [],
+            skillsOffered: Array.isArray(data.skillsOffered) ? data.skillsOffered : [],
+          } as UserData; // <--- Explicit cast here
+        }
+        setUserData(data as UserData); // <--- And here
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -42,10 +48,16 @@ export default function UserPage() {
 
     return () => unsubscribe();
   }, [router]);
-
+  const normalizedUserData = userData
+    ? {
+        ...userData,
+        skillsWanted: Array.isArray(userData.skillsWanted) ? userData.skillsWanted : [],
+        skillsOffered: Array.isArray(userData.skillsOffered) ? userData.skillsOffered : [],
+      }
+    : null;
   return (
     <Wrapper>
-      <HomeOne user={user} userData={userData} isLoading={isLoading} />
+      <HomeOne user={user} userData={normalizedUserData} isLoading={isLoading} />
     </Wrapper>
-  )
-} 
+  );
+}

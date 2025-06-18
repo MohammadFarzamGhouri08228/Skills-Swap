@@ -86,7 +86,9 @@ export class AuthService {
           currentBalance: 0,
           createdAt: new Date().toISOString(),
           emailValidated: user.emailVerified,
-          profilePicture: user.photoURL || undefined
+          profilePicture: user.photoURL || undefined,
+          skillsOffered: [],
+          skillsWanted: []
         });
       } else {
         // Update last login

@@ -17,10 +17,11 @@ import FooterOne from '@/layouts/footers/FooterOne'
 import { User } from 'firebase/auth';
 import { UserData as ImportedUserData } from '@/app/api/profile/userDataService';
 
-interface UserData extends ImportedUserData {
+// Compose with ImportedUserData instead of extending to avoid type conflicts
+type UserData = ImportedUserData & {
   skillsOffered?: string[];
   skillsWanted?: string[];
-}
+};
 
 interface HomeOneProps {
   user: User | null;

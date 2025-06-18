@@ -103,8 +103,10 @@ export default function PeersPage() {
     
     const filtered = users.filter(user => {
       const fullName = `${user.firstName} ${user.surname}`.toLowerCase();
-      const skills = user.skills?.join(' ').toLowerCase() || '';
-      const location = user.location?.toLowerCase() || '';
+      const skills = [
+        ...(user.skillsOffered || []),
+        ...((Array.isArray(user.skillsWanted) ? user.skillsWanted : []))
+      ].join(' ').toLowerCase();      const location = user.location?.toLowerCase() || '';
       const email = user.email.toLowerCase();
       
       const matches = fullName.includes(searchLower) || 
@@ -259,19 +261,21 @@ export default function PeersPage() {
                     {user.location && (
                       <p className="text-sm text-gray-600 mb-2">{user.location}</p>
                     )}
-                    {user.skills && user.skills.length > 0 && (
+                    {(user.skillsOffered?.length || 0) + (Array.isArray(user.skillsWanted) ? user.skillsWanted.length : 0) > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {user.skills.slice(0, 3).map((skill, index) => (
-                          <Badge 
-                            key={index} 
-                            className="bg-[#FF914D]/10 text-[#FF914D] border-[#FF914D]/20"
-                          >
-                            {skill}
-                          </Badge>
+                        {[...(user.skillsOffered || []), ...(Array.isArray(user.skillsWanted) ? user.skillsWanted : [])]
+                          .slice(0, 3)
+                          .map((skill, index) => (
+                            <Badge 
+                              key={index} 
+                              className="bg-[#FF914D]/10 text-[#FF914D] border-[#FF914D]/20"
+                            >
+                              {skill}
+                            </Badge>
                         ))}
-                        {user.skills.length > 3 && (
+                        {[...(user.skillsOffered || []), ...(Array.isArray(user.skillsWanted) ? user.skillsWanted : [])].length > 3 && (
                           <Badge variant="outline" className="border-[#FF914D]/20 text-[#FF914D]">
-                            +{user.skills.length - 3} more
+                            +{[...(user.skillsOffered || []), ...(Array.isArray(user.skillsWanted) ? user.skillsWanted : [])].length - 3} more
                           </Badge>
                         )}
                       </div>
@@ -297,4 +301,4 @@ export default function PeersPage() {
       </div>
     </Wrapper>
   );
-} 
+}

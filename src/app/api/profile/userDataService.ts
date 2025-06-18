@@ -2,7 +2,7 @@ import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 export interface UserData {
-  skillsWanted: boolean;
+  skillsWanted?: string[];
   uid: string;
   email: string;
   firstName: string;

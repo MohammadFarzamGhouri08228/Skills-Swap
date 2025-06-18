@@ -257,6 +257,7 @@ export default function Signup() {
         currentBalance: 0,
         createdAt: new Date().toISOString(),
         emailValidated: emailValidation.isValid,
+        skillsWanted: [], // Add this line to satisfy the UserData type
       };
 
       // Check if db is available before using it

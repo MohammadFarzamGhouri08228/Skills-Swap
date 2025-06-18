@@ -243,6 +243,7 @@ export default function ModernSignup() {
         dob: `${dob.day} ${dob.month} ${dob.year}`,
         gender: '', // Removed gender field as per request
         createdAt: new Date().toISOString(),
+        skillsWanted: [], // Add default empty array or appropriate default value
       };
 
       // Check if db is available before using it
