@@ -417,15 +417,15 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
         </div>
       </header>
 
-      <div className="flex-1 flex flex-row">
+      <div className="flex-1 flex flex-row justify-center items-start">
         {/* User Details */}
-        <div className="flex-1 p-6">
+        <div className="w-full max-w-4xl mx-auto p-6 flex flex-col items-center">
           {/* User Header */}
-          <div className="flex items-start gap-6 mb-8">
+          <div className="flex flex-col items-center gap-4 mb-8">
             <div className="relative">
-              <Avatar className="w-20 h-20 ring-4 ring-white shadow-xl">
+              <Avatar className="w-24 h-24 ring-4 ring-white shadow-xl">
                 <AvatarImage src={userData?.profilePicture || "/placeholder.svg?height=32&width=32"} />
-                <AvatarFallback className="bg-gradient-to-br from-[#FFD34E] to-[#FFB84E] text-[#5C2594] font-bold">
+                <AvatarFallback className="bg-gradient-to-br from-[#FFD34E] to-[#FFB84E] text-[#5C2594] font-bold text-2xl">
                   {getUserInitials(userData, null)}
                 </AvatarFallback>
               </Avatar>
@@ -459,32 +459,30 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                     input.click()
                   }}
                 >
-                  <Upload className="w-4 h-4" />
+                  <Upload className="w-5 h-5" />
                 </Button>
               )}
             </div>
-            <div className="flex-1 flex items-center gap-4">
-              <span className="ml-4 text-lg font-bold text-yellow-300 drop-shadow">{getUserDisplayName(userData, null)}</span>
-              {isOwnProfile && isEditingProfile && (
-                <Button variant="ghost" size="sm" className="text-[#FFD34E] hover:bg-[#FFD34E]/20 font-bold transition-colors duration-300" onClick={() => setIsEditingProfile(false)}>
-                  <Edit2 className="w-4 h-4 mr-1" />
-                  Save Changes
-                </Button>
-              )}
-            </div>
+            <span className="text-2xl font-bold text-yellow-300 drop-shadow">{getUserDisplayName(userData, null)}</span>
+            {isOwnProfile && isEditingProfile && (
+              <Button variant="ghost" size="sm" className="text-[#FFD34E] hover:bg-[#FFD34E]/20 font-bold transition-colors duration-300" onClick={() => setIsEditingProfile(false)}>
+                <Edit2 className="w-4 h-4 mr-1" />
+                Save Changes
+              </Button>
+            )}
           </div>
 
-          <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-purple-400 to-purple-800 drop-shadow mb-6 tracking-wide">
+          <p className="text-2l font-bold text-yellow-300 drop-shadow">
             Skill Exchange Profile
           </p>
-          <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {/* Skills Offered */}
-            <div className="bg-white rounded-xl shadow-lg border border-[#FFD34E]/40 p-6">
+            <div className="bg-white rounded-xl shadow-lg border border-[#FFD34E]/40 p-6 flex flex-col items-center">
               <h3 className="text-lg font-bold text-[#5C2594] mb-3 flex items-center gap-2">
                 <GraduationCap className="w-5 h-5 text-[#FFD34E]" />
                 Skills I Can Teach
               </h3>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 justify-center">
                 {Array.isArray(userData?.skillsOffered) && userData.skillsOffered.length > 0 ? (
                   userData.skillsOffered.map((skill: string, idx: number) => (
                     <span
@@ -500,12 +498,12 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
               </div>
             </div>
             {/* Skills Wanted */}
-            <div className="bg-white rounded-xl shadow-lg border border-[#FFD34E]/40 p-6">
+            <div className="bg-white rounded-xl shadow-lg border border-[#FFD34E]/40 p-6 flex flex-col items-center">
               <h3 className="text-lg font-bold text-[#5C2594] mb-3 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-[#FFD34E]" />
                 Skills I Want to Learn
               </h3>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 justify-center">
                 {Array.isArray(userData?.skillsWanted) && userData.skillsWanted.length > 0 ? (
                   userData.skillsWanted.map((skill: string, idx: number) => (
                     <span
@@ -522,12 +520,12 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
             </div>
           </div>
           {/* Exchanges */}
-          <div className="flex items-center gap-8">
-            <div className="text-center bg-[#FFD34E] rounded-xl p-4 shadow-lg border border-[#FFD34E]/40">
+          <div className="flex flex-wrap justify-center gap-8 mb-8">
+            <div className="text-center bg-[#FFD34E] rounded-xl p-4 shadow-lg border border-[#FFD34E]/40 min-w-[140px]">
               <p className="text-sm text-[#5C2594] font-bold">Total Peers</p>
               <p className="text-2xl font-extrabold text-[#5C2594]">{totalPeers}</p>
             </div>
-            <div className="text-center bg-[#FFD34E] rounded-xl p-4 shadow-lg border border-[#FFD34E]/40">
+            <div className="text-center bg-[#FFD34E] rounded-xl p-4 shadow-lg border border-[#FFD34E]/40 min-w-[140px]">
               <p className="text-sm text-[#5C2594] font-bold">Date Joined</p>
               <p className="text-2xl font-extrabold text-[#5C2594]">
                 {formatJoinedDate(userData?.createdAt)}
@@ -537,7 +535,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
 
           {/* Add Peer Requests section */}
           {currentUser && (
-            <div className="mt-8">
+            <div className="w-full mt-8">
               <PeerRequests 
                 currentUser={currentUser}
               />
