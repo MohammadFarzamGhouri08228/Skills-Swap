@@ -1,10 +1,10 @@
 "use client"
-
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calendar as CalendarIcon, ChevronRight, Search, Plus, Bell, Edit2, Upload, Star, GraduationCap, BookOpen, X, ChevronLeft, Users } from "lucide-react"
 import { format } from "date-fns"
@@ -17,13 +17,11 @@ import { UserData } from "@/app/api/profile/userDataService"
 import { useRouter } from "next/navigation"
 import { skillsService, Skill, SkillCategory } from "@/app/api/skills/skillsService"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import Image from "next/image"
 import PeerRequests from '@/components/peers/PeerRequests'
 import NotificationsPopover from '@/components/notifications/NotificationsPopover'
 import { peerService } from '@/app/api/peers/peerService'
 import { notificationService } from '@/app/api/notifications/notificationService'
 import { toast } from "react-hot-toast"
-import { Timestamp } from 'firebase/firestore'
 
 interface UserProfileClientProps {
   userId: string
@@ -68,7 +66,12 @@ function RequestItem({ name, skill, type, status }: RequestItemProps) {
     </div>
   )
 }
-
+function formatJoinedDate(dateString?: string) {
+  if (!dateString) return "Unknown";
+  const date = new Date(dateString);
+  // Example: May 27, 2025
+  return format(date, "MMMM d, yyyy");
+}
 export default function UserProfileClient({ userId, initialSkills, initialCalendarData, showSidebarUser = false, onPeerUpdate }: UserProfileClientProps) {
   const [isEditingSkills, setIsEditingSkills] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
@@ -99,6 +102,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
   const [peerRequest, setPeerRequest] = useState<any | null>(null)
   const [isAccepting, setIsAccepting] = useState(false)
   const [isRejecting, setIsRejecting] = useState(false)
+  const [totalPeers, setTotalPeers] = useState<number>(0);
 
   useEffect(() => {
     if (!auth) {
@@ -185,6 +189,32 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
     }
   }, [currentUser, userId, isOwnProfile, peerRequestSent])
 
+  // Fetch total peers from userPeers collection
+  useEffect(() => {
+    if (!userId) return;
+    const fetchPeers = async () => {
+      try {
+        if (!db) {
+          console.error("Firestore is not initialized");
+          setTotalPeers(0);
+          return;
+        }
+        const userPeersRef = doc(db, "userPeers", userId);
+        const userPeersSnap = await getDoc(userPeersRef);
+        if (userPeersSnap.exists()) {
+          const data = userPeersSnap.data();
+          setTotalPeers(Array.isArray(data.peers) ? data.peers.length : 0);
+        } else {
+          setTotalPeers(0);
+        }
+      } catch (error) {
+        console.error("Error fetching user peers:", error);
+        setTotalPeers(0);
+      }
+    };
+    fetchPeers();
+  }, [userId]);
+
   const getUserDisplayName = (userData: UserData | null, firebaseUser: FirebaseUser | null) => {
     if (userData?.firstName && userData?.surname) {
       return `${userData.firstName} ${userData.surname}`
@@ -195,117 +225,6 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
   const getUserInitials = (userData: UserData | null, firebaseUser: FirebaseUser | null) => {
     const name = getUserDisplayName(userData, firebaseUser)
     return name.split(' ').map((n: string) => n[0]).join('')
-  }
-
-  // Update the onValueChange handlers to include type annotations
-  const handleCategoryChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
-    const newSkills = { ...skills }
-    newSkills[type][index].category = value
-    setSkills(newSkills)
-  }
-
-  const handleSkillChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
-    const newSkills = { ...skills }
-    newSkills[type][index].name = value
-    setSkills(newSkills)
-  }
-
-  const handleLevelChange = (value: string, index: number, type: 'canTeach' | 'wantToLearn') => {
-    const newSkills = { ...skills }
-    newSkills[type][index].level = value
-    setSkills(newSkills)
-  }
-
-  const handleAddPeer = async () => {
-    if (!currentUser || !userData) return;
-    try {
-      console.log('Debug: Starting peer request process');
-      console.log('Debug: Sender:', {
-        id: currentUser.uid,
-        name: `${currentUser.firstName} ${currentUser.surname}`
-      });
-      console.log('Debug: Receiver:', {
-        id: userId,
-        name: `${userData.firstName} ${userData.surname}`
-      });
-
-      setIsAddingPeer(true);
-      await peerService.sendPeerRequest(currentUser.uid, userId, '');
-      setPeerRequestSent(true);
-      setIsAddingPeer(false);
-
-      // Send notification to receiver
-      await notificationService.createNotification({
-        userId: userId,
-        type: 'peer_request',
-        message: 'sent you a peer request',
-        fromUserId: currentUser.uid,
-        fromUser: {
-          firstName: currentUser.firstName || '',
-          surname: currentUser.surname || '',
-          profilePicture: currentUser.profilePicture || ''
-        },
-        read: false
-      });
-
-      console.log('Debug: Peer request sent successfully');
-      
-      toast.success(`${currentUser.firstName} ${currentUser.surname} sent a peer request to ${userData.firstName} ${userData.surname}`);
-    } catch (error) {
-      console.error('Debug: Error in handleAddPeer:', error);
-      setIsAddingPeer(false);
-      toast.error(`Failed to send peer request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  const handleAcceptPeerRequest = async () => {
-    if (!peerRequest || !currentUser) return
-    setIsAccepting(true)
-    try {
-      await peerService.acceptPeerRequest(peerRequest.id)
-      setPeerRequest(null)
-      // Send notification to sender
-      await notificationService.createNotification({
-        userId: peerRequest.senderId,
-        type: 'peer_accepted',
-        message: 'accepted your peer request',
-        fromUserId: currentUser.uid,
-        fromUser: {
-          firstName: currentUser.firstName,
-          surname: currentUser.surname,
-          profilePicture: currentUser.profilePicture
-        },
-        read: false
-      });
-    } catch (error) {
-      console.error('Error accepting peer request:', error)
-    }
-    setIsAccepting(false)
-  }
-
-  const handleRejectPeerRequest = async () => {
-    if (!peerRequest || !currentUser) return
-    setIsRejecting(true)
-    try {
-      await peerService.rejectPeerRequest(peerRequest.id)
-      setPeerRequest(null)
-      // Optionally, send notification for rejection
-      await notificationService.createNotification({
-        userId: peerRequest.senderId,
-        type: 'peer_rejected',
-        message: 'rejected your peer request',
-        fromUserId: currentUser.uid,
-        fromUser: {
-          firstName: currentUser.firstName,
-          surname: currentUser.surname,
-          profilePicture: currentUser.profilePicture
-        },
-        read: false
-      });
-    } catch (error) {
-      console.error('Error rejecting peer request:', error)
-    }
-    setIsRejecting(false)
   }
 
   if (showSidebarUser) {
@@ -349,8 +268,61 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
     )
   }
 
+  async function handleAcceptPeerRequest(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
+    event.preventDefault();
+    if (!peerRequest || !currentUser) return;
+    setIsAccepting(true);
+    try {
+      await peerService.acceptPeerRequest(peerRequest.id);
+      setPeerRequestSent(false);
+      setPeerRequest({ ...peerRequest, status: 'accepted' });
+      toast.success("Peer request accepted!");
+      if (onPeerUpdate) onPeerUpdate();
+    } catch (error) {
+      toast.error("Failed to accept peer request.");
+      console.error("Accept peer request error:", error);
+    } finally {
+      setIsAccepting(false);
+    }
+  }
+
+  async function handleRejectPeerRequest(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
+    event.preventDefault();
+    if (!peerRequest || !currentUser) return;
+    setIsRejecting(true);
+    try {
+      await peerService.rejectPeerRequest(peerRequest.id);
+      setPeerRequestSent(false);
+      setPeerRequest({ ...peerRequest, status: 'rejected' });
+      toast.success("Peer request rejected!");
+      if (onPeerUpdate) onPeerUpdate();
+    } catch (error) {
+      toast.error("Failed to reject peer request.");
+      console.error("Reject peer request error:", error);
+    } finally {
+      setIsRejecting(false);
+    }
+  }
+
+  async function handleAddPeer(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
+    event.preventDefault();
+    if (!currentUser || !userData) return;
+    setIsAddingPeer(true);
+    try {
+      await peerService.sendPeerRequest(currentUser.uid, userId);
+      setPeerRequestSent(true);
+      toast.success("Peer request sent!");
+      if (onPeerUpdate) onPeerUpdate();
+    } catch (error) {
+      toast.error("Failed to send peer request.");
+      console.error("Send peer request error:", error);
+    } finally {
+      setIsAddingPeer(false);
+    }
+  }
+
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#5C2594]">
+    <div className="min-h-screen bg-[#5C2594] flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-gray-200/50 px-6 py-4 flex-shrink-0 shadow-sm">
         <div className="flex items-center justify-between">
@@ -445,9 +417,9 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-row">
         {/* User Details */}
-        <div className="flex-1 p-6 overflow-y-auto">
+        <div className="flex-1 p-6">
           {/* User Header */}
           <div className="flex items-start gap-6 mb-8">
             <div className="relative">
@@ -502,30 +474,32 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
             </div>
           </div>
 
-          <p className="text-white/80 mb-4">Skill Exchange Profile</p>
-        <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          {/* Skills Offered */}
-          <div className="bg-white rounded-xl shadow-lg border border-[#FFD34E]/40 p-6">
-            <h3 className="text-lg font-bold text-[#5C2594] mb-3 flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-[#FFD34E]" />
-              Skills I Can Teach
-            </h3>
-            <div className="space-y-2">
-              {userData?.skillsOffered && userData.skillsOffered.length > 0 ? (
-                userData.skillsOffered.map((skill: string, idx: number) => (
-                  <div
-                    key={idx}
-                    className="bg-[#F3E8FF] text-[#5C2594] px-4 py-2 rounded-lg font-semibold shadow"
-                  >
-                    {skill}
-                  </div>
-                ))
-              ) : (
-                <div className="text-gray-400 italic">No skills to teach yet.</div>
-              )}
+          <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-purple-400 to-purple-800 drop-shadow mb-6 tracking-wide">
+            Skill Exchange Profile
+          </p>
+          <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            {/* Skills Offered */}
+            <div className="bg-white rounded-xl shadow-lg border border-[#FFD34E]/40 p-6">
+              <h3 className="text-lg font-bold text-[#5C2594] mb-3 flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-[#FFD34E]" />
+                Skills I Can Teach
+              </h3>
+              <div className="flex flex-wrap gap-3">
+                {Array.isArray(userData?.skillsOffered) && userData.skillsOffered.length > 0 ? (
+                  userData.skillsOffered.map((skill: string, idx: number) => (
+                    <span
+                      key={idx}
+                      className="bg-[#F3E8FF] text-[#5C2594] px-4 py-2 rounded-full font-semibold shadow"
+                    >
+                      {skill}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-400 italic">No skills to teach yet.</span>
+                )}
+              </div>
             </div>
-          </div>
-          {/* Skills Wanted */}
+            {/* Skills Wanted */}
             <div className="bg-white rounded-xl shadow-lg border border-[#FFD34E]/40 p-6">
               <h3 className="text-lg font-bold text-[#5C2594] mb-3 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-[#FFD34E]" />
@@ -547,426 +521,17 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
               </div>
             </div>
           </div>
-          {/*<div className="grid grid-cols-2 gap-8 mb-6">
-            <div className="relative bg-[#5C2594] rounded-xl p-6 shadow-lg border border-[#FFD34E]/40">
-               <div className="absolute -top-4 left-4 bg-[#FFD34E] text-[#5C2594] font-bold rounded-b-lg px-3 py-1 text-xs shadow">01</div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5 text-[#FFD34E]" />
-                  Skills I Can Teach
-                </h3>
-                {isOwnProfile && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-[#FFD34E] hover:bg-[#FFD34E]/20 font-bold transition-colors duration-300"
-                    onClick={() => setIsEditingSkills(!isEditingSkills)}
-                  >
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    {isEditingSkills ? "Save" : "Edit"}
-                  </Button>
-                )}
-              </div>
-              <div className="space-y-2">
-                {skills.canTeach.map((skill, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-[#6A35A6] rounded-lg shadow-sm border border-[#FFD34E]/20 hover:shadow-md transition-shadow">
-                    {isEditingSkills ? (
-                      <>
-                        <div className="flex-1 flex gap-2">
-                          <Select
-                            value={skill.category}
-                            onValueChange={(value: string) => handleCategoryChange(value, index, 'canTeach')}
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((category) => (
-                                <SelectItem key={category.id} value={category.name}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Select
-                            value={skill.name}
-                            onValueChange={(value: string) => handleSkillChange(value, index, 'canTeach')}
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder="Select skill" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableSkills.map((skill) => (
-                                <SelectItem key={skill.id} value={skill.name}>
-                                  {skill.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Select
-                            value={skill.level}
-                            onValueChange={(value: string) => handleLevelChange(value, index, 'canTeach')}
-                          >
-                            <SelectTrigger className="w-[120px]">
-                              <SelectValue placeholder="Select level" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Beginner">Beginner</SelectItem>
-                              <SelectItem value="Intermediate">Intermediate</SelectItem>
-                              <SelectItem value="Advanced">Advanced</SelectItem>
-                              <SelectItem value="Expert">Expert</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-red-600"
-                          onClick={() => {
-                            const newSkills = { ...skills }
-                            newSkills.canTeach = skills.canTeach.filter((_, i) => i !== index)
-                            setSkills(newSkills)
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <p className="text-sm font-bold text-white">{skill.name}</p>
-                          <p className="text-xs text-[#FFD34E]">{skill.category}</p>
-                        </div>
-                        <Badge variant="outline" className="bg-[#FFD34E] text-[#5C2594] font-bold">{skill.level}</Badge>
-                      </>
-                    )}
-                  </div>
-                ))}
-                {isEditingSkills && (
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Select
-                        value={selectedCategory}
-                        onValueChange={setSelectedCategory}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.name}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={selectedSkill}
-                        onValueChange={setSelectedSkill}
-                        disabled={!selectedCategory}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select skill" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableSkills.map((skill) => (
-                            <SelectItem key={skill.id} value={skill.name}>
-                              {skill.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={skillLevel}
-                        onValueChange={setSkillLevel}
-                      >
-                        <SelectTrigger className="w-[120px]">
-                          <SelectValue placeholder="Select level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Beginner">Beginner</SelectItem>
-                          <SelectItem value="Intermediate">Intermediate</SelectItem>
-                          <SelectItem value="Advanced">Advanced</SelectItem>
-                          <SelectItem value="Expert">Expert</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      disabled={!selectedCategory || !selectedSkill}
-                      onClick={() => {
-                        if (selectedCategory && selectedSkill) {
-                          const newSkills = { ...skills }
-                          newSkills.canTeach.push({
-                            name: selectedSkill,
-                            level: skillLevel,
-                            category: selectedCategory
-                          })
-                          setSkills(newSkills)
-                          setSelectedCategory("")
-                          setSelectedSkill("")
-                          setSkillLevel("Beginner")
-                        }
-                      }}
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add Skill
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="relative bg-[#5C2594] rounded-xl p-6 shadow-lg border border-[#FFD34E]/40">
-              <div className="absolute -top-4 left-4 bg-[#FFD34E] text-[#5C2594] font-bold rounded-b-lg px-3 py-1 text-xs shadow">02</div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-[#FFD34E]" />
-                  Skills I Want to Learn
-                </h3>
-                {isOwnProfile && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-[#FFD34E] hover:bg-[#FFD34E]/20 font-bold transition-colors duration-300"
-                    onClick={() => setIsEditingSkills(!isEditingSkills)}
-                  >
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    {isEditingSkills ? "Save" : "Edit"}
-                  </Button>
-                )}
-              </div>
-              <div className="space-y-2">
-                {skills.wantToLearn.map((skill, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-[#6A35A6] rounded-lg shadow-sm border border-[#FFD34E]/20 hover:shadow-md transition-shadow">
-                    {isEditingSkills ? (
-                      <>
-                        <div className="flex-1 flex gap-2">
-                          <Select
-                            value={skill.category}
-                            onValueChange={(value: string) => handleCategoryChange(value, index, 'wantToLearn')}
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder="Select category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((category) => (
-                                <SelectItem key={category.id} value={category.name}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Select
-                            value={skill.name}
-                            onValueChange={(value: string) => handleSkillChange(value, index, 'wantToLearn')}
-                          >
-                            <SelectTrigger className="w-[180px]">
-                              <SelectValue placeholder="Select skill" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableSkills.map((skill) => (
-                                <SelectItem key={skill.id} value={skill.name}>
-                                  {skill.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Select
-                            value={skill.level}
-                            onValueChange={(value: string) => handleLevelChange(value, index, 'wantToLearn')}
-                          >
-                            <SelectTrigger className="w-[120px]">
-                              <SelectValue placeholder="Select level" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Beginner">Beginner</SelectItem>
-                              <SelectItem value="Intermediate">Intermediate</SelectItem>
-                              <SelectItem value="Advanced">Advanced</SelectItem>
-                              <SelectItem value="Expert">Expert</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-red-600"
-                          onClick={() => {
-                            const newSkills = { ...skills }
-                            newSkills.wantToLearn = skills.wantToLearn.filter((_, i) => i !== index)
-                            setSkills(newSkills)
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <p className="text-sm font-bold text-white">{skill.name}</p>
-                          <p className="text-xs text-[#FFD34E]">{skill.category}</p>
-                        </div>
-                        <Badge variant="outline" className="bg-[#FFD34E] text-[#5C2594] font-bold">{skill.level}</Badge>
-                      </>
-                    )}
-                  </div>
-                ))}
-                {isEditingSkills && (
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Select
-                        value={selectedCategory}
-                        onValueChange={setSelectedCategory}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.name}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={selectedSkill}
-                        onValueChange={setSelectedSkill}
-                        disabled={!selectedCategory}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select skill" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableSkills.map((skill) => (
-                            <SelectItem key={skill.id} value={skill.name}>
-                              {skill.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={skillLevel}
-                        onValueChange={setSkillLevel}
-                      >
-                        <SelectTrigger className="w-[120px]">
-                          <SelectValue placeholder="Select level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Beginner">Beginner</SelectItem>
-                          <SelectItem value="Intermediate">Intermediate</SelectItem>
-                          <SelectItem value="Advanced">Advanced</SelectItem>
-                          <SelectItem value="Expert">Expert</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      disabled={!selectedCategory || !selectedSkill}
-                      onClick={() => {
-                        if (selectedCategory && selectedSkill) {
-                          const newSkills = { ...skills }
-                          newSkills.wantToLearn.push({
-                            name: selectedSkill,
-                            level: skillLevel,
-                            category: selectedCategory
-                          })
-                          setSkills(newSkills)
-                          setSelectedCategory("")
-                          setSelectedSkill("")
-                          setSkillLevel("Beginner")
-                        }
-                      }}
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add Skill
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div> */}
-
-          {/* Calendar Section */}
-          <div className="bg-[#5C2594] rounded-xl p-6 shadow-lg border border-[#FFD34E]/40 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">Calendar</h3>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-[240px] justify-start text-left font-normal border-white text-white hover:bg-[#FFD34E]/20 transition-colors duration-300">
-                    <CalendarIcon className="mr-2 h-4 w-4 text-[#FFD34E]" />
-                    {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => setSelectedDate(date)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Upcoming Sessions</h4>
-                <div className="space-y-2">
-                  {calendarData.upcoming.map((session, index) => (
-                    <Card key={index} className="bg-white/80 backdrop-blur-sm shadow-sm">
-                      <CardContent className="p-3">
-                        <p className="text-sm font-medium">{format(session.date, "MMM d, yyyy")}</p>
-                        <p className="text-sm text-gray-600">{session.title}</p>
-                        <p className="text-xs text-gray-500">with {session.partner}</p>
-                        <Badge variant={session.type === "Teaching" ? "default" : "secondary"} className="mt-1">
-                          {session.type}
-                        </Badge>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Past Sessions</h4>
-                <div className="space-y-2">
-                  {calendarData.past.map((session, index) => (
-                    <Card key={index} className="bg-white/80 backdrop-blur-sm shadow-sm">
-                      <CardContent className="p-3">
-                        <p className="text-sm font-medium">{format(session.date, "MMM d, yyyy")}</p>
-                        <p className="text-sm text-gray-600">{session.title}</p>
-                        <p className="text-xs text-gray-500">with {session.partner}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant={session.type === "Teaching" ? "default" : "secondary"}>
-                            {session.type}
-                          </Badge>
-                          <div className="flex items-center gap-1">
-                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                            <span className="text-xs">{session.rating}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
+          {/* Exchanges */}
           <div className="flex items-center gap-8">
             <div className="text-center bg-[#FFD34E] rounded-xl p-4 shadow-lg border border-[#FFD34E]/40">
-              <p className="text-2xl font-extrabold text-[#5C2594]">15</p>
-              <p className="text-sm text-[#5C2594] font-bold">Total Exchanges</p>
+              <p className="text-sm text-[#5C2594] font-bold">Total Peers</p>
+              <p className="text-2xl font-extrabold text-[#5C2594]">{totalPeers}</p>
             </div>
             <div className="text-center bg-[#FFD34E] rounded-xl p-4 shadow-lg border border-[#FFD34E]/40">
-              <p className="text-2xl font-extrabold text-[#5C2594]">3</p>
-              <p className="text-sm text-[#5C2594] font-bold">Active Exchanges</p>
-            </div>
-            <div className="text-center bg-[#FFD34E] rounded-xl p-4 shadow-lg border border-[#FFD34E]/40">
-              <p className="text-2xl font-extrabold text-[#5C2594]">1</p>
-              <p className="text-sm text-[#5C2594] font-bold">Owed Exchanges</p>
+              <p className="text-sm text-[#5C2594] font-bold">Date Joined</p>
+              <p className="text-2xl font-extrabold text-[#5C2594]">
+                {formatJoinedDate(userData?.createdAt)}
+              </p>
             </div>
           </div>
 
@@ -979,18 +544,19 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
             </div>
           )}
         </div>
-
         {/* Sidebar and toggle button */}
         <div className="relative h-full">
           <div className={`transition-all duration-300 fixed top-0 right-0 h-full z-40 ${showSidebar ? 'w-80' : 'w-0'} overflow-hidden`}>
-            <div className={`h-full bg-[#FFD34E] border-l border-[#FFD34E]/40 shadow-[0_0_15px_rgba(0,0,0,0.05)] flex flex-col ${showSidebar ? 'p-6' : 'p-0'}`}
-              style={{ width: showSidebar ? '20rem' : '0', minWidth: showSidebar ? '20rem' : '0' }}>
+            <div
+              className={`h-full bg-[#FFD34E] border-l border-[#FFD34E]/40 shadow-[0_0_15px_rgba(0,0,0,0.05)] flex flex-col ${showSidebar ? 'p-6' : 'p-0'}`}
+              style={{ width: showSidebar ? '20rem' : '0', minWidth: showSidebar ? '20rem' : '0' }}
+            >
               {showSidebar && (
                 <>
-                  {/* Notes Section */}
-                  <div className="mb-8">
+                  {/* Exchange Notes Sidebar - fills the sidebar */}
+                  <div className="flex flex-col h-full">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-[#5C2594]">Exchange Notes</h3>
+                      <h3 className="font-bold text-[#5C2594] text-lg">Exchange Notes</h3>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -1030,72 +596,50 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                         >Cancel</Button>
                       </div>
                     )}
-                    {/* Notes List */}
-                    {notes.map(note => (
-                      <Card key={note.id} className="mb-4 bg-[#6A35A6] shadow-lg border border-[#FFD34E]/20 hover:shadow-xl transition-shadow">
-                        <CardContent className="p-4 flex items-center justify-between gap-2">
-                          {editingNoteId === note.id ? (
-                            <>
-                              <input
-                                className="flex-1 rounded-lg px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all duration-300"
-                                value={editingContent}
-                                onChange={e => setEditingContent(e.target.value)}
-                              />
-                              <Button
-                                className="bg-black transition-colors duration-300 hover:bg-green-600 text-white font-bold rounded-full px-3 py-2"
-                                onClick={() => {
-                                  setNotes(notes.map(n => n.id === note.id ? { ...n, content: editingContent } : n));
-                                  setEditingNoteId(null);
-                                  setEditingContent("");
-                                }}
-                              >Save</Button>
-                              <Button
-                                className="bg-black transition-colors duration-300 hover:bg-green-600 text-white font-bold rounded-full px-3 py-2"
-                                onClick={() => setEditingNoteId(null)}
-                              >Cancel</Button>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-sm text-white/80 flex-1">{note.content}</p>
-                              <Button
-                                className="bg-black transition-colors duration-300 hover:bg-green-600 text-white font-bold rounded-full px-3 py-2"
-                                onClick={() => {
-                                  setEditingNoteId(note.id);
-                                  setEditingContent(note.content);
-                                }}
-                              >Edit</Button>
-                              <Button
-                                className="bg-black transition-colors duration-300 hover:bg-green-600 text-white font-bold rounded-full px-3 py-2"
-                                onClick={() => setNotes(notes.filter(n => n.id !== note.id))}
-                              >Delete</Button>
-                            </>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                  {/* Exchange Requests Section */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-[#5C2594]">Exchange Requests</h3>
-                      <Button variant="ghost" size="sm" className="bg-black transition-colors duration-300 hover:bg-green-600 text-white font-bold rounded-full px-4 py-2">
-                        <Plus className="w-4 h-4 mr-1" />
-                        New Request
-                      </Button>
-                    </div>
-                    <div className="space-y-3">
-                      <RequestItem
-                        name="Sarah Johnson"
-                        skill="UI/UX Design"
-                        type="Learning"
-                        status="Pending"
-                      />
-                      <RequestItem
-                        name="Mike Brown"
-                        skill="Web Development"
-                        type="Teaching"
-                        status="Accepted"
-                      />
+                    {/* Notes List - scrollable and fills sidebar */}
+                    <div className="flex-1 overflow-y-auto pr-1">
+                      {notes.map(note => (
+                        <Card key={note.id} className="mb-4 bg-[#6A35A6] shadow-lg border border-[#FFD34E]/20 hover:shadow-xl transition-shadow">
+                          <CardContent className="p-4 flex items-center justify-between gap-2">
+                            {editingNoteId === note.id ? (
+                              <>
+                                <input
+                                  className="flex-1 rounded-lg px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all duration-300"
+                                  value={editingContent}
+                                  onChange={e => setEditingContent(e.target.value)}
+                                />
+                                <Button
+                                  className="bg-black transition-colors duration-300 hover:bg-green-600 text-white font-bold rounded-full px-3 py-2"
+                                  onClick={() => {
+                                    setNotes(notes.map(n => n.id === note.id ? { ...n, content: editingContent } : n));
+                                    setEditingNoteId(null);
+                                    setEditingContent("");
+                                  }}
+                                >Save</Button>
+                                <Button
+                                  className="bg-black transition-colors duration-300 hover:bg-green-600 text-white font-bold rounded-full px-3 py-2"
+                                  onClick={() => setEditingNoteId(null)}
+                                >Cancel</Button>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm text-white/80 flex-1">{note.content}</p>
+                                <Button
+                                  className="bg-black transition-colors duration-300 hover:bg-green-600 text-white font-bold rounded-full px-3 py-2"
+                                  onClick={() => {
+                                    setEditingNoteId(note.id);
+                                    setEditingContent(note.content);
+                                  }}
+                                >Edit</Button>
+                                <Button
+                                  className="bg-black transition-colors duration-300 hover:bg-green-600 text-white font-bold rounded-full px-3 py-2"
+                                  onClick={() => setNotes(notes.filter(n => n.id !== note.id))}
+                                >Delete</Button>
+                              </>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
                   </div>
                 </>
@@ -1124,4 +668,4 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
       </div>
     </div>
   )
-} 
+}
