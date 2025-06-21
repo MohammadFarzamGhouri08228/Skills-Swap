@@ -5,22 +5,14 @@ import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Calendar as CalendarIcon, ChevronRight, Search, Plus, Bell, Edit2, Upload, Star, GraduationCap, BookOpen, X, ChevronLeft, Users } from "lucide-react"
+import { ChevronRight, Upload, GraduationCap, BookOpen, ChevronLeft, Users } from "lucide-react"
 import { format } from "date-fns"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
 import { auth } from "@/lib/firebase"
 import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth"
 import { userDataService } from "@/app/api/profile/userDataService"
 import { UserData } from "@/app/api/profile/userDataService"
 import { useRouter } from "next/navigation"
-import { skillsService, Skill, SkillCategory } from "@/app/api/skills/skillsService"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import PeerRequests from '@/components/peers/PeerRequests'
-import NotificationsPopover from '@/components/notifications/NotificationsPopover'
 import { peerService } from '@/app/api/peers/peerService'
-import { notificationService } from '@/app/api/notifications/notificationService'
 import { toast } from "react-hot-toast"
 
 interface UserProfileClientProps {
@@ -37,57 +29,18 @@ interface UserProfileClientProps {
   onPeerUpdate?: () => void
 }
 
-interface RequestItemProps {
-  name: string
-  skill: string
-  type: string
-  status: string
-}
-
-function RequestItem({ name, skill, type, status }: RequestItemProps) {
-  return (
-    <div className="flex items-center gap-3 p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm hover:shadow-md transition-shadow">
-      <Avatar className="w-8 h-8 ring-2 ring-white shadow-sm">
-        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`} />
-        <AvatarFallback>{name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-      </Avatar>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900">{name}</p>
-        <p className="text-xs text-gray-500">{skill}</p>
-        <div className="flex items-center gap-2 mt-1">
-          <Badge variant="outline" className="text-xs bg-white/50 shadow-sm">
-            {type}
-          </Badge>
-          <Badge variant={status === "Accepted" ? "default" : "secondary"} className="text-xs shadow-sm">
-            {status}
-          </Badge>
-        </div>
-      </div>
-    </div>
-  )
-}
 function formatJoinedDate(dateString?: string) {
   if (!dateString) return "Unknown";
   const date = new Date(dateString);
-  // Example: May 27, 2025
   return format(date, "MMMM d, yyyy");
 }
+
 export default function UserProfileClient({ userId, initialSkills, initialCalendarData, showSidebarUser = false, onPeerUpdate }: UserProfileClientProps) {
-  const [isEditingSkills, setIsEditingSkills] = useState(false)
-  const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
-  const [skills, setSkills] = useState(initialSkills)
-  const [calendarData] = useState(initialCalendarData)
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null)
   const [userData, setUserData] = useState<UserData | null>(null)
   const [currentUser, setCurrentUser] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const [categories, setCategories] = useState<SkillCategory[]>([])
-  const [availableSkills, setAvailableSkills] = useState<Skill[]>([])
-  const [selectedCategory, setSelectedCategory] = useState<string>("")
-  const [selectedSkill, setSelectedSkill] = useState<string>("")
-  const [skillLevel, setSkillLevel] = useState<string>("Beginner")
   const [showSidebar, setShowSidebar] = useState(true)
   const [notes, setNotes] = useState([
     { id: 1, content: "Prefers morning sessions for teaching. Available on weekends for learning." },
@@ -97,97 +50,36 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [editingContent, setEditingContent] = useState("");
   const [showAddNote, setShowAddNote] = useState(false);
-  const [isAddingPeer, setIsAddingPeer] = useState(false)
-  const [peerRequestSent, setPeerRequestSent] = useState(false)
-  const [peerRequest, setPeerRequest] = useState<any | null>(null)
-  const [isAccepting, setIsAccepting] = useState(false)
-  const [isRejecting, setIsRejecting] = useState(false)
   const [totalPeers, setTotalPeers] = useState<number>(0);
+  const [peerInfos, setPeerInfos] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     if (!auth) {
-      console.error('Firebase Auth is not initialized')
       setIsLoading(false)
       return
     }
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         router.push('/login')
         return
       }
-
       setFirebaseUser(user)
       try {
-        // Fetch current user's data
         const currentUserData = await userDataService.getUser(user.uid)
         setCurrentUser(currentUserData)
-
-        // Fetch profile user's data
         const profileUserData = await userDataService.getUser(userId)
         if (!profileUserData) {
-          console.error('Profile user not found')
           router.push('/peers')
           return
         }
         setUserData(profileUserData)
       } catch (error) {
-        console.error('Error fetching user data:', error)
+        //
       }
       setIsLoading(false)
     })
-
     return () => unsubscribe()
   }, [router, userId])
-
-  // Fetch categories on mount
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const categoriesData = await skillsService.getCategories()
-        setCategories(categoriesData)
-      } catch (error) {
-        console.error('Error fetching categories:', error)
-      }
-    }
-    fetchCategories()
-  }, [])
-
-  // Fetch skills for selected category
-  useEffect(() => {
-    const fetchSkillsByCategory = async () => {
-      if (selectedCategory) {
-        try {
-          const skillsData = await skillsService.getSkillsByCategory(selectedCategory)
-          setAvailableSkills(skillsData)
-        } catch (error) {
-          console.error('Error fetching skills by category:', error)
-        }
-      } else {
-        setAvailableSkills([])
-      }
-    }
-    fetchSkillsByCategory()
-  }, [selectedCategory])
-
-  // Update the edit buttons visibility based on whether viewing own profile
-  const isOwnProfile = currentUser?.uid === userId
-
-  // Check for existing peer request between current user and profile user
-  useEffect(() => {
-    const checkPeerRequest = async () => {
-      if (!currentUser || !userData) return
-      try {
-        const req = await peerService.findPeerRequestBetweenUsers(currentUser.uid, userId)
-        setPeerRequest(req)
-      } catch (error) {
-        setPeerRequest(null)
-      }
-    }
-    if (!isOwnProfile && currentUser && userId) {
-      checkPeerRequest()
-    }
-  }, [currentUser, userId, isOwnProfile, peerRequestSent])
 
   // Fetch total peers from userPeers collection
   useEffect(() => {
@@ -195,7 +87,6 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
     const fetchPeers = async () => {
       try {
         if (!db) {
-          console.error("Firestore is not initialized");
           setTotalPeers(0);
           return;
         }
@@ -207,13 +98,49 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
         } else {
           setTotalPeers(0);
         }
-      } catch (error) {
-        console.error("Error fetching user peers:", error);
+      } catch {
         setTotalPeers(0);
       }
     };
     fetchPeers();
   }, [userId]);
+
+  // Fetch peer infos (id + name)
+  useEffect(() => {
+    const fetchPeerInfos = async () => {
+      if (!userId || !db) return;
+      try {
+        const userPeersRef = doc(db, "userPeers", userId);
+        const userPeersSnap = await getDoc(userPeersRef);
+        if (userPeersSnap.exists()) {
+          const data = userPeersSnap.data();
+          if (Array.isArray(data.peers) && data.peers.length > 0) {
+            const peerDocs = await Promise.all(
+              data.peers.map((peerId: string) =>
+                getDoc(doc(db!, "users", peerId)).then(snap => ({ id: peerId, data: snap.data() }))
+              )
+            );
+            const infos = peerDocs
+              .map(({ id, data }) => {
+                if (!data) return null;
+                if (data.firstName && data.surname) return { id, name: `${data.firstName} ${data.surname}` };
+                if (data.displayName) return { id, name: data.displayName };
+                return { id, name: data.email || "Unknown" };
+              })
+              .filter(Boolean) as { id: string; name: string }[];
+            setPeerInfos(infos);
+          } else {
+            setPeerInfos([]);
+          }
+        } else {
+          setPeerInfos([]);
+        }
+      } catch {
+        setPeerInfos([]);
+      }
+    };
+    fetchPeerInfos();
+  }, [userId, totalPeers]);
 
   const getUserDisplayName = (userData: UserData | null, firebaseUser: FirebaseUser | null) => {
     if (userData?.firstName && userData?.surname) {
@@ -227,35 +154,7 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
     return name.split(' ').map((n: string) => n[0]).join('')
   }
 
-  if (showSidebarUser) {
-    if (isLoading || !firebaseUser || !userData) {
-      return (
-        <div className="flex items-center gap-3">
-          <Avatar className="w-8 h-8">
-            <AvatarImage src="/placeholder.svg?height=32&width=32" />
-            <AvatarFallback>...</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900">Loading...</p>
-            <p className="text-xs text-gray-500">Member</p>
-          </div>
-        </div>
-      )
-    }
-
-    return (
-      <div className="flex items-center gap-3">
-        <Avatar className="w-8 h-8">
-          <AvatarImage src={userData.profilePicture || firebaseUser.photoURL || "/placeholder.svg?height=32&width=32"} />
-          <AvatarFallback>{getUserInitials(userData, firebaseUser)}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900">{getUserDisplayName(userData, firebaseUser)}</p>
-          <p className="text-xs text-gray-500">Member</p>
-        </div>
-      </div>
-    )
-  }
+  const isOwnProfile = currentUser?.uid === userId
 
   if (isLoading || !firebaseUser || !userData) {
     return (
@@ -266,59 +165,6 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
         </div>
       </div>
     )
-  }
-
-  async function handleAcceptPeerRequest(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
-    event.preventDefault();
-    if (!peerRequest || !currentUser) return;
-    setIsAccepting(true);
-    try {
-      await peerService.acceptPeerRequest(peerRequest.id);
-      setPeerRequestSent(false);
-      setPeerRequest({ ...peerRequest, status: 'accepted' });
-      toast.success("Peer request accepted!");
-      if (onPeerUpdate) onPeerUpdate();
-    } catch (error) {
-      toast.error("Failed to accept peer request.");
-      console.error("Accept peer request error:", error);
-    } finally {
-      setIsAccepting(false);
-    }
-  }
-
-  async function handleRejectPeerRequest(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
-    event.preventDefault();
-    if (!peerRequest || !currentUser) return;
-    setIsRejecting(true);
-    try {
-      await peerService.rejectPeerRequest(peerRequest.id);
-      setPeerRequestSent(false);
-      setPeerRequest({ ...peerRequest, status: 'rejected' });
-      toast.success("Peer request rejected!");
-      if (onPeerUpdate) onPeerUpdate();
-    } catch (error) {
-      toast.error("Failed to reject peer request.");
-      console.error("Reject peer request error:", error);
-    } finally {
-      setIsRejecting(false);
-    }
-  }
-
-  async function handleAddPeer(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
-    event.preventDefault();
-    if (!currentUser || !userData) return;
-    setIsAddingPeer(true);
-    try {
-      await peerService.sendPeerRequest(currentUser.uid, userId);
-      setPeerRequestSent(true);
-      toast.success("Peer request sent!");
-      if (onPeerUpdate) onPeerUpdate();
-    } catch (error) {
-      toast.error("Failed to send peer request.");
-      console.error("Send peer request error:", error);
-    } finally {
-      setIsAddingPeer(false);
-    }
   }
 
   return (
@@ -332,87 +178,6 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
               <ChevronRight className="w-4 h-4" />
               <span className="text-gray-900">{getUserDisplayName(userData, null)}</span>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {/* Accept/Reject UI if current user is receiver and viewing sender's profile */}
-            {!isOwnProfile && peerRequest && peerRequest.status === 'pending' && peerRequest.receiverId === currentUser?.uid && peerRequest.senderId === userId && (
-              <>
-                <Button 
-                  size="sm"
-                  className="bg-[#FFD34E] text-[#5C2594] hover:bg-[#FFD34E]/90 font-bold transition-colors duration-300"
-                  onClick={handleAcceptPeerRequest}
-                  disabled={isAccepting}
-                >
-                  {isAccepting ? 'Accepting...' : 'Accept Request'}
-                </Button>
-                <Button 
-                  size="sm"
-                  variant="ghost"
-                  className="text-red-500 hover:bg-red-500/10"
-                  onClick={handleRejectPeerRequest}
-                  disabled={isRejecting}
-                >
-                  {isRejecting ? 'Rejecting...' : 'Reject'}
-                </Button>
-              </>
-            )}
-            {/* Add Peer button if no request exists and not own profile */}
-            {!isOwnProfile && !peerRequest && !peerRequestSent && (
-              <Button 
-                size="sm"
-                className="bg-[#FFD34E] text-[#5C2594] hover:bg-[#FFD34E]/90 font-bold transition-colors duration-300"
-                onClick={handleAddPeer}
-                disabled={isAddingPeer}
-              >
-                {isAddingPeer ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-[#5C2594] border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <Users className="w-4 h-4 mr-2" />
-                    Add Peer
-                  </>
-                )}
-              </Button>
-            )}
-            {/* Show Accept/Reject buttons if there's a pending request from the profile user to current user */}
-            {!isOwnProfile && peerRequest && peerRequest.status === 'pending' && peerRequest.senderId === userId && peerRequest.receiverId === currentUser?.uid && (
-              <>
-                <Button
-                  size="sm"
-                  className="bg-[#FFD34E] text-[#5C2594] hover:bg-[#FFD34E]/90 font-bold transition-colors duration-300"
-                  onClick={handleAcceptPeerRequest}
-                  disabled={isAccepting}
-                >
-                  {isAccepting ? 'Accepting...' : 'Accept Request'}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-red-500 hover:bg-red-500/10"
-                  onClick={handleRejectPeerRequest}
-                  disabled={isRejecting}
-                >
-                  {isRejecting ? 'Rejecting...' : 'Reject'}
-                </Button>
-              </>
-            )}
-            {/* Request sent badge */}
-            {!isOwnProfile && (peerRequestSent || (peerRequest && peerRequest.status === 'pending' && peerRequest.senderId === currentUser?.uid && peerRequest.receiverId === userId)) && (
-              <Badge variant="outline" className="bg-[#FFD34E] text-[#5C2594] font-bold">
-                Request Sent
-              </Badge>
-            )}
-            {isOwnProfile && (
-              <>
-                <NotificationsPopover userId={userId} />
-                <Button variant="ghost" className="text-[#0D5FF9] hover:bg-blue-50" onClick={() => setIsEditingProfile(true)}>
-                  Edit Profile
-                </Button>
-              </>
-            )}
           </div>
         </div>
       </header>
@@ -463,17 +228,13 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
                 </Button>
               )}
             </div>
-            <span className="text-2xl font-bold text-yellow-300 drop-shadow">{getUserDisplayName(userData, null)}</span>
-            {isOwnProfile && isEditingProfile && (
-              <Button variant="ghost" size="sm" className="text-[#FFD34E] hover:bg-[#FFD34E]/20 font-bold transition-colors duration-300" onClick={() => setIsEditingProfile(false)}>
-                <Edit2 className="w-4 h-4 mr-1" />
-                Save Changes
-              </Button>
-            )}
+            <span className="text-4xl font-extrabold text-yellow-300 drop-shadow text-center">
+              {getUserDisplayName(userData, null)}
+            </span>
           </div>
 
-          <p className="text-2l font-bold text-yellow-300 drop-shadow">
-            Skill Exchange Profile
+          <p className="text-2xl font-bold text-yellow-300 drop-shadow">
+            SkillSwap Profile
           </p>
           <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {/* Skills Offered */}
@@ -533,14 +294,32 @@ export default function UserProfileClient({ userId, initialSkills, initialCalend
             </div>
           </div>
 
-          {/* Add Peer Requests section */}
-          {currentUser && (
-            <div className="w-full mt-8">
-              <PeerRequests 
-                currentUser={currentUser}
-              />
+          {/* My Peers Section */}
+          <div className="w-full max-w-2xl mx-auto mb-8">
+            <div className="bg-white rounded-xl shadow-lg border border-[#FFD34E]/40 p-6 flex flex-col items-center">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-6 h-6 text-[#FFD34E] drop-shadow" />
+                <h3 className="text-xl font-extrabold text-[#5C2594] tracking-wide">My Peers</h3>
+              </div>
+              {peerInfos.length > 0 ? (
+                <div className="flex flex-wrap gap-3 justify-center">
+                  {peerInfos.map((peer) => (
+                    <button
+                      key={peer.id}
+                      className="bg-[#F3E8FF]/80 text-[#5C2594] px-5 py-2 rounded-full font-semibold shadow transition-all duration-200 hover:bg-[#FFD34E] hover:text-[#5C2594] hover:scale-105 cursor-pointer border border-[#FFD34E]/30 focus:outline-none"
+                      onClick={() => router.push(`/user/${peer.id}`)}
+                      type="button"
+                      title={`View ${peer.name}'s profile`}
+                    >
+                      {peer.name}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-400 italic text-center">No peers yet.</div>
+              )}
             </div>
-          )}
+          </div>
         </div>
         {/* Sidebar and toggle button */}
         <div className="relative h-full">
