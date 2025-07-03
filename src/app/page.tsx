@@ -166,10 +166,44 @@ export default function LandingPage() {
   const router = useRouter();
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 overflow-hidden flex flex-col justify-center items-center">
+      {/* Site Heading */}
+      <header className="w-full flex justify-center pt-10 pb-2">
+        <div className="relative flex flex-col items-center w-full">
+          {/* Decorative Glow Behind Heading */}
+          <span className="absolute -top-8 left-1/2 -translate-x-1/2 w-80 h-24 bg-yellow-300/30 blur-2xl rounded-full z-0"></span>
+          {/* Heading */}
+          <h1
+            className="
+              text-7xl
+              md:text-9xl
+              font-black
+              text-transparent
+              bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500
+              bg-clip-text
+              drop-shadow-[0_8px_32px_rgba(255,211,78,0.25)]
+              tracking-tight
+              shadow-yellow-200
+              uppercase
+              z-10
+              transition-all
+              duration-300
+              "
+            style={{
+              letterSpacing: '0.06em',
+              lineHeight: 1.05,
+              textShadow: '0 4px 32px #FFD34E55, 0 2px 8px #fff',
+            }}
+          >
+            SkillSwap
+          </h1>
+          {/* Subtle underline accent */}
+          <span className="block mt-2 h-2 w-32 md:w-56 bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 rounded-full opacity-80 shadow-lg"></span>
+        </div>
+      </header>
       {/* Hero Section */}
-      <div className="relative w-full flex flex-col items-center justify-center pt-20 pb-10">
+      <div className="relative w-full flex flex-col items-center justify-center pt-4 pb-0">
         <motion.h1
-          className="text-5xl md:text-6xl font-bold mb-6 text-center text-white"
+          className="text-4xl md:text-2xl font-bold mb-6 text-center text-white"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -178,7 +212,7 @@ export default function LandingPage() {
           <span className="text-yellow-400">Grow Together</span>
         </motion.h1>
         <motion.p
-          className="text-xl text-gray-300 mb-10 text-center"
+          className="text-l text-gray-300 mb-0 text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -207,13 +241,13 @@ export default function LandingPage() {
         <div className="flex gap-4 justify-center">
           <button
             onClick={() => router.push('/dashboard')}
-            className="px-8 py-4 bg-yellow-400 text-purple-900 rounded-full font-bold hover:bg-yellow-300 transition-colors"
+            className="px-8 py-3 bg-yellow-400 text-purple-900 rounded-full font-bold hover:bg-yellow-300 transition-colors"
           >
             Get Started
           </button>
           <button
             onClick={() => router.push('/modern/login')}
-            className="px-8 py-4 bg-white/10 text-white rounded-full font-bold hover:bg-white/20 transition-colors"
+            className="px-8 py-3 bg-white/10 text-white rounded-full font-bold hover:bg-white/20 transition-colors"
           >
             Sign In
           </button>
