@@ -1,4 +1,5 @@
 'use client';
+import { useSearchParams } from 'next/navigation'; // Add this import at the top
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -114,7 +115,8 @@ export default function ModernPeersPage() {
   const [userPeers, setUserPeers] = useState<string[]>([]);
   const [sentRequests, setSentRequests] = useState<string[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<string[]>([]);
-  
+  const searchParams = useSearchParams();
+
   const [chatPanel, setChatPanel] = useState<ChatPanel>({
     isOpen: false,
     isMinimized: false,
@@ -184,7 +186,18 @@ export default function ModernPeersPage() {
 
     return () => unsubscribe();
   }, []);
-
+  useEffect(() => {
+    const chatPeerId = searchParams.get('chat');
+    if (chatPeerId && users.length > 0 && currentUserId) {
+      // Find the peer user object
+      const peer = users.find(u => u.uid === chatPeerId);
+      // Only open if not already open
+      if (peer && (!chatPanel.isOpen || chatPanel.peer?.uid !== chatPeerId)) {
+        openChat(peer);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, users, currentUserId]);
   // Fetch users and setup real-time listeners
   useEffect(() => {
     if (!currentUserId || !db) {

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, User, Filter, Search, Star, ChevronLeft, ChevronRight, Eye, Edit, Trash2, MessageCircle, RefreshCw, ArrowLeftRight, Timer, Plus, X } from 'lucide-react';
-
+import { useRouter } from 'next/navigation'; // Add this import at the top if not already present
 // Firebase imports - now importing from main directory
 import { collection, getDocs, query, where, orderBy, addDoc, getDoc, deleteDoc, doc, setDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
@@ -246,7 +246,7 @@ function BookingsPage() {
     frequency: null,
     description: ''
   });
-  
+  const router = useRouter(); // Add this inside your component
   const itemsPerPage = 6;
   const [mounted, setMounted] = useState(false);
 
@@ -1007,13 +1007,21 @@ function BookingsPage() {
                         </div>
 
                         <div className="bookings-card-actions">
-                          <button
-                            className="bookings-action-btn bookings-btn-secondary"
-                            onClick={() => console.log('Message functionality coming soon')}
-                          >
-                            <MessageCircle size={16} />
-                            Message
-                          </button>
+                            <button
+                              className="bookings-action-btn bookings-btn-secondary"
+                              onClick={() => {
+                                // Find the peer's userId (you may need to adjust this if you store peerId differently)
+                                const peerObj = peers.find(p => p.name === booking.peer);
+                                if (peerObj) {
+                                  router.push(`/peers?chat=${peerObj.id}`);
+                                } else {
+                                  alert("Peer not found.");
+                                }
+                              }}
+                            >
+                              <MessageCircle size={16} />
+                              Message
+                            </button>
                           
                           {booking.status !== 'completed' && (
                             <button
