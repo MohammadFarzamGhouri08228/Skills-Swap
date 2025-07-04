@@ -2,6 +2,8 @@
 import React from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const skills = [
   { icon: '🎨', label: 'Design', category: 'Creative' },
@@ -375,6 +377,14 @@ export default function LandingPage() {
   // State to simulate user login status
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
+  React.useEffect(() => {
+    if (!auth) return;
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#2E1065] via-[#5B21B6] to-[#2E1065] overflow-hidden relative">
       
@@ -572,7 +582,7 @@ export default function LandingPage() {
                 <motion.button
                   onClick={() => {
                     if (isLoggedIn) {
-                      router.push('/dashboard');
+                      router.push('/user');
                     } else {
                       router.push('/modern/login');
                     }
@@ -595,7 +605,7 @@ export default function LandingPage() {
                 </motion.button>
               </div>
               
-              <p className="text-gray-300 text-lg">
+              <p className="text-gray-300 text-lg mt-10 mb-4">
                 Join our growing community of passionate learners and educators
               </p>
             </motion.div>
@@ -604,7 +614,7 @@ export default function LandingPage() {
 
         {/* Enhanced features section */}
         <motion.section
-          className="mt-24 mb-16 px-8"
+          className="mt-0 mb-16 px-8"
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 2 }}
@@ -824,7 +834,7 @@ export default function LandingPage() {
               <motion.button
                 onClick={() => {
                   if (isLoggedIn) {
-                    router.push('/dashboard');
+                    router.push('/user');
                   } else {
                     router.push('/modern/login');
                   }
