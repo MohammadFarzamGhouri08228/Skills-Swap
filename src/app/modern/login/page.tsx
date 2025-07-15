@@ -244,7 +244,7 @@ export default function ModernLogin() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              Welcome Back!<br />Sign In:
+              Sign In:
             </motion.h2>
             <form className="w-full space-y-6" onSubmit={handleSubmit}>
               <div>

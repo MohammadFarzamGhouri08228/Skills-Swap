@@ -1,12 +1,13 @@
 'use client';
-
+import { Play as PlayIcon } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Filter, Search, Star, ChevronLeft, ChevronRight, Eye, Edit, Trash2, MessageCircle, RefreshCw, ArrowLeftRight, Timer, Plus, X } from 'lucide-react';
+import { Calendar, Clock, User, Filter, Search, Star, ChevronLeft, ChevronRight, Eye, Edit, Trash2, MessageCircle, RefreshCw, ArrowLeftRight, Timer, Plus, X, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation'; // Add this import at the top if not already present
 // Firebase imports - now importing from main directory
 import { collection, getDocs, query, where, orderBy, addDoc, getDoc, deleteDoc, doc, setDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { app, db } from '../../../../firebase/firebase';
+import { Timestamp } from "firebase/firestore"; // Add this if not already present
 
 // Import Header and Footer components (assuming they exist elsewhere)
 import HeaderOne from '@/layouts/headers/HeaderOne'; // Example import path
@@ -31,6 +32,13 @@ interface Booking {
   duration: string;
   nextSession: string | null;
   description: string;
+  meetingLink?: string;
+  participants?: {
+    teacher1?: { userId: string; skillOffered?: string };
+    teacher2?: { userId: string; skillOffered?: string };
+  };
+  senderId?: string;
+  receiverId?: string;
 }
 
 // Interface for user stats
@@ -249,6 +257,72 @@ function BookingsPage() {
   const router = useRouter(); // Add this inside your component
   const itemsPerPage = 6;
   const [mounted, setMounted] = useState(false);
+  
+  // Helper: Check if session is startable (time reached, confirmed, not completed/missed)
+  function isSessionStartable(booking: Booking) {
+    if (booking.status !== 'confirmed' || booking.meetingLink) return false;
+    const [time, modifier] = booking.time.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    if (modifier === 'PM' && hours < 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+    const sessionDate = new Date(booking.date);
+    sessionDate.setHours(hours, minutes, 0, 0);
+    const now = new Date();
+    return now >= sessionDate;
+  }
+
+  // Helper: Check if session can be joined (meetingLink exists, not completed/missed)
+  function isSessionJoinable(booking: Booking) {
+    return !!booking.meetingLink && booking.status === 'confirmed';
+  }
+
+  // When user clicks "Begin Session", create Google Meet link and save to Firestore
+  async function handleBeginSession(booking: Booking) {
+    // Use Google Meet instant meeting link (for demo, not authenticated)
+    // For production, use Google Meet API with OAuth for unique links
+    const meetingLink = `https://meet.google.com/new`;
+
+    // Save meeting link and mark current user as joined
+    const currentUserId = currentUser?.uid;
+    const bookingDocRef = doc(db, "bookings", booking.id);
+    await setDoc(
+      bookingDocRef,
+      {
+        meetingLink,
+        joinedUsers: currentUserId ? [currentUserId] : [],
+        sessionStartedAt: Timestamp.now(),
+      },
+      { merge: true }
+    );
+    setBookings(prev =>
+      prev.map(b =>
+        b.id === booking.id ? { ...b, meetingLink, joinedUsers: currentUserId ? [currentUserId] : [] } : b
+      )
+    );
+    window.open(meetingLink, "_blank");
+  }
+
+  // When user clicks "Join Session", add user to joinedUsers in Firestore
+  async function handleJoinSession(booking: Booking) {
+    const currentUserId = currentUser?.uid;
+    if (!currentUserId) return;
+    const bookingDocRef = doc(db, "bookings", booking.id);
+    const bookingSnap = await getDoc(bookingDocRef);
+    let joinedUsers: string[] = [];
+    if (bookingSnap.exists()) {
+      joinedUsers = bookingSnap.data().joinedUsers || [];
+    }
+    if (!joinedUsers.includes(currentUserId)) {
+      joinedUsers.push(currentUserId);
+      await setDoc(bookingDocRef, { joinedUsers }, { merge: true });
+      setBookings(prev =>
+        prev.map(b =>
+          b.id === booking.id ? { ...b, joinedUsers } : b
+        )
+      );
+    }
+    window.open(booking.meetingLink, "_blank");
+  }
 
   // Helper function to fetch peer details from the userPeers collection
   const fetchPeersFromUserPeers = async (userId: string): Promise<Peer[]> => {
@@ -281,6 +355,7 @@ function BookingsPage() {
       // If we have peer user IDs, fetch their details from the users collection
       if (peerUserIds.length > 0) {
         const usersRef = collection(db, 'users');
+        const userQuery = query(usersRef, where('uid', '==', userId)); // userId should be currentUser.uid
         
         // Firestore 'in' query has a limit of 10, so we might need to batch
         const batchSize = 10;
@@ -298,7 +373,7 @@ function BookingsPage() {
             console.log('User data:', userData);
             
             fetchedPeers.push({
-              id: userData.uid,
+              id: userData.uid, // This must be the Firebase Auth UID
               name: `${userData.firstName || ''} ${userData.surname || ''}`.trim() || 'Unknown Peer',
               skills: userData.skillsOffered || [],
               rating: userData.rating || 0,
@@ -408,6 +483,8 @@ function BookingsPage() {
           duration: data.timeSlot.duration,
           nextSession: nextSessionString,
           description: data.notes || '',
+          participants: data.participants,
+          meetingLink: data.meetingLink,
         });
       });
       
@@ -451,21 +528,19 @@ function BookingsPage() {
   };
 
   // Monitor authentication state
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setCurrentUser(user);
-        fetchUserDataAndStats(user.uid);
-      } else {
-        setCurrentUser(null);
-        setDataLoading(false);
-        // If no user is logged in, you might want to redirect to login
-        // or show mock data for demo purposes
-      }
-    });
+      useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          setCurrentUser(user || null); // user.uid is always the Firebase Auth UID
+        });
+        return () => unsubscribe();
+      }, []);
 
-    return () => unsubscribe();
-  }, []);
+    // Fetch user data and stats only when currentUser is set
+    useEffect(() => {
+      if (currentUser?.uid) {
+        fetchUserDataAndStats(currentUser.uid);
+      }
+    }, [currentUser]);
 
   // Filter bookings based on search and filters
   useEffect(() => {
@@ -526,9 +601,9 @@ function BookingsPage() {
     if (selectedPeer) {
       setNewBookingForm(prev => ({
         ...prev,
-        peerId: peerId,
+        peerId: selectedPeer.id, // This must be the Firebase Auth UID
         peerName: selectedPeer.name,
-        partnerSkill: '' // Reset partner skill when peer changes
+        partnerSkill: ''
       }));
     }
   };
@@ -573,30 +648,29 @@ function BookingsPage() {
 
       // Construct the booking data for Firestore
       const bookingData = {
-        location: "Virtual - Google Meet", // Using a placeholder based on your image
         notes: newBookingForm.description,
         participants: {
-          teacher1: { // Assuming current user is teacher1
+          teacher1: {
             skillOffered: newBookingForm.mySkill,
             userId: currentUser.uid,
           },
-          teacher2: { // Assuming peer is teacher2
+          teacher2: {
             skillOffered: newBookingForm.partnerSkill,
-            userId: newBookingForm.peerId,
+            userId: newBookingForm.peerId, // This must be the peer's UID
           },
         },
-        status: 'pending', // Initial status
+        senderId: currentUser.uid,
+        receiverId: newBookingForm.peerId,        status: 'pending',
         timeSlot: {
-          duration: newBookingForm.duration, // Store as string
-          startTime: startDate, // Firestore will convert Date objects to Timestamps
-          endTime: endDate, // Firestore will convert Date objects to Timestamps
+          duration: newBookingForm.duration,
+          startTime: startDate,
+          endTime: endDate,
         },
-        // createdAt will be added by Firestore server timestamp
         isRecurring: newBookingForm.isRecurring,
         frequency: newBookingForm.frequency,
-        nextSession: nextSessionDate, // Save as Date or null
-        rating: 0, // Default rating for new bookings
-        secondaryDate: newBookingForm.secondaryDate ? new Date(newBookingForm.secondaryDate) : null, // Save secondary date
+        nextSession: nextSessionDate,
+        rating: 0,
+        secondaryDate: newBookingForm.secondaryDate ? new Date(newBookingForm.secondaryDate) : null,
       };
 
       console.log("Current User:", currentUser);
@@ -718,14 +792,25 @@ function BookingsPage() {
 
     try {
       const bookingDocRef = doc(db, "bookings", selectedBooking.id);
-      
+      const [hours, minutes] = (editForm.time || selectedBooking.time).split(':').map(Number);
+      const startDate = new Date(editForm.date || selectedBooking.date);
+      startDate.setHours(hours, minutes, 0, 0);
+      const durationStr = editForm.duration || selectedBooking.duration;
+      const durationValue = parseFloat(durationStr);
+      const durationMinutes = durationStr.includes('hour') ? durationValue * 60 : durationValue;
+      const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+      const sessionDate = new Date(`${selectedBooking.date}T${selectedBooking.time}`);
       const updatedData: any = {
         notes: editForm.description,
         timeSlot: {
           duration: editForm.duration,
+          startTime: startDate,
+          endTime: endDate,
         },
         isRecurring: editForm.isRecurring,
         frequency: editForm.frequency,
+        status: editForm.status,
+        rating: editForm.rating,
       };
 
       // Only update date and time if not daily recurring
@@ -779,7 +864,7 @@ function BookingsPage() {
       await deleteDoc(doc(db, "bookings", bookingId));
       setBookings(prev => prev.filter(booking => booking.id !== bookingId));
       setFilteredBookings(prev => prev.filter(booking => booking.id !== bookingId));
-      setMessageModalContent({ title: "Success!", body: "Booking cancelled successfully!", isError: false });
+      setMessageModalContent({ title: "Success!", body: "Booking deleted successfully!", isError: false });
       setMessageModalOpen(true);
 
       // Re-fetch user stats after a booking is deleted
@@ -789,7 +874,7 @@ function BookingsPage() {
 
     } catch (e) {
       console.error("Error deleting document: ", e);
-      setMessageModalContent({ title: "Error", body: "Error cancelling booking. Please try again.", isError: true });
+      setMessageModalContent({ title: "Error", body: "Error deleting booking. Please try again.", isError: true });
       setMessageModalOpen(true);
     } finally {
       setIsLoading(false);
@@ -863,52 +948,6 @@ function BookingsPage() {
             </div>
           </div>
 
-          {/* Filters Section */}
-          <div className="bookings-filters">
-            <div className="bookings-container">
-              <div className="bookings-filters-content">
-                <div className="bookings-search">
-                  <Search className="bookings-search-icon" />
-                  <input
-                    type="text"
-                    placeholder="Search sessions or peers..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="bookings-search-input"
-                  />
-                </div>
-                
-                <div className="bookings-filter-group">
-                  <div className="bookings-filter">
-                    <Filter className="bookings-filter-icon" />
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="bookings-filter-select"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="confirmed">Confirmed</option>
-                      <option value="pending">Pending</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </div>
-                  
-                  <div className="bookings-filter">
-                    <select
-                      value={typeFilter}
-                      onChange={(e) => setTypeFilter(e.target.value)}
-                      className="bookings-filter-select"
-                    >
-                      <option value="all">All Types</option>
-                      <option value="recurring">Recurring</option>
-                      <option value="one-time">One-time</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Make a Booking Button */}
           <div className="bookings-make-booking-section">
             <div className="bookings-container">
@@ -922,166 +961,423 @@ function BookingsPage() {
             </div>
           </div>
 
-          {/* Bookings Grid */}
+          {/* Bookings Content */}
           <div className="bookings-content">
             <div className="bookings-container">
-              {isLoading ? (
-                <div className="bookings-loading">
-                  <div className="bookings-loading-spinner"></div>
-                </div>
-              ) : (
-                mounted && (
-                  <div className="bookings-grid">
-                    {currentBookings.map((booking) => (
-                      <div key={booking.id} className="bookings-card">
-                        <div className="bookings-card-header">
-                          <div className="bookings-card-type">
-                            {booking.isRecurring ? (
-                              <div className="bookings-recurring">
-                                <RefreshCw size={16} />
-                                <span>{booking.frequency}</span>
-                              </div>
-                            ) : (
-                              <div className="bookings-one-time">
-                                📅 One-time
-                              </div>
-                            )}
-                          </div>
-                          <div className={`bookings-card-status ${getStatusColor(booking.status)}`}>
-                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                          </div>
-                        </div>
 
-                        <div className="bookings-card-content">
-                          <div className="bookings-skill-exchange">
-                            <div className="bookings-skill-item">
-                              <div className="bookings-skill-label">I teach:</div>
-                              <div className="bookings-skill-name">{booking.mySkill}</div>
+              {/* Pending Section */}
+              <section className="mb-10">
+                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-yellow-500">
+                  <ArrowLeftRight className="text-yellow-500" /> Pending
+                </h2>
+                <div className="bookings-grid">
+                  {bookings.filter(b => b.status === 'pending').length === 0 && (
+                    <div className="text-gray-50 italic">No pending requests.</div>
+                  )}
+                  {bookings.filter(b => b.status === 'pending').map(booking => (
+                    <div key={booking.id} className="bookings-card">
+                      <div className="bookings-card-header">
+                        <div className="bookings-card-type">
+                          {booking.isRecurring ? (
+                            <div className="bookings-recurring">
+                              <RefreshCw size={16} />
+                              <span>{booking.frequency}</span>
                             </div>
-                            <ArrowLeftRight className="bookings-exchange-icon" />
-                            <div className="bookings-skill-item">
-                              <div className="bookings-skill-label">I learn:</div>
-                              <div className="bookings-skill-name">{booking.partnerSkill}</div>
-                            </div>
-                          </div>
-                          
-                          <div className="bookings-card-meta">
-                            <div className="bookings-meta-item">
-                              <User className="bookings-meta-icon" />
-                              <span>{booking.peer}</span>
-                            </div>
-                            
-                            <div className="bookings-datetime-section">
-                              {!(booking.isRecurring && booking.frequency === 'Daily') && (
-                                <div className="bookings-meta-item bookings-datetime">
-                                  <Calendar className="bookings-meta-icon" />
-                                  <span className="bookings-datetime-text">
-                                    {formatDateTime(booking.date, booking.time)}
-                                    {booking.isRecurring && booking.frequency === 'Bi-weekly' && booking.secondaryDate && (
-                                      <span> & {formatDateTime(booking.secondaryDate, booking.time)}</span>
-                                    )}
-                                  </span>
-                                </div>
-                              )}
-                              
-                              <div className="bookings-meta-item bookings-duration">
-                                <Timer className="bookings-meta-icon" />
-                                <span className="bookings-duration-text">{booking.duration}</span>
-                              </div>
-                            </div>
-                            
-                            {/* <div className="bookings-meta-item">
-                              <Star className="bookings-meta-icon" />
-                              <span>{booking.rating}</span>
-                            </div> */}
-                          </div>
-
-                          {booking.nextSession && (
-                            <div className="bookings-next-session">
-                              <div className="bookings-next-label">Next session:</div>
-                              <div className="bookings-next-date">
-                                {formatDateTime(booking.nextSession, booking.time)}
-                              </div>
+                          ) : (
+                            <div className="bookings-one-time">
+                              📅 One-time
                             </div>
                           )}
                         </div>
-
-                        <div className="bookings-card-actions">
-                            <button
-                              className="bookings-action-btn bookings-btn-secondary"
-                              onClick={() => {
-                                // Find the peer's userId (you may need to adjust this if you store peerId differently)
-                                const peerObj = peers.find(p => p.name === booking.peer);
-                                if (peerObj) {
-                                  router.push(`/peers?chat=${peerObj.id}`);
-                                } else {
-                                  alert("Peer not found.");
-                                }
-                              }}
-                            >
-                              <MessageCircle size={16} />
-                              Message
-                            </button>
-                          
-                          {booking.status !== 'completed' && (
-                            <button
-                              className="bookings-action-btn bookings-btn-accent"
-                              onClick={() => handleEdit(booking)}
-                            >
-                              <Edit size={16} />
-                              Edit
-                            </button>
-                          )}
-
-                          {booking.status !== 'completed' && booking.status !== 'cancelled' && (
-                            <button
-                              className="bookings-action-btn bookings-btn-danger"
-                              onClick={() => {
-                                setBookingToDelete(booking.id);
-                                setDeleteConfirmationModalOpen(true);
-                              }}
-                            >
-                              <Trash2 size={16} />
-                              Cancel
-                            </button>
-                          )}
+                        <div className={`bookings-card-status ${getStatusColor(booking.status)}`}>
+                          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                         </div>
                       </div>
-                    ))}
+                      <div className="bookings-card-content">
+                        <div className="bookings-skill-exchange">
+                          <div className="bookings-skill-item">
+                            <div className="bookings-skill-label">I teach:</div>
+                            <div className="bookings-skill-name">{booking.mySkill}</div>
+                          </div>
+                          <ArrowLeftRight className="bookings-exchange-icon" />
+                          <div className="bookings-skill-item">
+                            <div className="bookings-skill-label">I learn:</div>
+                            <div className="bookings-skill-name">{booking.partnerSkill}</div>
+                          </div>
+                        </div>
+                        <div className="bookings-card-meta">
+                          <div className="bookings-meta-item">
+                            <User className="bookings-meta-icon" />
+                            <span>{booking.peer}</span>
+                          </div>
+                          <div className="bookings-datetime-section">
+                            {!(booking.isRecurring && booking.frequency === 'Daily') && (
+                              <div className="bookings-meta-item bookings-datetime">
+                                <Calendar className="bookings-meta-icon" />
+                                <span className="bookings-datetime-text">
+                                  {formatDateTime(booking.date, booking.time)}
+                                  {booking.isRecurring && booking.frequency === 'Bi-weekly' && booking.secondaryDate && (
+                                    <span> & {formatDateTime(booking.secondaryDate, booking.time)}</span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            <div className="bookings-meta-item bookings-duration">
+                              <Timer className="bookings-meta-icon" />
+                              <span className="bookings-duration-text">{booking.duration}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {booking.nextSession && (
+                          <div className="bookings-next-session">
+                            <div className="bookings-next-label">Session Time:</div>
+                            <div className="bookings-next-date">
+                              {formatDateTime(booking.nextSession, booking.time)}
+                            </div>
+                          </div>
+                        )}
+                        <div className="bookings-card-actions flex flex-wrap gap-2 mt-2">
+                        {/* Message Button */}
+                        <button
+                          className="bookings-action-btn flex justify-center px-4 py-2 rounded bg-gray-300 text-gray-700 hover:bg-gray-400 transition"
+                          onClick={() => {
+                            const peerObj = peers.find(p => p.name === booking.peer);
+                            if (peerObj) {
+                              router.push(`/peers?chat=${peerObj.id}`);
+                            } else {
+                              setMessageModalContent({
+                                title: "Peer Not Found",
+                                body: "Could not find this peer in your list.",
+                                isError: true
+                              });
+                              setMessageModalOpen(true);
+                            }
+                          }}
+                          title="Message Peer"
+                        >
+                          <MessageCircle size={16} />
+                          <span className="ml-1">Message</span>
+                        </button>
+                        {/* Edit Button */}
+                        <button
+                          className="bookings-action-btn flex justify-center px-4 py-2 rounded bg-blue-200 text-blue-700 hover:bg-blue-400 transition"
+                          onClick={() => handleEdit(booking)}
+                          title="Edit Booking"
+                        >
+                          <Edit size={16} />
+                          <span className="ml-1">Edit</span>
+                        </button>
+                        {/* Confirm Button (only for teacher2) */}
+                        {booking.participants?.teacher2?.userId === currentUser?.uid && (
+                          <button
+                            className="bookings-action-btn flex justify-center px-4 py-2 rounded bg-green-200 text-green-700 hover:bg-green-400 transition"
+                            onClick={async () => {
+                              const meetingCode = `skillswap-${booking.id}`;
+                              const meetingLink = `https://meet.jit.si/${meetingCode}`;
+                              await setDoc(doc(db, "bookings", booking.id), { status: "confirmed", meetingLink }, { merge: true });
+                              setBookings(prev =>
+                                prev.map(x =>
+                                  x.id === booking.id ? { ...x, status: "confirmed", meetingLink } : x
+                                )
+                              );
+                            }}
+                            title="Confirm Booking"
+                          >
+                            <PlayIcon size={16} />
+                            <span className="ml-1">Confirm</span>
+                          </button>
+                        )}
+                        {/* Cancel Button */}
+                        <button
+                          className="bookings-action-btn flex justify-center px-4 py-2 rounded bg-red-200 text-red-700 hover:bg-red-400 transition"
+                          onClick={() => handleDeleteBooking(booking.id)}
+                          title="Cancel Booking"
+                        >
+                          <Trash2 size={16} />
+                          <span className="ml-1">Cancel</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                )
-              )}
+                ))}
+              </div>
+            </section>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="bookings-pagination">
-                  <button
-                    className="bookings-pagination-btn"
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  
-                  {[...Array(totalPages)].map((_, index) => (
-                    <button
-                      key={index}
-                      className={`bookings-pagination-btn ${currentPage === index + 1 ? 'active' : ''}`}
-                      onClick={() => setCurrentPage(index + 1)}
-                    >
-                      {index + 1}
-                    </button>
+              {/* Finalized Section */}
+              <section>
+                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-green-500">
+                  <PlayIcon className="text-green-500" /> Finalized Bookings
+                </h2>
+                <div className="bookings-grid">
+                  {bookings.filter(b =>
+                    b.status === 'confirmed' || b.status === 'completed'
+                  ).length === 0 && (
+                    <div className="text-gray-50 italic">No finalized bookings.</div>
+                  )}
+                  {bookings.filter(b =>
+                    b.status === 'confirmed' || b.status === 'completed'
+                  ).map(booking => (
+                    <div key={booking.id} className="bookings-card">
+                      <div className="bookings-card-header">
+                        <div className="bookings-card-type">
+                          {booking.isRecurring ? (
+                            <div className="bookings-recurring">
+                              <RefreshCw size={16} />
+                              <span>{booking.frequency}</span>
+                            </div>
+                          ) : (
+                            <div className="bookings-one-time">
+                              📅 One-time
+                            </div>
+                          )}
+                        </div>
+                        <div className={`bookings-card-status ${getStatusColor(booking.status)}`}>
+                          {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                        </div>
+                      </div>
+                      <div className="bookings-card-content">
+                        <div className="bookings-skill-exchange">
+                          <div className="bookings-skill-item">
+                            <div className="bookings-skill-label">I teach:</div>
+                            <div className="bookings-skill-name">{booking.mySkill}</div>
+                          </div>
+                          <ArrowLeftRight className="bookings-exchange-icon" />
+                          <div className="bookings-skill-item">
+                            <div className="bookings-skill-label">I learn:</div>
+                            <div className="bookings-skill-name">{booking.partnerSkill}</div>
+                          </div>
+                        </div>
+                        <div className="bookings-card-meta">
+                          <div className="bookings-meta-item">
+                            <User className="bookings-meta-icon" />
+                            <span>{booking.peer}</span>
+                          </div>
+                          <div className="bookings-datetime-section">
+                            {!(booking.isRecurring && booking.frequency === 'Daily') && (
+                              <div className="bookings-meta-item bookings-datetime">
+                                <Calendar className="bookings-meta-icon" />
+                                <span className="bookings-datetime-text">
+                                  {formatDateTime(booking.date, booking.time)}
+                                  {booking.isRecurring && booking.frequency === 'Bi-weekly' && booking.secondaryDate && (
+                                    <span> & {formatDateTime(booking.secondaryDate, booking.time)}</span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            <div className="bookings-meta-item bookings-duration">
+                              <Timer className="bookings-meta-icon" />
+                              <span className="bookings-duration-text">{booking.duration}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {booking.nextSession && (
+                          <div className="bookings-next-session">
+                            <div className="bookings-next-label">Session Time:</div>
+                            <div className="bookings-next-date">
+                              {formatDateTime(booking.nextSession, booking.time)}
+                            </div>
+                          </div>
+                        )}
+                        <div className="bookings-card-actions flex flex-wrap gap-2 mt-2">
+                          {/* Message Button */}
+                          <button
+                            className="bookings-action-btn flex items-center justify-center min-w-[140px] px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold transition"
+                            onClick={() => {
+                              const peerObj = peers.find(p => p.name === booking.peer);
+                              if (peerObj) {
+                                router.push(`/peers?chat=${peerObj.id}`);
+                              } else {
+                                setMessageModalContent({
+                                  title: "Peer Not Found",
+                                  body: "Could not find this peer in your list.",
+                                  isError: true
+                                });
+                                setMessageModalOpen(true);
+                              }
+                            }}
+                            title="Message Peer"
+                          >
+                            <MessageCircle size={18} className="mr-2" />
+                            Message
+                          </button>
+                          {/* Edit Button */}
+                          <button
+                            className="bookings-action-btn flex items-center justify-center min-w-[140px] px-4 py-2 rounded bg-blue-200 text-blue-700 hover:bg-blue-300 font-semibold transition"
+                            onClick={() => handleEdit(booking)}
+                            title="Edit Booking"
+                          >
+                            <Edit size={18} className="mr-2" />
+                            Edit
+                          </button>
+                          {/* Join Meeting Button */}
+                          {booking.meetingLink && booking.status === 'confirmed' && (
+                            <a
+                              href={booking.meetingLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bookings-action-btn flex items-center justify-center min-w-[140px] px-4 py-2 rounded bg-purple-200 text-purple-700 hover:bg-purple-300 font-semibold transition"
+                              style={{ textDecoration: 'none' }}
+                            >
+                              <PlayIcon size={18} className="mr-2" />
+                              Join Meeting
+                            </a>
+                          )}
+                          {/* Mark as Completed or Missed Buttons */}
+                          {booking.status === 'confirmed' && (
+                            <>
+                              <button
+                                className="bookings-action-btn flex items-center justify-center min-w-[140px] px-4 py-2 rounded bg-green-200 text-green-700 hover:bg-green-300 font-semibold transition"
+                                onClick={async () => {
+                                  await setDoc(doc(db, "bookings", booking.id), { status: "completed" }, { merge: true });
+                                  setBookings(prev =>
+                                    prev.map(x =>
+                                      x.id === booking.id ? { ...x, status: "completed" } : x
+                                    )
+                                  );
+                                }}
+                              >
+                                <CheckCircle size={18} className="mr-2" />
+                                Mark as Completed
+                              </button>
+                              <button
+                                className="bookings-action-btn flex items-center justify-center min-w-[140px] px-4 py-2 rounded bg-pink-200 text-red-700 hover:bg-pink-300 font-semibold transition"
+                                onClick={async () => {
+                                  await setDoc(doc(db, "bookings", booking.id), { status: "missed" }, { merge: true });
+                                  setBookings(prev =>
+                                    prev.map(x =>
+                                      x.id === booking.id ? { ...x, status: "missed" } : x
+                                    )
+                                  );
+                                }}
+                              >
+                                <X size={18} className="mr-2" />
+                                Mark as Missed
+                              </button>
+                            </>
+                          )}
+                          <button
+                            className="bookings-action-btn flex items-center justify-center min-w-[140px] px-4 py-2 rounded bg-red-200 text-red-700 hover:bg-red-300 font-semibold transition"
+                            onClick={() => handleDeleteBooking(booking.id)}
+                            title="Delete Booking"
+                          >
+                            <Trash2 size={18} className="mr-2" />
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                  
-                  <button
-                    className="bookings-pagination-btn"
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight size={20} />
-                  </button>
                 </div>
-              )}
+              </section>
+              {/* Missed Section */}
+              <section>
+                <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-red-700">
+                  <X className="text-red-700" /> Missed Sessions
+                </h2>
+                <div className="bookings-grid">
+                  {bookings.filter(b => b.status === 'missed').length === 0 && (
+                    <div className="text-gray-50 italic">No missed sessions.</div>
+                  )}
+                  {bookings.filter(b => b.status === 'missed').map(booking => (
+                    <div key={booking.id} className="bookings-card shadow-lg rounded-xl border-2 border-red-300 bg-red-50">
+                      <div className="bookings-card-header">
+                        <div className="bookings-card-type">
+                          {booking.isRecurring ? (
+                            <div className="bookings-recurring">
+                              <RefreshCw size={16} />
+                              <span>{booking.frequency}</span>
+                            </div>
+                          ) : (
+                            <div className="bookings-one-time">
+                              📅 One-time
+                            </div>
+                          )}
+                        </div>
+                        <div className="bookings-card-status bookings-status-missed">
+                          Missed
+                        </div>
+                      </div>
+                      <div className="bookings-card-content">
+                        <div className="bookings-skill-exchange">
+                          <div className="bookings-skill-item">
+                            <div className="bookings-skill-label">I teach:</div>
+                            <div className="bookings-skill-name">{booking.mySkill}</div>
+                          </div>
+                          <ArrowLeftRight className="bookings-exchange-icon" />
+                          <div className="bookings-skill-item">
+                            <div className="bookings-skill-label">I learn:</div>
+                            <div className="bookings-skill-name">{booking.partnerSkill}</div>
+                          </div>
+                        </div>
+                        <div className="bookings-card-meta">
+                          <div className="bookings-meta-item">
+                            <User className="bookings-meta-icon" />
+                            <span>{booking.peer}</span>
+                          </div>
+                          <div className="bookings-datetime-section">
+                            {!(booking.isRecurring && booking.frequency === 'Daily') && (
+                              <div className="bookings-meta-item bookings-datetime">
+                                <Calendar className="bookings-meta-icon" />
+                                <span className="bookings-datetime-text">
+                                  {formatDateTime(booking.date, booking.time)}
+                                  {booking.isRecurring && booking.frequency === 'Bi-weekly' && booking.secondaryDate && (
+                                    <span> & {formatDateTime(booking.secondaryDate, booking.time)}</span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            <div className="bookings-meta-item bookings-duration">
+                              <Timer className="bookings-meta-icon" />
+                              <span className="bookings-duration-text">{booking.duration}</span>
+                            </div>
+                          </div>
+                        </div>
+                        {booking.nextSession && (
+                          <div className="bookings-next-session">
+                            <div className="bookings-next-label">Session Time:</div>
+                            <div className="bookings-next-date">
+                              {formatDateTime(booking.nextSession, booking.time)}
+                            </div>
+                          </div>
+                        )}
+                        <div className="bookings-card-actions flex flex-wrap gap-2 mt-2">
+                          {/* Message Button */}
+                          <button
+                            className="bookings-action-btn flex items-center px-4 py-2 rounded bg-gray-300 text-gray-700 hover:bg-gray-400 transition"
+                            onClick={() => {
+                              const peerObj = peers.find(p => p.name === booking.peer);
+                              if (peerObj) {
+                                router.push(`/peers?chat=${peerObj.id}`);
+                              } else {
+                                setMessageModalContent({
+                                  title: "Peer Not Found",
+                                  body: "Could not find this peer in your list.",
+                                  isError: true
+                                });
+                                setMessageModalOpen(true);
+                              }
+                            }}
+                            title="Message Peer"
+                          >
+                            <MessageCircle size={16} />
+                            <span className="ml-1">Message</span>
+                          </button>
+                          {/* Delete Button */}
+                          <button
+                            className="bookings-action-btn flex items-center px-4 py-2 rounded bg-red-200 text-red-700 hover:bg-red-400 transition"
+                            onClick={() => handleDeleteBooking(booking.id)}
+                            title="Delete Booking"
+                          >
+                            <Trash2 size={16} />
+                            <span className="ml-1">Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
             </div>
           </div>
         </div>
@@ -1389,20 +1685,6 @@ function BookingsPage() {
                       <option value="2 hours">2 hours</option>
                       <option value="2.5 hours">2.5 hours</option>
                       <option value="3 hours">3 hours</option>
-                    </select>
-                  </div>
-                  
-                  <div className="bookings-form-group">
-                    <label>Status</label>
-                    <select
-                      value={editForm.status}
-                      onChange={(e) => setEditForm({...editForm, status: e.target.value})}
-                      className="bookings-form-select"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="confirmed">Confirmed</option>
-                      <option value="completed">Completed</option>
-                      {/* Add other statuses as needed */}
                     </select>
                   </div>
                   
