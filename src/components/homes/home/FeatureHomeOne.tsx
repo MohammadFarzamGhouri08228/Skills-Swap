@@ -12,8 +12,8 @@ export default function FeatureHomeOne({style_2}: Props) {
           <div className="row">
             <div className="col-12 wow fadeInUp">
               <div className="section-title text-center">
-                <span>Features</span>
-                <h2>One Platform Many Skills</h2>
+                
+                <h2>One Platform, Many Skills!</h2>
               </div>
             </div>
 
