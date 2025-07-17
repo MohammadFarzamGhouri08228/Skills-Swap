@@ -1472,22 +1472,16 @@ img{
 # How It Worksingle-instructor
 --------------------------------*/
 
-.working-process{
+.working-process {
+	background: linear-gradient(
+	  90deg,
+	  #FFD23F 0%, /* Yellow */
+	  #FF914D 100% /* Tangerine */
+	);
 	background-repeat: no-repeat;
 	background-size: cover;
 	position: relative;
 	z-index: 1;
-}
-.working-process:after{
-	content: '';
-	position: absolute;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	background: #002935;
-	opacity: .87;
-	z-index: -1;
 }
 .single-work{
 	text-align: center;
