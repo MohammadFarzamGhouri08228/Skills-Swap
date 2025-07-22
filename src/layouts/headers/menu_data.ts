@@ -40,6 +40,7 @@ const menu_data: DataType[] = [
 		has_dropdown: true,
 		sub_menus: [
 			{ link: "/peers", title: "Peers" },
+			{ link: "/feedback", title: "Feedback" },
 			{ link: "/grid-blog", title: "Grid Blog" },
 			{ link: "/standard-blog", title: "Standard Blog" },
 			{ link: "/blog-details", title: "Blog Details" },
