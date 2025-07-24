@@ -5,48 +5,40 @@ export default function FooterOne() {
     <>
       <section className="footer">
         <div className="container">
-          <div className="row">
-            <div className="col-xl-7 col-lg-7 wow fadeIn">
-              <h2 className="fntitle">Subscribe to Our  Newsletter <br />
-                for Latest Update</h2>
-            </div>
-
-            <div className="col-xl-5 col-lg-5 align-self-center wow fadeIn">
-              <div className="newsletter">
-                <form action="#" method="post">
-                  <input type="email" name="EMAIL" placeholder="Email Address" />
-                  <button type="submit">Subscribe</button>
-                </form>
-              </div>
-            </div>
-          </div>
-
           <div className="row footer-bottom">
             <div className="col-xl-3 col-md-6 col-12 wow fadeIn">
               <div className="single-footer">
                 <div className="about-footer">
                   <div className="footer-logo">
-                    <a href="#"><img src="assets/img/footer-logo.svg" alt="SkillSwap" /></a>
+                    <a href="/user">
+                      <img
+                        src="assets/img/logo.svg"
+                        alt="SkillSwap"
+                        className="w-16 h-auto" // w-16 = 4rem = 64px
+                      />
+                    </a>
                   </div>
+
+                  <h3 className="footer-title"><a href="/user">SkillSwap</a></h3>
                   <p>
                     Swap your skills and learn from others in a vibrant community. Join us to share your expertise and discover new talents.
                   </p>
 
                   <div className="fot-social">
-                    <span>Follow Us On :</span>
+                    <span>Subscribe To Our Youtube Channel:</span>
                     <ul>
-                      <li>
+                      {/* <li>
                         <a href="#"><i className="bx bxl-facebook"></i></a>
                       </li>
 
                       <li>
                         <a href="#"><i className="bx bxl-twitter"></i></a>
-                      </li>
-                      <li>
+                      </li> */}
+                      {/* <li>
                         <a href="#"><i className="bx bxl-linkedin"></i></a>
-                      </li>
+                      </li> */}
                       <li>
-                        <a href="#"><i className="bx bxl-youtube"></i></a>
+                        <a href="https://www.youtube.com/@Skill-Swap-Real"><i className="bx bxl-youtube"></i></a>
                       </li>
                     </ul>
                   </div>
@@ -59,15 +51,15 @@ export default function FooterOne() {
                 <h3 className="footer-title">Useful Links</h3>
                 <ul>
                   <li><a href="user">Home</a></li>
-                  <li><a href="#">About Us</a></li>
+                  {/* <li><a href="#">About Us</a></li> */}
                   <li><a href="skills">Skills</a></li>
-                  <li><a href="#">Categories</a></li>
-                  <li><a href="#">Contact</a></li>
+                  {/* <li><a href="#">Categories</a></li> */}
+                  <li><a href="contact">Contact</a></li>
                 </ul>
               </div>
             </div>
 
-            <div className="col-xl-3 col-md-6 col-12 wow fadeIn">
+            {/* <div className="col-xl-3 col-md-6 col-12 wow fadeIn">
               <div className="single-footer">
                 <h3 className="footer-title">Resources</h3>
                 <ul>
@@ -79,7 +71,7 @@ export default function FooterOne() {
                   <li><a href="#">Security</a></li>
                 </ul>
               </div>
-            </div>
+            </div> */}
 
             <div className="col-xl-3 col-md-6 col-12 wow fadeIn">
               <div className="single-footer">
@@ -87,8 +79,7 @@ export default function FooterOne() {
                 <div className="contact-info">
                   <p>
                     <i className='bx bx-map' ></i>
-                    <span>15 Rose StreetHarvey, IL <br />
-                      60426 USA</span>
+                    <span>Pakistan</span>
                   </p>
                   <p>
                     <i className='bx bx-phone' ></i>
@@ -99,7 +90,8 @@ export default function FooterOne() {
                   <p>
                     <i className='bx bx-envelope'></i>
                     <span>
-                      example@education.com</span>
+                      realskillswap@gmail.com
+                    </span>
                   </p>
                 </div>
               </div>
