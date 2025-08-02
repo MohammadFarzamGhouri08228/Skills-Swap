@@ -84,13 +84,13 @@ export default function FooterOne() {
                   <p>
                     <i className='bx bx-phone' ></i>
                     <span>
-                      708-210-9101</span>
+                      +923032988887</span>
                   </p>
 
                   <p>
                     <i className='bx bx-envelope'></i>
                     <span>
-                      realskillswap@gmail.com
+                      jaan.nisaarr@gmail.com
                     </span>
                   </p>
                 </div>
